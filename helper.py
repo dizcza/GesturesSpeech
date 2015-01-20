@@ -1,5 +1,19 @@
 import btk
 import os
+import numpy as np
+
+
+def get_hand_labels():
+    lhand_labels = np.array([
+        "LFSH",     "LBSH",     "LUPA",     "LELB",     "LIEL",
+        "LOWR",     "LIWR",     "LWRE",     "LIHAND",   "LOHAND",
+        "LIDX1",    "LIDX2",    "LIDX3",    "LMDL1",    "LMDL2",
+        "LMDL3",    "LRNG1",    "LRNG2",    "LRNG3",    "LPNK1",
+        "LPNK2",    "LPNK3",    "LTHM1",    "LTHM2",    "LTHM3",
+    ])
+    rhand_labels = ["R" + label[1:] for label in lhand_labels]
+    hands_labels = np.concatenate([lhand_labels, rhand_labels])
+    return hands_labels
 
 
 def init_frame(filename):
@@ -18,7 +32,11 @@ def init_frame(filename):
     return initFrames[short_name]
 
 
-def print_info(acq):
+def print_info(filename):
+    reader = btk.btkAcquisitionFileReader()
+    reader.SetFilename(filename)
+    reader.Update()
+    acq = reader.GetOutput()
     print('Acquisition duration: %.2f s' % acq.GetDuration())
     print('Point frequency: %.2f Hz' % acq.GetPointFrequency())
     print('Number of frames: %d' % acq.GetPointFrameNumber())
@@ -38,6 +56,7 @@ def print_info(acq):
     for i in range(acq.GetPoints().GetItemNumber()):
         print acq.GetPoint(i).GetLabel()
         print acq.GetPoint(i).GetDescription()
+        # print acq.GetPoint(i).GetValues()
 
 
 def moving_average_simple(xs, wsize=5):
@@ -113,3 +132,12 @@ def modify_orient_in(folder):
         if c3d.endswith(".c3d"):
             change_orientation(folder + c3d)
     print "Done."
+
+
+def check_for_missed_hand_labels(given_labels):
+    hands_labels = get_hand_labels()
+    missed_labels = []
+    for label in hands_labels:
+        if label not in given_labels:
+            missed_labels.append(label)
+    return missed_labels
