@@ -5,6 +5,9 @@
 
 <body>
 <p align="center"><i>This repo provides the intruments to work with Motion Capture .c3d files, which includes Ukrainian gestures.</i></p>
+
+<video src="video_example.mp4" width="320" height="200" controls preload></video>
+
 <table style="width:100%">
   <tr>
     <th>script</th>
