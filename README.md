@@ -1,11 +1,10 @@
-# GesturesSpeech
 <html>
 <head>
-<h5 align="center">This repo provides the intrument to work with Motion Capture .c3d files, which includes Ukrainian gestures</h4>
+<h3 align="center">GesturesSpeech</h3>
 </head>
 
 <body>
-
+<p>This repo provides the intrument to work with Motion Capture .c3d files, which includes Ukrainian gestures</p>
 <table style="width:100%">
   <tr>
     <td>files_modifier.py</td>
