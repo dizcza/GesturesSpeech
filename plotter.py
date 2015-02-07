@@ -22,10 +22,6 @@ def plot_deriv(_decr):
     plt.show()
 
 
-
-
-
-
 def animate(i):
     """
     :param i: frame

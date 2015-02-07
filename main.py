@@ -8,14 +8,12 @@ import os
 import json
 
 
-reader = btk.btkAcquisitionFileReader()
-
-
 def describe(c3d_file):
     """
     :param c3d_file: .c3d-file to read info from
     :return: full description dic
     """
+    reader = btk.btkAcquisitionFileReader()
     reader.SetFilename(c3d_file)
     reader.Update()
     acq = reader.GetOutput()
@@ -45,7 +43,7 @@ def describe(c3d_file):
     description["missed"] = check_for_missed(data)
 
     if description["missed"] > 0:
-        data[data == 0] = np.NaN             # handle missing data (zeros)
+        data[data == 0] = np.NaN  # handle missing data (zeros)
     description["data"] = data
 
     return description
@@ -62,6 +60,7 @@ def get_points_data(acq):
         data = np.dstack((data, acq.GetPoint(label).GetValues().T))
     data = np.delete(data.T, 0, axis=0)  # first marker is noisy for this file
     return data
+
 
 def plot_relaxed_indices(_dscr):
     """
@@ -142,7 +141,7 @@ def split_file(filename, split_thr):
 
     relaxed_indices = get_relaxed_indices(_dscr, split_thr)
     pairs = zip(relaxed_indices[:-1], relaxed_indices[1:])
-    pairs_in_two = [(pairs[i], pairs[i+1]) for i in range(0, len(relaxed_indices)-1, 2)]
+    pairs_in_two = [(pairs[i], pairs[i + 1]) for i in range(0, len(relaxed_indices) - 1, 2)]
 
     for unique_id, two_the_same_samples in enumerate(pairs_in_two):
         gesture = "_gest%d" % unique_id
@@ -199,6 +198,7 @@ def plot_them_all(folder):
                 continue
 
 
+# reader = btk.btkAcquisitionFileReader()
 # reader.SetFilename("D:/GesturesDataset/Meet/M1_02_v2.c3d")
 # reader.Update()
 # acq_main = reader.GetOutput()
