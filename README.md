@@ -20,7 +20,7 @@
   </tr>
   <tr>
     <td>labeling.py</td>
-    <td>contains all 83 markers (labels) name with init (relaxed) frame for each .c3d file</td>
+    <td>contains all 83 markers (labels) names with init (relaxed) frame for each .c3d file</td>
   </tr>
   <tr>
     <td><b><i>main.py<b></i></td>
