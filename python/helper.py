@@ -38,6 +38,7 @@ def check_for_missed(data):
     """
      Checks for values in data being zeros.
     :param data: (#markers, #frames, 3) ndarray of 3d points data
+    :return overall zero values number in data
     """
     # for marker in range(data.shape[0]):
     #     for frame in range(data.shape[1]):
@@ -46,9 +47,11 @@ def check_for_missed(data):
     #                 print marker, frame, ordinate
 
     missed = len(data[data == 0])
-    if len(data[data == 0]) > 0:
-        print "\tThere is %d missed data (zeros)." % missed
-    return missed
+    corrupted_frames = 0.
+    for frame in range(data.shape[1]):
+        if 0 in data[:, frame, :]:
+            corrupted_frames += 1.
+    return corrupted_frames / data.shape[1] * 100.
 
 
 if __name__ == "__main__":

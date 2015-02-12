@@ -35,23 +35,33 @@ def init_frame(filename):
         "M7_01.c3d": 400,
         "M8_01.c3d": 500,
         "M9_01.c3d": 500,
+
         "C1_mcraw.c3d": 795,
         "C2_mcraw.c3d": 420,
         "C3_mcraw.c3d": 850,
+
+        "D1_mcraw001.c3d": 740,
+        "D2_mcraw001.c3d": 780,
+        "D3_mcraw001.c3d": 740,
+        "D4_mcraw001.c3d": 800,
+
         "F1_mcraw.c3d": 755,
         "F2_mcraw.c3d": 1150,
         "F3_mcraw.c3d": 815,
         "F4_mcraw.c3d": 385,
         "F5_mcraw.c3d": 1055,
+
         "H1_mcraw.c3d": 800,
         "H2_mcraw.c3d": 450,
         "H3_mcraw.c3d": 520,
         "H4_mcraw.c3d": 450,
         "H5_mcraw.c3d": 700,
         "H6_mcraw.c3d": 1000,
+
         "N1_mcraw002.c3d": 285,
         "N2_mcraw002.c3d": 440,
         "N3_mcraw001.c3d": 450,
+
         "S1_mcraw001.c3d": 570,
         "S2_mcraw001.c3d": 430,
         "S3_mcraw001.c3d": 580,
@@ -61,7 +71,11 @@ def init_frame(filename):
         "S7_mcraw001.c3d": 450,
         "S8_mcraw001.c3d": 510,
     }
-    return initFrames[short_name]
+
+    if short_name in initFrames.keys():
+        return initFrames[short_name]
+    else:
+        return 0
 
 
 def get_hands_ids(given_labels):

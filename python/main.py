@@ -198,6 +198,22 @@ def plot_them_all(folder):
                 continue
 
 
+def check_them_all(folder):
+    for c3d_file in os.listdir(folder):
+        if c3d_file.endswith(".c3d"):
+            try:
+                _dscr = describe(folder + c3d_file)
+                markers = _dscr["acquisition"].GetPoints().GetItemNumber()
+                if markers < 83:
+                    print "Not enough markers in %s: \t %d < 83" % (_dscr["filename"], markers)
+
+                if _dscr["missed"] > 0:
+                    print "%.2f %% corrupted frames in %s\n" % (_dscr["missed"], _dscr["filename"])
+            except:
+                print "cannot describe %s" % c3d_file
+                continue
+
+
 # reader = btk.btkAcquisitionFileReader()
 # reader.SetFilename("D:/GesturesDataset/Meet/M1_02_v2.c3d")
 # reader.Update()
@@ -205,11 +221,13 @@ def plot_them_all(folder):
 # print_info("D:/GesturesDataset/Meet/M5_01.c3d")
 # print init_frame("D:/GesturesDataset/Meet/M1_02_v2.c3d")
 
-# _dscr = describe("D:/GesturesDataset/Hospital/H6_mcraw.c3d")
-# display_animation(_dscr, speed_rate=1)
+_dscr = describe("D:/GesturesDataset/Hospital/H6_mcraw.c3d")
+# np.save("data3d.npy", _dscr["data"])
+display_animation(_dscr, frames_range=[1050, 1400])
 # plot_relaxed_indices(_dscr)
-# plot_them_all("D:/GesturesDataset/School/")
+# plot_them_all("D:/GesturesDataset/Dactyl/")
 # plot_deriv(_dscr)
 # split_file("D:/GesturesDataset/Hospital/H6_mcraw.c3d")
-
 # split_mult_files("D:/GesturesDataset/School/", split_thr=10.0)
+
+# check_them_all("D:/GesturesDataset/splitAll/")
