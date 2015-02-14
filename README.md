@@ -39,9 +39,10 @@
   </tr>
 </table> 
 
-<p>Free visualizers:</p>
+<p>Free 3D Motion Capture visualizers:</p>
 <ul>
   <li><a href="http://b-tk.googlecode.com/svn/web/mokka/index.html">Mokka</a></li>
+  <li>A powerfull <a href="http://www.blender.org/">Blender</a> suite (look at <a href="http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender">here</a> to be able to import .c3d files)</li>
   <li><a href="http://www.c-motion.com/free-downloads/">Free CMO Reader</a></li>
 </ul>
 
