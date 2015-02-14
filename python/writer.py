@@ -48,6 +48,31 @@ def change_orientation(filename, default_orient=(0, 2, 1)):
     writer.Update()
 
 
+def fill_missed_frame_and_save(filename, markerID, frame_missed):
+    reader = btk.btkAcquisitionFileReader()
+    writer = btk.btkAcquisitionFileWriter()
+
+    reader.SetFilename(filename)
+    reader.Update()
+    acq = reader.GetOutput()
+
+    framesXYZ = acq.GetPoint(markerID).GetValues()
+
+    point_prev_frame = acq.GetPoint(markerID).GetValues()[frame_missed-1, :]
+    point_next_frame = acq.GetPoint(markerID).GetValues()[frame_missed+1, :]
+    point_aver_frame = (point_prev_frame + point_next_frame) / 2.
+
+    framesXYZ[frame_missed, :] = point_aver_frame
+
+    acq.GetPoint(markerID).SetValues(framesXYZ)
+
+    print "%s[%d] vals set to %s" % (acq.GetPoint(markerID).GetLabel(), frame_missed, framesXYZ[frame_missed, :])
+
+    writer.SetInput(acq)
+    writer.SetFilename(filename)
+    writer.Update()
+
+
 def modify_orient_in(folder):
     """
     :param folder: path to folder with .c3d-files

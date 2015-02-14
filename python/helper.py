@@ -46,12 +46,12 @@ def check_for_missed(data):
     #             if data[marker][frame][ordinate] == 0:
     #                 print marker, frame, ordinate
 
-    missed = len(data[data == 0])
-    corrupted_frames = 0.
+    # missed = len(data[data == 0])
+    corrupted_frames = []
     for frame in range(data.shape[1]):
-        if 0 in data[:, frame, :]:
-            corrupted_frames += 1.
-    return corrupted_frames / data.shape[1] * 100.
+        if 0 in data[:, frame, :] or np.isnan(data[:, frame, :]).any():
+            corrupted_frames.append(frame)
+    return corrupted_frames
 
 
 if __name__ == "__main__":

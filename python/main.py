@@ -2,7 +2,7 @@
 
 from helper import *
 from labeling import *
-from files_modifier import *
+from writer import *
 from plotter import *
 import os
 import json
@@ -42,7 +42,7 @@ def describe(c3d_file):
     description["freq"] = acq.GetPointFrequency()
     description["missed"] = check_for_missed(data)
 
-    if description["missed"] > 0:
+    if any(description["missed"]):
         data[data == 0] = np.NaN  # handle missing data (zeros)
     description["data"] = data
 
@@ -198,6 +198,14 @@ def plot_them_all(folder):
                 continue
 
 
+def add_bar_plane(corrupted_frames, frames_num, init_fr):
+    fig, ax = plt.subplots()
+    missed = init_fr + np.array(corrupted_frames)
+    heights = np.ones(len(corrupted_frames))
+    ax.bar(missed, heights, width=0.8, color='r')
+    ax.set_xlim([init_fr, frames_num + init_fr])
+
+
 def check_them_all(folder):
     for c3d_file in os.listdir(folder):
         if c3d_file.endswith(".c3d"):
@@ -207,8 +215,16 @@ def check_them_all(folder):
                 if markers < 83:
                     print "Not enough markers in %s: \t %d < 83" % (_dscr["filename"], markers)
 
-                if _dscr["missed"] > 0:
-                    print "%.2f %% corrupted frames in %s\n" % (_dscr["missed"], _dscr["filename"])
+                if any(_dscr["missed"]):
+                    corrupted_share = float(len(_dscr["missed"])) / _dscr["frames"] * 100.
+                    init_fr = init_frame(c3d_file)
+                    add_bar_plane(_dscr["missed"], _dscr["frames"], init_fr=0)
+                    print "%d (%.2f%%) corrupted frames in %s\n" % (len(_dscr["missed"]),
+                                                                    corrupted_share,
+                                                                    _dscr["filename"])
+                    print np.array(_dscr["missed"])
+                    plt.title(c3d_file)
+                    plt.show()
             except:
                 print "cannot describe %s" % c3d_file
                 continue
@@ -221,9 +237,9 @@ def check_them_all(folder):
 # print_info("D:/GesturesDataset/Meet/M5_01.c3d")
 # print init_frame("D:/GesturesDataset/Meet/M1_02_v2.c3d")
 
-_dscr = describe("D:/GesturesDataset/Hospital/H6_mcraw.c3d")
+# _dscr = describe("D:/GesturesDataset/Family/split/F2_mcraw/F2_mcraw_gest3_sample1.c3d")
+# display_animation(_dscr, frames_range=[40, 60])
 # np.save("data3d.npy", _dscr["data"])
-display_animation(_dscr, frames_range=[1050, 1400])
 # plot_relaxed_indices(_dscr)
 # plot_them_all("D:/GesturesDataset/Dactyl/")
 # plot_deriv(_dscr)
@@ -231,3 +247,7 @@ display_animation(_dscr, frames_range=[1050, 1400])
 # split_mult_files("D:/GesturesDataset/School/", split_thr=10.0)
 
 # check_them_all("D:/GesturesDataset/splitAll/")
+# fill_missed_frame_and_save("D:/GesturesDataset/Family/F2_mcraw.c3d", 58, 2434)
+# fill_missed_frame_and_save("D:/GesturesDataset/Family/split/F2_mcraw/F2_mcraw_gest3_sample0.c3d", 58, 58)
+# _dscr = describe("D:/GesturesDataset/Common/")
+
