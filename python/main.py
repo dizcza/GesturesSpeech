@@ -124,49 +124,6 @@ def get_relaxed_indices(_dscr, thr=10.):
     return relaxed_indices
 
 
-def split_file(filename, split_thr):
-    """
-    Splits particular .c3d-file into unique examples.
-    :param filename: .c3d-file
-    :param split_thr: the positions below that value are considered to be near relaxed (init) pos
-    """
-    writer = btk.btkAcquisitionFileWriter()
-    _dscr = describe(filename)
-    short_name = filename.split('/')[-1]
-    folder_path = filename[:-len(short_name)]
-    short_name = short_name.split('.c3d')[0]
-    folder_path += "split/" + short_name + "/"
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
-    relaxed_indices = get_relaxed_indices(_dscr, split_thr)
-    pairs = zip(relaxed_indices[:-1], relaxed_indices[1:])
-    pairs_in_two = [(pairs[i], pairs[i + 1]) for i in range(0, len(relaxed_indices) - 1, 2)]
-
-    for unique_id, two_the_same_samples in enumerate(pairs_in_two):
-        gesture = "_gest%d" % unique_id
-        for sample_id, frame_borders in enumerate(two_the_same_samples):
-            new_short_name = short_name + gesture + "_sample%d.c3d" % sample_id
-            left_frame, right_frame = frame_borders
-
-            # Copy original data
-            clone = _dscr["acquisition"].Clone()
-
-            # Crop the acquisition to keep only the ROI
-            clone.ResizeFrameNumberFromEnd(_dscr["frames"] - left_frame + 1)
-            clone.ResizeFrameNumber(right_frame - left_frame + 1)
-            clone.SetFirstFrame(left_frame)
-
-            # Make sure to left events to be empty
-            # since they initially were empty
-            clone.ClearEvents()
-
-            # Create new C3D file
-            writer.SetInput(clone)
-            writer.SetFilename(folder_path + new_short_name)
-            writer.Update()
-
-
 def split_mult_files(folder_path, split_thr):
     """
      Splits all examples into their folders by unique ones.
@@ -175,8 +132,22 @@ def split_mult_files(folder_path, split_thr):
     """
     for c3d_file in os.listdir(folder_path):
         if c3d_file.endswith(".c3d"):
-            split_file(folder_path + '/' + c3d_file, split_thr)
-        print "%s is successfully split" % c3d_file
+            _dscr = describe(folder_path + c3d_file)
+            double_pair = get_double_border_frames(_dscr, split_thr)
+            split_file(folder_path, c3d_file, double_pair)
+
+
+def get_double_border_frames(_dscr, split_thr):
+    """
+    :param _dscr: .c3d-file description
+    :param split_thr: the positions below that value are considered to be near relaxed (init) pos
+    :return list of double pairs, each of them contains 2 pairs of border frames (for each sample per gest)
+    """
+    relaxed_indices = get_relaxed_indices(_dscr, split_thr)
+    pairs = zip(relaxed_indices[:-1], relaxed_indices[1:])
+    double_pairs = [(pairs[i], pairs[i + 1]) for i in range(0, len(relaxed_indices) - 1, 2)]
+
+    return double_pairs
 
 
 def plot_them_all(folder):
@@ -198,11 +169,11 @@ def plot_them_all(folder):
                 continue
 
 
-def add_bar_plane(corrupted_frames, frames_num, init_fr):
+def add_bar_plane(corrupted_frames, frames_num, init_fr=0):
     fig, ax = plt.subplots()
     missed = init_fr + np.array(corrupted_frames)
     heights = np.ones(len(corrupted_frames))
-    ax.bar(missed, heights, width=0.8, color='r')
+    ax.bar(missed, heights, width=0.8, color='black')
     ax.set_xlim([init_fr, frames_num + init_fr])
 
 
@@ -217,8 +188,7 @@ def check_them_all(folder):
 
                 if any(_dscr["missed"]):
                     corrupted_share = float(len(_dscr["missed"])) / _dscr["frames"] * 100.
-                    init_fr = init_frame(c3d_file)
-                    add_bar_plane(_dscr["missed"], _dscr["frames"], init_fr=0)
+                    add_bar_plane(_dscr["missed"], _dscr["frames"])
                     print "%d (%.2f%%) corrupted frames in %s\n" % (len(_dscr["missed"]),
                                                                     corrupted_share,
                                                                     _dscr["filename"])
@@ -234,20 +204,17 @@ def check_them_all(folder):
 # reader.SetFilename("D:/GesturesDataset/Meet/M1_02_v2.c3d")
 # reader.Update()
 # acq_main = reader.GetOutput()
-# print_info("D:/GesturesDataset/Meet/M5_01.c3d")
-# print init_frame("D:/GesturesDataset/Meet/M1_02_v2.c3d")
 
 # _dscr = describe("D:/GesturesDataset/Family/split/F2_mcraw/F2_mcraw_gest3_sample1.c3d")
 # display_animation(_dscr, frames_range=[40, 60])
-# np.save("data3d.npy", _dscr["data"])
-# plot_relaxed_indices(_dscr)
-# plot_them_all("D:/GesturesDataset/Dactyl/")
+# plot_relm_all("D:/GesturesDataset/Dactyl/")
 # plot_deriv(_dscr)
-# split_file("D:/GesturesDataset/Hospital/H6_mcraw.c3d")
 # split_mult_files("D:/GesturesDataset/School/", split_thr=10.0)
 
-# check_them_all("D:/GesturesDataset/splitAll/")
+# check_them_all("D:/GesturesDataset/School/")
 # fill_missed_frame_and_save("D:/GesturesDataset/Family/F2_mcraw.c3d", 58, 2434)
 # fill_missed_frame_and_save("D:/GesturesDataset/Family/split/F2_mcraw/F2_mcraw_gest3_sample0.c3d", 58, 58)
-# _dscr = describe("D:/GesturesDataset/Common/")
 
+# check_for_missed_labels(_dscr)
+
+# TODO resave M5_01_lastgest_lastsample

@@ -120,12 +120,14 @@ def check_for_missed_hand_labels(given_labels):
 
 def save_labeling(_dscr):
     all_labels = get_all_labels(_dscr)
-    print "%d markers have been saved in markers_names.txt" % len(all_labels)
-    np.savetxt("markers_names.txt", all_labels, fmt="%s", delimiter='\n')
+    print "%d markers have been saved in valid_labels.txt" % len(all_labels)
+    np.savetxt("valid_labels.txt", all_labels, fmt="%s", delimiter='\n')
 
 
 def get_all_labels(_dscr):
     all_labels = []
+    # print _dscr["acquisition"].GetPoints().GetItemNumber()
+    # print _dscr["acquisition"]
     for i in range(_dscr["acquisition"].GetPoints().GetItemNumber()):
         label = _dscr["acquisition"].GetPoint(i).GetLabel().rsplit(":")[-1]
         all_labels.append(label)
@@ -134,7 +136,7 @@ def get_all_labels(_dscr):
 
 def check_for_missed_labels(_dscr):
     labels = get_all_labels(_dscr)
-    valid_labels = np.loadtxt("markers_names.txt", dtype=str, delimiter="\n")
+    valid_labels = np.loadtxt("valid_labels.txt", dtype=str, delimiter="\n")
     for current_label in valid_labels:
         if current_label not in labels:
             print "%s is missed in %s" % (current_label, _dscr["filename"])

@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import btk
 import os
 
@@ -84,3 +86,45 @@ def modify_orient_in(folder):
     print "Done."
 
 
+def split_file(folder_path, filename, double_pairs):
+    """
+    Splits particular .c3d-file into unique examples.
+    :param folder_path: .c3d-file
+    :param filename: short filename
+    :param double_pairs: list of double pairs of frame borders
+    """
+    reader = btk.btkAcquisitionFileReader()
+    writer = btk.btkAcquisitionFileWriter()
+    reader.SetFilename(folder_path + filename)
+    reader.Update()
+    acq = reader.GetOutput()
+    FRAMES = acq.GetPointFrameNumber()
+
+    short_name = filename.split('.c3d')[0]
+    new_folder_path = folder_path + "split/" + short_name + "/"
+    if not os.path.exists(new_folder_path):
+        os.makedirs(new_folder_path)
+
+    for unique_id, two_the_same_samples in enumerate(double_pairs):
+        gesture = "_gest%d" % unique_id
+        for sample_id, frame_borders in enumerate(two_the_same_samples):
+            new_short_name = short_name + gesture + "_sample%d.c3d" % sample_id
+            left_frame, right_frame = frame_borders
+
+            # Copy original data
+            clone = acq.Clone()
+
+            # Crop the acquisition to keep only the ROI
+            clone.ResizeFrameNumberFromEnd(FRAMES - left_frame + 1)
+            clone.ResizeFrameNumber(right_frame - left_frame + 1)
+            clone.SetFirstFrame(left_frame)
+
+            # Make sure to left events to be empty
+            # since they initially were empty
+            clone.ClearEvents()
+
+            # Create new C3D file
+            writer.SetInput(clone)
+            writer.SetFilename(new_folder_path + new_short_name)
+            writer.Update()
+    print "%s was successfully split into 2x%d samples" % (short_name, len(double_pairs))
