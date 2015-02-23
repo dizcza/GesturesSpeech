@@ -2,3 +2,4 @@
 temp.py
 *.npy
 *.json
+__init__.py
