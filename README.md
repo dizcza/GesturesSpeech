@@ -4,16 +4,44 @@
 </head>
 
 <body>
-<p align="center"><i>This repo provides the intruments to work with Motion Capture .c3d files, which includes Ukrainian gestures.</i></p>
+<p align="center"><i>This repo provides the intruments to work with Motion Capture data, which include Ukrainian gestures.</i></p>
 
 <video src="video_example.mp4" width="320" height="200" controls preload></video>
 
+<h6>Projects:</h6>
+<ul>
+  <li>MoCap (Motion Capture):
+    <ul>
+      <li>covers basic Ukrainian gestures</li>
+      <li>file type: c3d</li>
+      <li>body joints: 83</li>
+      <li>data is measured in millimeters</li>
+      <li>FPS: 120</li>
+      <li>unique gesture classes: ~150</li>
+      <li>samples per gesture: 2</li>
+    </ul>
+  </li>
+  <li><a href="http://datascience.sehir.edu.tr/visapp2013">Kinect<a/>:</li>
+    <ul>
+      <li>covers basic hand motions</li>
+      <li>file type: txt</li>
+      <li>body joints: 20</li>
+      <li>data is measured in meters</li>
+      <li>FPS: 30</li>
+      <li>unique gesture classes: 8</li>
+      <li>samples per gesture: 28</li>
+    </ul>
+</ul>
+
 <table style="width:100%">
   <tr>
+    <th>Project</th>
     <th>script</th>
     <th>file info</th>	
   </tr>
+  
   <tr>
+    <td rowspan="6">MoCap</td>
     <td>files_modifier.py</td>
     <td>changes orientation XYZ by default (Z should measure human height)</td>	
   </tr>
@@ -36,6 +64,12 @@
   <tr>
     <td>plotter.py</td>
     <td>displays animation</td>
+  </tr>
+  
+  <tr>
+    <td>Kinect</td>
+    <td>reader.py</td>
+    <td>includes Humanoid class implementaion</td>
   </tr>
 </table> 
 
