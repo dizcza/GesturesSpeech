@@ -12,7 +12,7 @@
 <ul>
   <li>MoCap (Motion Capture):
     <ul>
-      <li>covers basic Ukrainian gestures</li>
+      <li>covers common Ukrainian gestures</li>
       <li>file type: c3d</li>
       <li>body joints: 83</li>
       <li>data is measured in millimeters</li>

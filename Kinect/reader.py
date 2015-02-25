@@ -11,7 +11,6 @@ Reference:
 }
 """
 
-
 import os
 import numpy as np
 from numpy.linalg import norm
@@ -19,13 +18,15 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from MOCAP.math_kernel import moving_average
 from mpl_toolkits.mplot3d import Axes3D
+from pprint import pprint
 
 
 KINECT_PATH = "D:\GesturesDataset\KINECT\\"
 MARKERS = 20
-Tmin = .0005
-Tmax = .0075
-
+Tmin = .007
+Tmax = .075
+HAND_MARKERS = np.array(["HandLeft",  "WristLeft",  "ElbowLeft",
+                         "HandRight", "WristRight", "ElbowRight"])
 
 def convert_time(string):
     """
@@ -45,9 +46,9 @@ def gather_labels(rlines):
     """
     label_indices = 7 + 4 * np.arange(MARKERS)
     label_names = np.array(rlines)[label_indices]
-    labels = {}
-    for labelID, marker_name in enumerate(label_names):
-        labels[marker_name[1:-1]] = labelID
+    labels = []
+    for noisy_label in label_names:
+        labels.append(noisy_label[1:-1])
     return labels
 
 
@@ -79,14 +80,15 @@ def read_body(rlines):
 
 
 class Humanoid(object):
-    def __init__(self, filename):
+    def __init__(self, filename, beta=0.1):
         """
          Creates a gesture from Kinect folder.
         :param filename: txt-file path
         """
         swap = {"left": "right", "right": "left"}
         self.prime_hand = filename.split('\\')[-1].split("Hand")[0].lower()
-        self.stationary_hand = swap[self.prime_hand]
+        self.free_hand = swap[self.prime_hand]
+        self.beta = beta
         with open(filename, 'r') as rfile:
             rlines = rfile.readlines()
             self.name = rlines[3][1:-1]
@@ -98,6 +100,10 @@ class Humanoid(object):
         self.preprocessing()
 
 
+    # def __del__(self):
+    #     plt.clf()
+
+
     def __str__(self):
         s = "GESTURE: %s\n" % self.name
         s += "\t frames: \t %d\n" % self.frames
@@ -107,25 +113,28 @@ class Humanoid(object):
         return s
 
 
-    def get_ids(self, marker_names):
+    def get_ids(self, *args):
         """
          Gets specific data ids by marker_names keys.
         :param marker_names: list of keys
         :return: data ids, w.r.t. marker_names
         """
         ids = []
-        for marker in marker_names:
-            ids.append(self.labels[marker])
-        return ids
+        for marker in args:
+            ids.append(self.labels.index(marker))
+        if len(ids) == 1:
+            return ids[0]
+        else:
+            return ids
 
 
     def estimate_height(self):
         """
          Computes a human height.
         """
-        self.feet_ids = self.get_ids(["FootRight", "FootLeft"])
-        self.feet_data = self.data[self.feet_ids, ::]
-        pentagone = self.data[self.labels["Head"], ::] - self.feet_data
+        feet_ids = self.get_ids("FootRight", "FootLeft")
+        head_id = self.get_ids("Head")
+        pentagone = self.data[head_id, ::] - self.data[feet_ids, ::]
         self.height = np.average(np.average(pentagone, axis=1), axis=0)[2]
 
 
@@ -139,62 +148,61 @@ class Humanoid(object):
         self.frames -= wsize - 1
 
         # step 1: subtract shoulder center from all joints
-        center_id = self.labels["ShoulderCenter"]
+        center_id = self.get_ids("ShoulderCenter")
         shoulder_center = np.average(self.data[center_id, ::], axis=0)
         center_std = norm(np.std(self.data[center_id, ::], axis=0))
         self.data -= shoulder_center
 
         # step 2: normalize by shoulder dist
-        sh_ids = self.get_ids(["ShoulderLeft", "ShoulderRight"])
+        sh_ids = self.get_ids("ShoulderLeft", "ShoulderRight")
         sh_diff = self.data[sh_ids[0], ::] - self.data[sh_ids[1], ::]
         self.shoulder_length = np.average(norm(sh_diff, axis=1))
         sh_std = norm(np.std(sh_diff, axis=0))
         self.std = norm([center_std, sh_std])
-        # self.norm_data = self.data / self.shoulder_length
+        self.norm_data = self.data / self.shoulder_length
 
 
-    def create_feature_map(self, mode):
-        self.hand_markers = ["HandLeft",  "WristLeft",  "ElbowLeft",
-                              "HandRight", "WristRight", "ElbowRight"]
+    def define_moving_markers(self, mode):
+        self.moving_markers = np.array([])
         if mode == "oneHand":
-            _ids_matter = []
-            one_hand_ids = []
-            for handID, joint in enumerate(self.hand_markers):
-                if self.prime_hand in joint.lower():
-                    one_hand_ids.append(handID)
-                    _ids_matter.append(self.labels[joint])
-            self.hand_markers = np.array(self.hand_markers)[one_hand_ids]
+            for marker in self.labels:
+                if self.prime_hand in marker.lower() and marker in HAND_MARKERS:
+                    self.moving_markers = np.append(self.moving_markers, marker)
         else:
-            _ids_matter = self.get_ids(self.hand_markers)
-        self.prime_data = self.data[_ids_matter, ::]
-        self.feature_map = self.prime_data / self.shoulder_length
+            for marker in self.labels:
+                if marker in HAND_MARKERS:
+                    self.moving_markers = np.append(self.moving_markers, marker)
 
 
     def compute_displacement(self, mode):
         """
          Computes joints displacements.
         """
-        self.create_feature_map(mode)
-        self.joint_displace = []
-        self.joint_std = []
-        for jointID, joint in enumerate(self.feature_map):
-            # joint.shape == (frames, 3)
-            delta_per_frame = joint[1:, :] - joint[:-1, :]
-            dist_per_frame = norm(delta_per_frame, axis=1)
-            offset = np.sum(dist_per_frame) / (self.frames - 1)
-            self.joint_displace.append(offset)
+        self.define_moving_markers(mode)
+        self.joint_displace = {}
+        self.joint_std = {}
+        for markerID in range(self.norm_data.shape[0]):
+            marker = self.labels[markerID]
+            if marker in self.moving_markers:
+                # delta_per_frame.shape == (frames-1, 3)
+                delta_per_frame = self.norm_data[markerID, 1:, :] - \
+                                  self.norm_data[markerID, :-1, :]
+                dist_per_frame = norm(delta_per_frame, axis=1)
+                offset = np.average(dist_per_frame)
+                j_std = np.std(dist_per_frame, dtype=np.float64)
+            else:
+                offset = 0
+                j_std = 0
+            self.joint_displace[marker] = offset
+            self.joint_std[marker] = j_std
 
-            j_std = np.std(dist_per_frame, dtype=np.float64)
-            self.joint_std.append(j_std)
-        # self.limit_displacement()
 
-
-    def upd_thr(self):
+    def upd_thr(self, mode=None):
         """
          Updates global displacement thresholds
         """
         global Tmin, Tmax
-        self.compute_displacement(mode=None)
+        self.compute_displacement(mode)
         if min(self.joint_displace) < Tmin:
             Tmin = min(self.joint_displace)
         if max(self.joint_displace) > Tmax:
@@ -208,16 +216,23 @@ class Humanoid(object):
         self.compute_displacement(mode)
         plt.clf()
         ax = self.fig.add_subplot(111)
-        ind = np.arange(len(self.joint_displace))
+
+        offset_list, joint_std_list = [], []
+        for marker in self.labels:
+            if marker in self.moving_markers:
+                offset_list.append(self.joint_displace[marker])
+                joint_std_list.append(self.joint_std[marker])
+
+        ind = np.arange(len(offset_list))
         width = 0.5
-        offsets_bar = ax.bar(ind, self.joint_displace, width, yerr=self.joint_std,
-                             error_kw=dict(elinewidth=2, ecolor='red'))
+        offset_bar = ax.bar(ind, offset_list, width, yerr=joint_std_list,
+                            error_kw=dict(elinewidth=2, ecolor='red'))
         ax.set_xlim(xmin=0)
         ax.set_ylim(ymin=0)
         ax.set_xticks(ind+width/2)
         ax.set_title("%s joint displacements" % self.name)
         ax.set_ylabel("displacement, norm units")
-        ax.set_xticklabels(self.hand_markers)
+        ax.set_xticklabels(self.moving_markers)
         plt.show()
 
 
@@ -270,11 +285,20 @@ class Humanoid(object):
          Limits joint displacements from the bottom and the top.
         """
         # FIXME 6 hand ids --> 3 primary ids
-        for jointID in range(len(self.joint_displace)):
-            if self.joint_displace[jointID] < Tmin:
-                self.joint_displace[jointID] = Tmin
-            elif self.joint_displace[jointID] > Tmax:
-                self.joint_displace[jointID] = Tmax
+        for marker in self.moving_markers:
+            if self.joint_displace[marker] < Tmin:
+                self.joint_displace[marker] = Tmin
+            elif self.joint_displace[marker] > Tmax:
+                self.joint_displace[marker] = Tmax
+
+
+    def compute_weights(self):
+        self.weights = {}
+        displacements = np.array(self.joint_displace.values())
+        denom = np.sum(1. - np.exp(-self.beta * displacements))
+        for marker in self.labels:
+            self.weights[marker] = (1. - np.exp(
+                -self.beta * self.joint_displace[marker])) / denom
 
 
 def compute_thresholds():
@@ -286,7 +310,7 @@ def compute_thresholds():
             full_filename = os.path.join(root, log)
             if full_filename.endswith(".txt"):
                 gest = Humanoid(full_filename)
-                gest.upd_thr()
+                gest.upd_thr("oneHand")
     print "Tmin: %f; \t Tmax: %f" % (Tmin, Tmax)
 
 
@@ -298,7 +322,8 @@ def in_folder():
     for log in os.listdir(folder):
         if log.endswith(".txt"):
             gest = Humanoid(folder + log)
-            gest.show_displacement()
+            gest.show_displacement("oneHand")
+            gest.compute_weights()
             # gest.compute_displacement()
             # print gest
             # gest.animate()
@@ -306,4 +331,4 @@ def in_folder():
 
 
 in_folder()
-
+# compute_thresholds()
