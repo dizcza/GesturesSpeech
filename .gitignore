@@ -2,6 +2,5 @@
 temp.py
 *.npy
 *.json
-__init__.py
 .idea
 MOCAP/animation

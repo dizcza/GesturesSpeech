@@ -269,6 +269,7 @@ class Humanoid(object):
         """
          Limits joint displacements from the bottom and the top.
         """
+        # FIXME 6 hand ids --> 3 primary ids
         for jointID in range(len(self.joint_displace)):
             if self.joint_displace[jointID] < Tmin:
                 self.joint_displace[jointID] = Tmin

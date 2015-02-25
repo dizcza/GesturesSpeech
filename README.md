@@ -4,7 +4,7 @@
 </head>
 
 <body>
-<p align="center"><i>This repo provides the intruments to work with Motion Capture data, which include Ukrainian gestures.</i></p>
+<p align="center"><i>This repo provides the instruments to work with Motion Capture data, which include Ukrainian gestures.</i></p>
 
 <video src="video_example.mp4" width="320" height="200" controls preload></video>
 
@@ -41,7 +41,7 @@
   </tr>
   
   <tr>
-    <td rowspan="6">MoCap</td>
+    <td rowspan="7">MoCap</td>
     <td>files_modifier.py</td>
     <td>changes orientation XYZ by default (Z should measure human height)</td>	
   </tr>
@@ -50,7 +50,7 @@
     <td>prints info about open .c3d file</td>
   </tr>
   <tr>
-    <td>labeling.py</td>
+    <td>labelling.py</td>
     <td>contains all 83 markers (labels) names with init (relaxed) frame for each .c3d file</td>
   </tr>
   <tr>
@@ -65,6 +65,10 @@
     <td>plotter.py</td>
     <td>displays animation</td>
   </tr>
+  <tr>
+    <td>valid_labels.txt</td>
+    <td>list of 83 valid body joints names</td>
+  </tr>  
   
   <tr>
     <td>Kinect</td>
