@@ -16,7 +16,7 @@
   </li>
   
   <li>Humanoid hierarchical structure:
-	<div><img src="humanoid labels.png" height="300"/></div>
+	<div><img src="humanoid labels.PNG" height="300"/></div>
   </li>
 </ul>
 
