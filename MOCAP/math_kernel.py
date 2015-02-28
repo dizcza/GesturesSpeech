@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import numpy as np
-from numpy import sqrt
 
 
 def diff(data, step=1):
@@ -20,35 +19,6 @@ def diff(data, step=1):
         _deriv = np.average(_deriv, axis=1)
         deriv_data[:, tick, :] = _deriv
     return deriv_data
-
-
-def deviation(_dscr, mode="hands", step=1):
-    """
-    :param _dscr: description info
-    :param mode: whether use only hands marker all full set of markers
-    :param step: number of frames per step
-    :return: list of offsets from current to init pos
-    """
-    data = _dscr["data"]
-
-    if mode == "hands":
-        data = data[_dscr["hands_ids"], :, :]
-    init_pos = data[:, _dscr["init_frame"], :]
-    # print init_pos.shape
-    offset = []
-    for frame in range(step, _dscr["frames"], step):
-        # for snap_shot in range(step):
-        #     data[:, frame-step:frame, :]
-        # frames_excluded_dev = np.sum(sqrt((data[:, frame-step:frame, :] - init_pos) ** 2))
-
-        coord_aver = np.average(data[:, frame-step:frame, :], axis=1)
-        # if frame in range(1160, 1170):
-        #     print coord_aver == np.array([np.nan] * 3)
-            # print coord_aver.shape
-        # shift = np.sum(sqrt((coord_aver - init_pos) ** 2)) / _dscr["markers"]
-        shift = sqrt(np.sum((coord_aver - init_pos) ** 2)) / _dscr["markers"]
-        offset.append(shift)
-    return offset
 
 
 def moving_average_simple(xs, wsize=5):

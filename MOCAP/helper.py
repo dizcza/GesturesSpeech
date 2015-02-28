@@ -40,22 +40,11 @@ def check_for_missed(data):
     """
      Checks for values in data being zeros.
     :param data: (#markers, #frames, 3) ndarray of 3d points data
-    :return overall zero values number in data
+    :return list of corrupted frame IDs
     """
-    # for marker in range(data.shape[0]):
-    #     for frame in range(data.shape[1]):
-    #         for ordinate in range(data.shape[2]):
-    #             if data[marker][frame][ordinate] == 0:
-    #                 print marker, frame, ordinate
-
-    # missed = len(data[data == 0])
     corrupted_frames = []
     for frame in range(data.shape[1]):
         if 0 in data[:, frame, :] or np.isnan(data[:, frame, :]).any():
             corrupted_frames.append(frame)
     return corrupted_frames
 
-
-if __name__ == "__main__":
-    # change_orientation("D:/GesturesDataset/Family/F4_mcraw.c3d")
-    pass

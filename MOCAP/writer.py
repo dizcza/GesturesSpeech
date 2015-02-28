@@ -2,6 +2,7 @@
 
 import btk
 import os
+from reader import *
 
 
 def rewrite_files_in(folder):
@@ -128,3 +129,16 @@ def split_file(folder_path, filename, double_pairs):
             writer.SetFilename(new_folder_path + new_short_name)
             writer.Update()
     print "%s was successfully split into 2x%d samples" % (short_name, len(double_pairs))
+
+
+def split_mult_files(folder_path, split_thr):
+    """
+     Splits all examples into their folders by unique ones.
+    :param folder_path: folder with .c3d-examples from particular group
+    :param split_thr: the positions below that value are considered to be near relaxed (init) pos
+    """
+    for c3d_file in os.listdir(folder_path):
+        if c3d_file.endswith(".c3d"):
+            gest = HumanoidUkr(folder_path + c3d_file)
+            double_pair = gest.get_double_border_frames(split_thr)
+            split_file(folder_path, c3d_file, double_pair)

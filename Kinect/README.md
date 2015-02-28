@@ -11,7 +11,7 @@
 <div><img src="joint_displacements.png" height="300"/></div>
 <p>When all weights are set for each gesture class, it's time to use DTW to compare some unknown sequence (from a testing set) with a known one (from a training set).</p>
 <div><img src="dtw_path.png" height="300"/></div>
-<p>Using only 3 crucial body joints (with the other weights to be zeros), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly.</p>
+<p>Using only 3 crucial body joints (with the other weights to be zeros), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while using all body joints (with constant weights) yields 22.5 % out-of-sample error.</p>
 
 </body>
 </html>

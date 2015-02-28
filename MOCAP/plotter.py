@@ -1,102 +1,56 @@
 # coding=utf-8
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.animation as animation
-from math_kernel import *
-import time
+from reader import *
+import os
 
 
-def plot_deriv(_decr):
+def add_bar_plane(corrupted_frames, frames_num, init_fr=0):
     """
-     Plots the derivatives (by frame, not time) of data offsets.
-    :param _decr: description dic
+     Adds bar plane for check_them_all() func.
+    :param corrupted_frames: list of corrupted frames in the acq
+    :param frames_num: number of frames in the gesture
+    :param init_fr: =0 by default
     """
-    data = moving_average(_decr["data"])
-    deriv = diff(data, step=2)
-    deriv = moving_average(deriv, wsize=7)
-
-    dev = np.average(sqrt(np.sum(deriv ** 2, axis=2)), axis=0)
-    dev = moving_average_simple(dev, wsize=7)
-    plt.plot(range(len(dev)), dev)
-    plt.plot(range(len(dev)), np.zeros(len(dev)), 'r--', lw=3)
-    plt.show()
+    fig, ax = plt.subplots()
+    missed = init_fr + np.array(corrupted_frames)
+    heights = np.ones(len(corrupted_frames))
+    ax.bar(missed, heights, width=0.8, color='black')
+    ax.set_xlim([init_fr, frames_num + init_fr])
 
 
-def animate(i, data, pts):
+def check_them_all(folder):
+    for c3d_file in os.listdir(folder):
+        if c3d_file.endswith(".c3d"):
+            try:
+                gest = HumanoidUkr(folder + c3d_file)
+                if gest.markers_total < 83:
+                    print "Not enough markers in %s: \t %d < 83" % (gest.filename, gest.markers_total)
+
+                if any(gest.missed):
+                    corrupted_share = float(len(gest.missed)) / gest.frames * 100.
+                    add_bar_plane(gest.missed, gest.frames)
+                    print "%d (%.2f%%) corrupted frames in %s\n" % (len(gest.missed),
+                                                                    corrupted_share,
+                                                                    gest.filename)
+                    print np.array(gest.missed)
+                    plt.title(c3d_file)
+                    plt.show()
+            except:
+                print "cannot describe %s" % c3d_file
+                continue
+
+
+def plot_them_all(folder):
     """
-    :param i: frame
-    :return: points (markers) pos in the current frame
+     Plots the main info: deviation per frame.
+    :param folder: path to folder with .c3d-files
     """
-    global prev_time
-    # print (time.time() - prev_time) * 1e3
-    prev_time = time.time()
-
-    for marker in range(data.shape[0]):
-        x, y, z = data[marker, i, :]
-        pts[marker].set_data([x], [y])
-        pts[marker].set_3d_properties([z])
-
-    # for pt, xi in zip(pts, data):
-    #     x, y, z = xi[:i].T
-    #     pt.set_data(x[-1:], y[-1:])
-    #     pt.set_3d_properties(z[-1:])
-    return []
-
-
-def display_animation(_dscr, speed_rate=1., frames_range=None, save=False):
-    """
-    :param _dscr: description dic
-    :param speed_rate: animation speed (1.0 is by default)
-    :param frames_range: frames range to animate markers (if it's set)
-    """
-    if save:
-        frames_step = 2
-    else:
-        frames_step = int(speed_rate * 5)
-
-    if frames_range:
-        frames = np.arange(frames_range[0], frames_range[1], frames_step)
-    else:
-        frames = np.arange(0, _dscr["frames"]-1, frames_step)
-
-    # data = _dscr["data"]
-    data = _dscr["data"][:, frames, :]
-
-    fig = plt.figure(figsize=(10,10))
-    ax = fig.add_axes([0, 0, 1, 1], projection='3d')
-    ax.view_init(15, 110)
-    pts = []
-    for i in range(data.shape[0]):
-        # sets 83 empty plots for 83 markers
-        pts += ax.plot([], [], [], 'o', color='black', markersize=4)
-
-    # ax.set_xlim3d(-700, 700)
-    # ax.set_ylim3d(-1000, -500)
-    # ax.set_zlim3d(0, 1500)
-    ax.set_axis_off()
-
-    ax.set_xlim3d([np.nanmin(_dscr["data"][:, :, 0])+100, np.nanmax(_dscr["data"][:, :, 0])-100])
-    ax.set_ylim3d([np.nanmin(_dscr["data"][:, :, 1])-400, np.nanmax(data[:, :, 1])+400])
-    ax.set_zlim3d([np.nanmin(_dscr["data"][:, :, 2]), np.nanmax(_dscr["data"][:, :, 2])])
-
-    ax.set_xlabel('X [mm]')
-    ax.set_ylabel('Y [mm]')
-    ax.set_zlabel('Z [mm]')
-
-    global prev_time
-    prev_time = time.time()
-    anim = animation.FuncAnimation(fig,
-                                   func=animate,
-                                   fargs=(data, pts),
-                                   frames=data.shape[1],
-                                   interval=1000./_dscr["freq"],
-                                   blit=True)
-
-    if save:
-        mp4_file = _dscr['filename'].split('/')[-1][:-4] + '.mp4'
-        anim.save(mp4_file, writer='ffmpeg', fps=50)
-        print "Saved in %s" % mp4_file
-    else:
-        plt.show()
-        pass
+    for c3d_file in os.listdir(folder):
+        if c3d_file.endswith(".c3d"):
+            try:
+                gest = HumanoidUkr(folder + c3d_file)
+                print "file: %s; \t frames: %d" % (c3d_file, gest.frames)
+                gest.plot_relaxed_indices()
+            except:
+                print "cannot describe %s" % c3d_file
+                continue

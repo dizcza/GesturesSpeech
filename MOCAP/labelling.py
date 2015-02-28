@@ -3,6 +3,14 @@
 import numpy as np
 
 
+def gather_labels(acq):
+    labels = []
+    for i in range(acq.GetPoints().GetItemNumber()):
+        label = acq.GetPoint(i).GetLabel().split(":")[-1]
+        labels.append(label)
+    return labels
+
+
 def get_hand_labels():
     """
     :return: (n,) array of hand labels' names
@@ -24,7 +32,7 @@ def init_frame(filename):
     :param filename: .c3d-file
     :return: init (relaxed) frame pertains to the filename.c3d
     """
-    short_name = filename.split('/')[-1].rsplit("_gest")[0] + ".c3d"
+    short_name = filename.split('\\')[-1]
     initFrames = {
         "M1_02_v2.c3d": 280,
         "M2_02.c3d": 405,
@@ -85,11 +93,12 @@ def get_hands_ids(given_labels):
     """
     hands_labels = get_hand_labels()
     hands_ids = []
-    del given_labels["RIDX3"]
-    del given_labels["RPNK3"]
+    # FIXME add logic: do not delete markers
+    given_labels.remove("RIDX3")
+    given_labels.remove("RPNK3")
     for label in hands_labels:
         if label in given_labels:
-            hands_ids.append(given_labels[label])
+            hands_ids.append(given_labels.index(label))
     return hands_ids
 
 
@@ -101,7 +110,7 @@ def get_feet_ids(given_labels):
     feet_labels = ["RANK", "LANK", "RTOE", "LTOE", "RHEL", "LHEL"]
     feet_ids = []
     for label in feet_labels:
-        feet_ids.append(given_labels[label])
+        feet_ids.append(given_labels.index(label))
     return feet_ids
 
 
@@ -118,25 +127,20 @@ def check_for_missed_hand_labels(given_labels):
     return missed_labels
 
 
-def save_labeling(_dscr):
-    all_labels = get_all_labels(_dscr)
-    print "%d markers have been saved in valid_labels.txt" % len(all_labels)
-    np.savetxt("valid_labels.txt", all_labels, fmt="%s", delimiter='\n')
+def save_labelling(gest):
+    """
+     Saves current gesture labelling.
+    :param gest: HumanoidUkr instance
+    """
+    print "%d markers have been saved in valid_labels.txt" % len(gest.labels)
+    np.savetxt("valid_labels.txt", gest.labels, fmt="%s", delimiter='\n')
 
 
-def get_all_labels(_dscr):
-    all_labels = []
-    # print _dscr["acquisition"].GetPoints().GetItemNumber()
-    # print _dscr["acquisition"]
-    for i in range(_dscr["acquisition"].GetPoints().GetItemNumber()):
-        label = _dscr["acquisition"].GetPoint(i).GetLabel().rsplit(":")[-1]
-        all_labels.append(label)
-    return all_labels
-
-
-def check_for_missed_labels(_dscr):
-    labels = get_all_labels(_dscr)
+def check_for_missed_labels(gest):
+    """
+    :param gest: HumanoidUkr instance
+    """
     valid_labels = np.loadtxt("valid_labels.txt", dtype=str, delimiter="\n")
     for current_label in valid_labels:
-        if current_label not in labels:
-            print "%s is missed in %s" % (current_label, _dscr["filename"])
+        if current_label not in gest.labels:
+            print "%s is missed in %s" % (current_label, gest.filename)

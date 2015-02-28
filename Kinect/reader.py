@@ -291,14 +291,12 @@ class Humanoid(object):
         return []
 
 
-    def animate(self, mode=None):
+    def animate(self):
         """
          Animates 3d data.
         :param mode: show all markers or prime only
         """
         self.init_3d()
-        if mode == "prime":
-            self.data = self.prime_data
 
         self.anim = animation.FuncAnimation(self.fig,
                                            func=self.next_frame,

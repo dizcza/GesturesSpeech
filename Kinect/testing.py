@@ -83,6 +83,6 @@ def compare_test():
 
     return Etest
 
-# compare_training()
-# compare_test()
-in_folder()
+
+compare_test()
+# in_folder()
