@@ -71,10 +71,19 @@
   </tr>  
   
   <tr>
-    <td>Kinect</td>
+    <td rowspan="3">Kinect</td>
     <td>reader.py</td>
-    <td>includes Humanoid class implementaion</td>
+    <td>Humanoid class implementaion</td>
   </tr>
+  <tr>
+    <td>setting.py</td>
+    <td>tools for picking up the best parameters (training part)</td>
+  </tr>
+  <tr>
+    <td>testing.py</td>
+    <td>testing and comparing Kinect motion gestures</td>
+  </tr>
+  
 </table> 
 
 <p>Free 3D Motion Capture visualizers:</p>
@@ -86,10 +95,11 @@
 
 <p>Obligatory <a href="https://www.python.org/ftp/python/2.7/python-2.7.msi">Python 2.7</a> packages (can be found at http://www.lfd.uci.edu/~gohlke/pythonlibs/):</p>
 <ul>
-  <li> <a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">The Biomechanical ToolKit</a>
+  <li><a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">The Biomechanical ToolKit</a>
   		to read and modify data from .c3d files</li>
-  <li> <a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <b>pyparsing</b>, <b>dateutil</b>, <b>pytz</b> and <b>six</b>)</li>
+  <li><a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <b>pyparsing</b>, <b>dateutil</b>, <b>pytz</b> and <b>six</b>)</li>
   <li><a href="http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download"> 		numpy</a></li>
+  <li><a href="https://pypi.python.org/pypi/dtw/1.0">dtw</a> (dynamic time warping)</li>
 </ul>
 
 </body>
