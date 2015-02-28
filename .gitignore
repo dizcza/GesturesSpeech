@@ -1,6 +1,5 @@
 *.pyc
 temp.py
 *.npy
-*.json
 .idea
 MOCAP/animation

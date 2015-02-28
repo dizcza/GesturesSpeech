@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from MOCAP.math_kernel import moving_average
 from mpl_toolkits.mplot3d import Axes3D
-from pprint import pprint
+import json
 
 
 KINECT_PATH = "D:\GesturesDataset\KINECT\\"
@@ -80,6 +80,12 @@ def read_body(rlines):
 
 
 class Humanoid(object):
+    """
+        Provides an instruments to visualize and operate 3d data,
+        taken with Microsoft Kinect sensor and written in simple txt-format.
+        Data can be downloaded from the reference below:
+            http://datascience.sehir.edu.tr/visapp2013/
+    """
     def __init__(self, filename, beta=0.1):
         """
          Creates a gesture from Kinect folder.
@@ -95,13 +101,12 @@ class Humanoid(object):
             self.labels = gather_labels(rlines)
             self.data, self.fps = read_body(rlines)
         self.frames = self.data.shape[1]
-        self.fig = plt.figure()
-        self.estimate_height()
+        self.estimate_human_height()
         self.preprocessing()
 
 
-    # def __del__(self):
-    #     plt.clf()
+    def __del__(self):
+        plt.close()
 
 
     def __str__(self):
@@ -111,6 +116,10 @@ class Humanoid(object):
         s += "\t height: \t %g m\n" % self.height
         s += "\t data std: \t %g m (or %.2f %%)\n" % (self.std, self.std/self.height * 100)
         return s
+
+
+    def get_norm_data(self):
+        return self.norm_data
 
 
     def get_ids(self, *args):
@@ -128,7 +137,14 @@ class Humanoid(object):
             return ids
 
 
-    def estimate_height(self):
+    def get_weights(self):
+        weights_ordered = []
+        for marker in self.labels:
+            weights_ordered.append(self.weights[marker])
+        return np.array(weights_ordered)
+
+
+    def estimate_human_height(self):
         """
          Computes a human height.
         """
@@ -174,7 +190,7 @@ class Humanoid(object):
                     self.moving_markers = np.append(self.moving_markers, marker)
 
 
-    def compute_displacement(self, mode):
+    def compute_displacement(self, mode=None):
         """
          Computes joints displacements.
         """
@@ -213,8 +229,10 @@ class Humanoid(object):
         """
          Plots a chart bar of joints displacements.
         """
-        self.compute_displacement(mode)
-        plt.clf()
+        if not hasattr(self, "joint_displace"):
+            self.compute_displacement(mode)
+
+        self.fig = plt.figure()
         ax = self.fig.add_subplot(111)
 
         offset_list, joint_std_list = [], []
@@ -240,7 +258,6 @@ class Humanoid(object):
         """
          Initialize empty 3d plots.
         """
-        plt.close()
         self.fig = plt.figure(figsize=(10, 10))
         self.ax = Axes3D(self.fig)
         self.ax.view_init(15, 110)
@@ -301,34 +318,9 @@ class Humanoid(object):
                 -self.beta * self.joint_displace[marker])) / denom
 
 
-def compute_thresholds():
-    """
-     Updates bottom and top displacement thresholds.
-    """
-    for root, _, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
-        for log in logs:
-            full_filename = os.path.join(root, log)
-            if full_filename.endswith(".txt"):
-                gest = Humanoid(full_filename)
-                gest.upd_thr("oneHand")
-    print "Tmin: %f; \t Tmax: %f" % (Tmin, Tmax)
-
-
-def in_folder():
-    """
-     Reads all logs in the chosen folder.
-    """
-    folder = KINECT_PATH + "Training\\LeftHandSwipeRight\\"
-    for log in os.listdir(folder):
-        if log.endswith(".txt"):
-            gest = Humanoid(folder + log)
-            gest.show_displacement("oneHand")
-            gest.compute_weights()
-            # gest.compute_displacement()
-            # print gest
-            # gest.animate()
-    # print "Tmin: %f; \t Tmax: %f" % (Tmin, Tmax)
-
-
-in_folder()
-# compute_thresholds()
+    def set_weights(self):
+        self.weights = {}
+        weights_aver_dic = json.load(open("WEIGHTS_AVER.json", 'r'))
+        weights_arr = weights_aver_dic[self.name]
+        for markerID, marker_name in enumerate(self.labels):
+            self.weights[marker_name] = weights_arr[markerID]
