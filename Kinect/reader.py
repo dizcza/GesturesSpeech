@@ -86,7 +86,7 @@ class Humanoid(object):
         Data can be downloaded from the reference below:
             http://datascience.sehir.edu.tr/visapp2013/
     """
-    def __init__(self, filename, beta=0.1):
+    def __init__(self, filename):
         """
          Creates a gesture from Kinect folder.
         :param filename: txt-file path
@@ -94,7 +94,6 @@ class Humanoid(object):
         swap = {"left": "right", "right": "left"}
         self.prime_hand = filename.split('\\')[-1].split("Hand")[0].lower()
         self.free_hand = swap[self.prime_hand]
-        self.beta = beta
         with open(filename, 'r') as rfile:
             rlines = rfile.readlines()
             self.name = rlines[3][1:-1]
@@ -103,6 +102,7 @@ class Humanoid(object):
         self.frames = self.data.shape[1]
         self.estimate_human_height()
         self.preprocessing()
+        self.set_weights()
 
 
     def __del__(self):
@@ -309,18 +309,19 @@ class Humanoid(object):
                 self.joint_displace[marker] = Tmax
 
 
-    def compute_weights(self):
+    def compute_weights(self, beta=1e-4):
         self.weights = {}
         displacements = np.array(self.joint_displace.values())
-        denom = np.sum(1. - np.exp(-self.beta * displacements))
+        denom = np.sum(1. - np.exp(-beta * displacements))
         for marker in self.labels:
             self.weights[marker] = (1. - np.exp(
-                -self.beta * self.joint_displace[marker])) / denom
+                -beta * self.joint_displace[marker])) / denom
 
 
     def set_weights(self):
         self.weights = {}
-        weights_aver_dic = json.load(open("WEIGHTS_AVER.json", 'r'))
+        KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
+        weights_aver_dic = KINECT_INFO["weights"]
         weights_arr = weights_aver_dic[self.name]
         for markerID, marker_name in enumerate(self.labels):
             self.weights[marker_name] = weights_arr[markerID]
