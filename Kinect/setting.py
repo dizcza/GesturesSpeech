@@ -9,7 +9,7 @@ def compute_thresholds():
     """
      Updates bottom and top displacement thresholds.
     """
-    for root, _, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
+    for root, _, logs in os.walk(KINECT_PATH + "Training\\"):
         for log in logs:
             full_filename = os.path.join(root, log)
             if full_filename.endswith(".txt"):
@@ -18,13 +18,13 @@ def compute_thresholds():
     print "Tmin: %f; \t Tmax: %f" % (Tmin, Tmax)
 
 
-def compute_weights(beta):
+def compute_weights(beta, mode="oneHand"):
     """
      Computes aver weights from the Training dataset.
     """
     KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
     weights_aver = {}
-    for root, _, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
+    for root, _, logs in os.walk(KINECT_PATH + "Training\\"):
         weights_within = []
         gesture_class = ""
         for log in logs:
@@ -32,7 +32,7 @@ def compute_weights(beta):
             if full_filename.endswith(".txt"):
                 gest = Humanoid(full_filename)
                 gesture_class = gest.name
-                gest.compute_displacement(mode="oneHand")
+                gest.compute_displacement(mode)
                 gest.compute_weights(beta)
                 w = gest.get_weights()
                 weights_within.append(w)
@@ -207,7 +207,7 @@ def choose_beta():
     best_beta = possible_betas[ind]
     print "BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta)
     end = time.time()
-    print "\t Duration: %g s" % (end - begin)
+    print "\t Duration: ~%d m" % (end - begin) / 60.
 
     plt.plot(np.log(possible_betas), obtained_ratios, 'o')
     plt.xlabel("betas, log")

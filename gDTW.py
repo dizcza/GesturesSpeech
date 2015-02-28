@@ -40,7 +40,7 @@ def swap_first_two_cols(data):
 
 def compare(known_gest, unknown_gest):
     """
-     Input gestures must have get_norm_data() method!
+     Input gestures must have get_norm_data() and get_weights() methods!
     :param known_gest: sequence known to be in some gesture class
     :param unknown_gest: unknown test sequence
     :return: (float), similarity of the given gestures
@@ -62,12 +62,13 @@ def compare(known_gest, unknown_gest):
     return dist, cost, path
 
 
-def show_comparison(gest1, gest2):
+def show_comparison(known_gest, unknown_gest):
     """
      Shows the result of gestures comparison.
-    :param gest1, gest2: some 3d-gestures
+    :param known_gest, unknown_gest: some 3d-gestures
     """
-    dist, cost, path = compare(gest1, gest2)
+    dist, cost, path = compare(known_gest, unknown_gest)
+    # print unknown_gest.shoulder_length * dist * cost.shape[0] / 20. * 100.
     print 'Minimum distance found: %.4f' % dist
     print "x-path (first gesture frames):\n", path[0]
     print "y-path (second gesture frames):\n", path[1]
@@ -75,8 +76,8 @@ def show_comparison(gest1, gest2):
     plt.plot(path[0], path[1], 'w')
     plt.xlim((-0.5, cost.shape[0]-0.5))
     plt.ylim((-0.5, cost.shape[1]-0.5))
-    plt.xlabel("FRAMES #1")
-    plt.ylabel("FRAMES #2")
+    plt.xlabel("FRAMES #1: %s" % known_gest.name)
+    plt.ylabel("FRAMES #2: (unknown)")
     plt.title("DTW frames path")
     plt.show()
 

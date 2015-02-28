@@ -71,7 +71,7 @@
   </tr>  
   
   <tr>
-    <td rowspan="3">Kinect</td>
+    <td rowspan="4">Kinect</td>
     <td>reader.py</td>
     <td>Humanoid class implementaion</td>
   </tr>
@@ -82,6 +82,10 @@
   <tr>
     <td>testing.py</td>
     <td>testing and comparing Kinect motion gestures</td>
+  </tr>
+  <tr>
+    <td>KINECT_INFO.json</td>
+    <td>includes the necessary info and chosen params for the Kinect project</td>
   </tr>
   
 </table> 

@@ -11,7 +11,6 @@ Reference:
 }
 """
 
-import os
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
@@ -27,6 +26,7 @@ Tmin = .007
 Tmax = .075
 HAND_MARKERS = np.array(["HandLeft",  "WristLeft",  "ElbowLeft",
                          "HandRight", "WristRight", "ElbowRight"])
+
 
 def convert_time(string):
     """
@@ -86,6 +86,7 @@ class Humanoid(object):
         Data can be downloaded from the reference below:
             http://datascience.sehir.edu.tr/visapp2013/
     """
+
     def __init__(self, filename):
         """
          Creates a gesture from Kinect folder.
@@ -119,6 +120,9 @@ class Humanoid(object):
 
 
     def get_norm_data(self):
+        """
+        :return: (#markers, #frames, 3) normalized data
+        """
         return self.norm_data
 
 
@@ -138,6 +142,9 @@ class Humanoid(object):
 
 
     def get_weights(self):
+        """
+        :return: (#markers,) ravelled array of weights
+        """
         weights_ordered = []
         for marker in self.labels:
             weights_ordered.append(self.weights[marker])
@@ -179,6 +186,10 @@ class Humanoid(object):
 
 
     def define_moving_markers(self, mode):
+        """
+         Sets moving markers, w.r.t. mode.
+        :param mode: whether use one or both hands
+        """
         self.moving_markers = np.array([])
         if mode == "oneHand":
             for marker in self.labels:
@@ -310,6 +321,10 @@ class Humanoid(object):
 
 
     def compute_weights(self, beta=1e-4):
+        """
+         Computes weights to be used in DTW.
+        :param beta: param to be chosen during the training
+        """
         self.weights = {}
         displacements = np.array(self.joint_displace.values())
         denom = np.sum(1. - np.exp(-beta * displacements))
@@ -319,6 +334,9 @@ class Humanoid(object):
 
 
     def set_weights(self):
+        """
+         Sets loaded weihts from KINECT_INFO
+        """
         self.weights = {}
         KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
         weights_aver_dic = KINECT_INFO["weights"]
