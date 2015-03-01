@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import numpy as np
+from numpy.linalg import norm
 
 
 def diff(data, step=1):

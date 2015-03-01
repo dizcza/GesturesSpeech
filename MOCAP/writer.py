@@ -2,7 +2,7 @@
 
 import btk
 import os
-from reader import *
+from splitter import *
 
 
 def rewrite_files_in(folder):

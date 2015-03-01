@@ -1,21 +1,11 @@
 # coding = utf-8
+
 from reader import *
 from gDTW import compare, show_comparison
 import os
 import time
-
-
-def compute_thresholds():
-    """
-     Updates bottom and top displacement thresholds.
-    """
-    for root, _, logs in os.walk(KINECT_PATH + "Training\\"):
-        for log in logs:
-            full_filename = os.path.join(root, log)
-            if full_filename.endswith(".txt"):
-                gest = Humanoid(full_filename)
-                gest.upd_thr("oneHand")
-    print "Tmin: %f; \t Tmax: %f" % (Tmin, Tmax)
+import json
+import matplotlib.pyplot as plt
 
 
 def compute_weights(beta, mode="oneHand"):
@@ -30,7 +20,7 @@ def compute_weights(beta, mode="oneHand"):
         for log in logs:
             full_filename = os.path.join(root, log)
             if full_filename.endswith(".txt"):
-                gest = Humanoid(full_filename)
+                gest = HumanoidKinect(full_filename)
                 gesture_class = gest.name
                 gest.compute_displacement(mode)
                 gest.compute_weights(beta)
@@ -41,9 +31,8 @@ def compute_weights(beta, mode="oneHand"):
             weights_aver[gesture_class] = np.average(weights_within, axis=0).tolist()
     KINECT_INFO["weights"] = weights_aver
 
-    json.dump(weights_aver, open("WEIGHTS_AVER.json", 'w'))
     json.dump(KINECT_INFO,  open("KINECT_INFO.json",  'w'))
-    print "New weights are saved in KINECT_INFO.json and WEIGHTS_AVER.json."
+    print "New weights are saved in KINECT_INFO.json"
 
 
 def compute_within_variance():
@@ -54,37 +43,34 @@ def compute_within_variance():
     print "COMPUTING WITHIN VARIANCE"
     
     KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
-    overall_within_var = []
+    one_vs_the_same_var = []
     for root, _, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
         log_examples = [_log for _log in logs if _log.endswith(".txt")]
 
         if not any(log_examples):
             continue
 
-        withing_var = []
         while len(log_examples) > 1:
             first_log = os.path.join(root, log_examples[0])
-            firstGest = Humanoid(first_log)
+            firstGest = HumanoidKinect(first_log)
 
             for another_log in log_examples[1:]:
                 full_filename = os.path.join(root, another_log)
-                goingGest = Humanoid(full_filename)
+                goingGest = HumanoidKinect(full_filename)
                 dist = compare(firstGest, goingGest)[0]
-                withing_var.append(dist)
+                one_vs_the_same_var.append(dist)
+
             log_examples.pop(0)
 
-        aver_within_class_var = np.average(withing_var)
 
-        overall_within_var.append(aver_within_class_var)
+    WITHIN_VAR = np.average(one_vs_the_same_var)
+    within_std = np.std(one_vs_the_same_var)
 
-    AVER_WITHIN_VAR = np.average(overall_within_var)
-    within_std = np.std(overall_within_var)
-
-    KINECT_INFO["within_variance"] = AVER_WITHIN_VAR
+    KINECT_INFO["within_variance"] = WITHIN_VAR
     KINECT_INFO["within_std"] = within_std
     json.dump(KINECT_INFO, open("KINECT_INFO.json", 'w'))
 
-    info = "Done with: \n\t within-var: %g \n\t " % AVER_WITHIN_VAR
+    info = "Done with: \n\t within-var: %g \n\t " % WITHIN_VAR
     info += "within-std: %g\n" % within_std
     print info
 
@@ -97,7 +83,7 @@ def compute_between_variance():
     print "COMPUTING BETWEEN VARIANCE"
     
     KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
-    overall_between_var = []
+    one_vs_others_var = []
     dirs = os.listdir(KINECT_PATH + "Training")
     roots = [KINECT_PATH + "Training\\" + one for one in dirs]
 
@@ -106,38 +92,28 @@ def compute_between_variance():
         dirs_left = roots[1:]
         print "\tComparing %s with the others ..." % first_dir.split("\\")[-1]
 
-        folder_vs_folders_left_var = []
-
         for first_log in os.listdir(first_dir):
             first_log_full = os.path.join(first_dir, first_log)
-            firstGest = Humanoid(first_log_full)
-
-            first_vs_others_var = []
+            firstGest = HumanoidKinect(first_log_full)
 
             for other_dir in dirs_left:
                 indir_var = []
                 for other_log in os.listdir(other_dir):
                     full_filename = os.path.join(other_dir, other_log)
-                    goingGest = Humanoid(full_filename)
+                    goingGest = HumanoidKinect(full_filename)
                     dist = compare(firstGest, goingGest)[0]
-                    indir_var.append(dist)
-
-                first_vs_others_var.append(np.average(indir_var))
-
-            folder_vs_folders_left_var.append(np.average(first_vs_others_var))
-
-        overall_between_var.append(np.average(folder_vs_folders_left_var))
+                    one_vs_others_var.append(dist)
 
         roots.pop(0)
 
-    AVER_BETWEEN_VAR = np.average(overall_between_var)
-    between_std = np.std(overall_between_var)
+    BETWEEN_VAR = np.average(one_vs_others_var)
+    between_std = np.std(one_vs_others_var)
 
-    KINECT_INFO["between_variance"] = AVER_BETWEEN_VAR
+    KINECT_INFO["between_variance"] = BETWEEN_VAR
     KINECT_INFO["between_std"] = between_std
     json.dump(KINECT_INFO, open("KINECT_INFO.json", 'w'))
 
-    info = "Done with: \n\t between-var: %g \n\t " % AVER_BETWEEN_VAR
+    info = "Done with: \n\t between-var: %g \n\t " % BETWEEN_VAR
     info += "between-std: %g\n" % between_std
     print info
 
@@ -217,6 +193,6 @@ def choose_beta():
 
 
 # update_ratio()
-# choose_beta()
+choose_beta()
 
 
