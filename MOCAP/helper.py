@@ -1,8 +1,9 @@
 # coding=utf-8
 
 import numpy as np
-# from files_modifier import *
 import btk
+import os
+import shutil
 
 
 def print_info(filename):
@@ -36,7 +37,7 @@ def print_info(filename):
         # print acq.GetPoint(i).GetValues()
 
 
-def check_for_missed(data):
+def get_corrupted_frames(data):
     """
      Checks for values in data being zeros.
     :param data: (#markers, #frames, 3) ndarray of 3d points data
@@ -48,3 +49,87 @@ def check_for_missed(data):
             corrupted_frames.append(frame)
     return corrupted_frames
 
+
+def init_frame(filename):
+    """
+    :param filename: .c3d-file
+    :return: init (relaxed) frame pertains to the filename.c3d
+    """
+    short_name = filename.split('\\')[-1]
+    initFrames = {
+        "M1_02_v2.c3d": 280,
+        "M2_02.c3d": 405,
+        "M3_01.c3d": 785,
+        "M4_01.c3d": 1470,
+        "M5_01.c3d": 660,
+        "M6_01.c3d": 400,
+        "M7_01.c3d": 400,
+        "M8_01.c3d": 500,
+        "M9_01.c3d": 500,
+
+        "C1_mcraw.c3d": 795,
+        "C2_mcraw.c3d": 420,
+        "C3_mcraw.c3d": 850,
+
+        "D1_mcraw001.c3d": 740,
+        "D2_mcraw001.c3d": 780,
+        "D3_mcraw001.c3d": 740,
+        "D4_mcraw001.c3d": 800,
+
+        "F1_mcraw.c3d": 755,
+        "F2_mcraw.c3d": 1150,
+        "F3_mcraw.c3d": 815,
+        "F4_mcraw.c3d": 385,
+        "F5_mcraw.c3d": 1055,
+
+        "H1_mcraw.c3d": 800,
+        "H2_mcraw.c3d": 450,
+        "H3_mcraw.c3d": 520,
+        "H4_mcraw.c3d": 450,
+        "H5_mcraw.c3d": 700,
+        "H6_mcraw.c3d": 1000,
+
+        "N1_mcraw002.c3d": 285,
+        "N2_mcraw002.c3d": 440,
+        "N3_mcraw001.c3d": 450,
+
+        "S1_mcraw001.c3d": 570,
+        "S2_mcraw001.c3d": 430,
+        "S3_mcraw001.c3d": 580,
+        "S4_mcraw001.c3d": 400,
+        "S5_mcraw001.c3d": 500,
+        "S6_mcraw001.c3d": 380,
+        "S7_mcraw001.c3d": 450,
+        "S8_mcraw001.c3d": 510,
+    }
+
+    if short_name in initFrames.keys():
+        return initFrames[short_name]
+    else:
+        return 0
+
+
+def separate_dataset():
+    """
+     0's samples will be for training
+     1's samples will be for testing
+    """
+    splitAll = "D:\GesturesDataset\splitAll"
+    trn_folder = splitAll + "\\Training"
+    tst_folder = splitAll + "\\Testing"
+
+    if not os.path.exists(trn_folder):
+        os.mkdir(trn_folder)
+    if not os.path.exists(tst_folder):
+        os.mkdir(tst_folder)
+
+    for c3d_file in os.listdir(splitAll):
+        src = os.path.join(splitAll, c3d_file)
+        if c3d_file.endswith("_sample0.c3d"):
+            shutil.copy(src, trn_folder)
+        elif c3d_file.endswith("_sample1.c3d"):
+            shutil.copy(src, tst_folder)
+
+
+if __name__ == "__main__":
+    separate_dataset()

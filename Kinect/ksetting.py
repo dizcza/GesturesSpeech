@@ -1,6 +1,6 @@
 # coding = utf-8
 
-from reader import *
+from kreader import *
 from gDTW import compare, show_comparison
 import os
 import time

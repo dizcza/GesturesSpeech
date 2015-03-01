@@ -49,6 +49,14 @@ class HumanoidBasic(object):
         """
         return self.norm_data
 
+    def get_hand_norm_data(self):
+        """
+        :return: (#hand_markers, #frames, 3) normalized data,
+                 pertains to hand joints
+        """
+        hand_ids = self.get_ids(*self.hand_markers)
+        return self.norm_data[hand_ids, ::]
+
     def get_ids(self, *args):
         """
          Gets specific data ids by marker_names keys.
@@ -63,8 +71,18 @@ class HumanoidBasic(object):
         else:
             return ids
 
+    def get_hand_weights(self):
+        if not any(self.moving_markers):
+            self.define_moving_markers(None)
+        hweights_ordered = []
+        for marker in self.labels:
+            if marker in self.hand_markers:
+                hweights_ordered.append(self.weights[marker])
+        return hweights_ordered
+
     def get_weights(self):
         """
+        :param mode: seek only prime body joints or not
         :return: (#markers,) ravelled array of weights
         """
         weights_ordered = []

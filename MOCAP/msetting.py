@@ -1,6 +1,6 @@
 # coding = utf-8
 
-from reader import *
+from mreader import *
 from gDTW import compare, show_comparison
 import os
 import time
@@ -45,19 +45,16 @@ def compute_between_variance():
     trn_folder = "D:\GesturesDataset\splitAll\Training"
     one_vs_others_var = []
 
-    trn_files = os.listdir(trn_folder)
-    while len(trn_files) > 1:
-        first_file = os.path.join(trn_folder, trn_files[0])
-        firstGest = HumanoidUkr(first_file)
-        print "\tComparing %s with the others..." % trn_files[0]
+    samples = []
+    trn_logs = os.listdir(trn_folder)
+    for log in trn_logs:
+        fname = os.path.join(trn_folder, log)
+        samples.append(HumanoidUkr(fname))
 
-        for other_file in trn_files[1:]:
-            filename = os.path.join(trn_folder, other_file)
-            goingGest = HumanoidUkr(filename)
-            dist = compare(firstGest, goingGest)[0]
+    for first_id in range(len(trn_logs)):
+        for other_id in range(first_id, len(trn_folder)):
+            dist = compare(samples[first_id], samples[other_id])
             one_vs_others_var.append(dist)
-
-        trn_files.pop(0)
 
     BETWEEN_VAR = np.average(one_vs_others_var)
     between_std = np.std(one_vs_others_var)

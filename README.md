@@ -8,7 +8,24 @@
 
 <video src="video_example.mp4" width="320" height="200" controls preload></video>
 
-<h6>Projects:</h6>
+<p>Projects kernel summary:</p>
+<table style="width:100%">
+  <tr>
+    <th>script</th>
+    <th>file info</th>
+  </tr>
+  <tr>
+    <td>humanoid</td>
+    <td>HumanoidBasic class: super class for both projects</td>
+  </tr>
+  <tr>
+    <td>gDTW</td>
+    <td>gesture weighted DTW algorithm implementation</td>
+  </tr>
+</table>
+
+
+<h6>Projects info:</h6>
 <ul>
   <li>MoCap (Motion Capture):
     <ul>
@@ -41,9 +58,21 @@
   </tr>
   
   <tr>
-    <td rowspan="7">MoCap</td>
+    <td rowspan="10">MoCap</td>
     <td>files_modifier.py</td>
     <td>changes orientation XYZ by default (Z should measure human height)</td>	
+  </tr>
+  <tr>
+    <td>mreader.py</td>
+    <td>MoCap C3D files reader</td>
+  </tr>
+  <tr>
+    <td>msetting.py</td>
+    <td>MoCap training part</td>
+  </tr>
+  <tr>
+    <td>mtesting.py</td>
+    <td>MoCap testing part</td>
   </tr>
   <tr>
     <td>helper.py</td>
@@ -54,16 +83,16 @@
     <td>contains all 83 markers (labels) names with init (relaxed) frame for each .c3d file</td>
   </tr>
   <tr>
-    <td><b><i>main.py<b></i></td>
-    <td><i>main file to work with .c3d files</i></td>
-  </tr>
-  <tr>
     <td>math_kernel.py</td>
     <td>provides necessary math function</td>
   </tr>
   <tr>
-    <td>plotter.py</td>
-    <td>displays animation</td>
+    <td>splitter.py</td>
+    <td>HumanoidUkrSplitter class implementation</td>
+  </tr>
+  <tr>
+    <td>troubles_hunter.py</td>
+    <td>checks split C3D files for having troubles and shows them if any</td>
   </tr>
   <tr>
     <td>valid_labels.txt</td>
@@ -72,16 +101,16 @@
   
   <tr>
     <td rowspan="4">Kinect</td>
-    <td>reader.py</td>
-    <td>Humanoid class implementaion</td>
+    <td>kreader.py</td>
+    <td>Kinect txt files reader</td>
   </tr>
   <tr>
-    <td>setting.py</td>
-    <td>tools for picking up the best parameters (training part)</td>
+    <td>ksetting.py</td>
+    <td>Kinect training part</td>
   </tr>
   <tr>
-    <td>testing.py</td>
-    <td>testing and comparing Kinect motion gestures</td>
+    <td>ktesting.py</td>
+    <td>Kinect testing part</td>
   </tr>
   <tr>
     <td>KINECT_INFO.json</td>

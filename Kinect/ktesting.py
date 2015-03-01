@@ -1,6 +1,6 @@
 # coding = utf-8
 from gDTW import compare, show_comparison
-from reader import *
+from kreader import *
 import os
 
 
@@ -67,7 +67,7 @@ def compare_test():
                 unknown_gest = HumanoidKinect(full_filename)
                 offset = []
                 for known_gest in patterns:
-                    dist = compare(known_gest, unknown_gest)[0]
+                    dist = compare(known_gest, unknown_gest)
                     offset.append(dist)
                 ind = np.argmin(offset)
                 possible_gest = patterns[ind]

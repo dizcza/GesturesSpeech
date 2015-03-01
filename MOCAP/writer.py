@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import btk
 import os
 from splitter import *
 
@@ -52,6 +51,13 @@ def change_orientation(filename, default_orient=(0, 2, 1)):
 
 
 def fill_missed_frame_and_save(filename, markerID, frame_missed):
+    """
+     Approximates missed frames.
+     Rewrites and saves the c3d file.
+    :param filename: c3d-fname
+    :param markerID: corrupted maker id
+    :param frame_missed: frames with problems
+    """
     reader = btk.btkAcquisitionFileReader()
     writer = btk.btkAcquisitionFileWriter()
 
@@ -139,6 +145,6 @@ def split_mult_files(folder_path, split_thr):
     """
     for c3d_file in os.listdir(folder_path):
         if c3d_file.endswith(".c3d"):
-            gest = HumanoidUkr(folder_path + c3d_file)
+            gest = HumanoidUkrSplitter(folder_path + c3d_file)
             double_pair = gest.get_double_border_frames(split_thr)
             split_file(folder_path, c3d_file, double_pair)

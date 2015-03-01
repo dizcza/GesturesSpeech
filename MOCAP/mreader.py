@@ -4,19 +4,21 @@ import btk
 from humanoid import HumanoidBasic
 import matplotlib.animation as animation
 from labelling import *
+from helper import init_frame
 
 
-def gather_points_data(acq):
+def gather_points_data(acq, step):
     """
     :param acq: acquisition from .c3d-file
     :return: (#markers, #frames, 3) ndarray of 3d points data
     """
     data = np.empty((3, acq.GetPointFrameNumber(), 1))
     for i in range(0, acq.GetPoints().GetItemNumber()):
-        label = acq.GetPoint(i).GetLabel()
-        data = np.dstack((data, acq.GetPoint(label).GetValues().T))
+        label_id = acq.GetPoint(i).GetLabel()
+        data = np.dstack((data, acq.GetPoint(label_id).GetValues().T))
     data = np.delete(data.T, 0, axis=0)  # first marker is noisy for this file (truly)
-    return data
+    frames_kept = np.arange(0, data.shape[1], step)
+    return data[:, frames_kept, :]
 
 
 class HumanoidUkr(HumanoidBasic):
@@ -27,25 +29,25 @@ class HumanoidUkr(HumanoidBasic):
     def __init__(self, c3d_file):
         HumanoidBasic.__init__(self)
         # TODO think about self.name: parse xlsx info
-        self.project = "MOCAP"
+        self.project = "MoCap"
         self.name = c3d_file.split('\\')[-1][:-12]
         reader = btk.btkAcquisitionFileReader()
         reader.SetFilename(c3d_file)
         reader.Update()
 
         # set info
-        self.acq = reader.GetOutput()
-        self.frames = self.acq.GetPointFrameNumber()
-        self.fps = self.acq.GetPointFrequency()
+        acq = reader.GetOutput()
+        self.fps = acq.GetPointFrequency()
 
         # dealing with markers
-        self.labels = gather_labels(self.acq)
+        self.labels = gather_labels(acq)
         self.markers_total = len(self.labels)
-        self.hand_markers = get_hand_labels()
+        self.hand_markers = get_hand_labels(self.labels)
         self.shoulder_markers = ["LBSH", "CLAV", "RBSH"]
 
         # dealing with data
-        self.data = gather_points_data(self.acq)
+        self.data = gather_points_data(acq, step=15)
+        self.frames = self.data.shape[1]
         relaxed_frame = init_frame(c3d_file)
         self.init_pos = self.data[:, relaxed_frame, :]
 
@@ -62,6 +64,9 @@ class HumanoidUkr(HumanoidBasic):
 
 
     def estimate_hand_contribution(self):
+        """
+         Estimates how much each hand has been moving along the prev positions.
+        """
         if not any(self.joint_displace):
             self.compute_displacement(self)
         rhand_contrib = 0.
@@ -117,7 +122,7 @@ class HumanoidUkr(HumanoidBasic):
 
 
 if __name__ == "__main__":
-    gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest0_sample0.c3d")
+    gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest1_sample0.c3d")
     # gest.animate()
     print gest
     gest.show_displacement()

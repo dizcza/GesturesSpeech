@@ -1,11 +1,15 @@
 # coding=utf-8
 
-from reader import *
+from mreader import *
+from helper import get_corrupted_frames
+import matplotlib.pyplot as plt
+import os
 
 
 class HumanoidUkrSplitter(HumanoidUkr):
     def __init__(self, filename):
         HumanoidUkr.__init__(self, filename)
+        self.corrupted = get_corrupted_frames(self.data)
 
 
     def compute_offset(self, mode="hands", step=1):
@@ -15,8 +19,9 @@ class HumanoidUkrSplitter(HumanoidUkr):
         :param step: number of frames per step
         """
         if mode == "hands":
-            data = self.data[self.hand_ids, ::]
-            init_pos = self.init_pos[self.hand_ids, :]
+            hand_ids = self.get_ids(self.hand_markers)
+            data = self.data[hand_ids, ::]
+            init_pos = self.init_pos[hand_ids, :]
         else:
             data = self.data
             init_pos = self.init_pos
@@ -102,6 +107,23 @@ class HumanoidUkrSplitter(HumanoidUkr):
         plt.legend(["offset", "relaxed pos"], numpoints=1)
 
         plt.show()
+
+
+def plot_them_all(folder):
+    """
+     Plots relaxed indices with their deviation from relaxed frame.
+    :param folder: path to folder with .c3d-files
+    """
+    for c3d_file in os.listdir(folder):
+        if c3d_file.endswith(".c3d"):
+            try:
+                fname = os.path.join(folder, c3d_file)
+                gest = HumanoidUkrSplitter(fname)
+                print "file: %s; \t frames: %d" % (c3d_file, gest.frames)
+                gest.plot_relaxed_indices()
+            except:
+                print "cannot describe %s" % c3d_file
+                continue
 
 
 if __name__ == "__main__":

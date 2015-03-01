@@ -1,5 +1,6 @@
 *.pyc
 temp.py
+training.py
 *.npy
 .idea
 MOCAP/animation

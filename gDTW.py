@@ -15,13 +15,40 @@ from numpy.linalg import norm
 from functools import partial
 
 
-def dist_measure(fdata1, fdata2, weights=None):
+def mydtw(data1, data2, weights):
+    """ Computes the DTW of two sequences.
+
+    :param ndarray data1: (#markers, #frames1, 3) data of the known gest
+    :param ndarray data1: (#markers, #frames2, 3) data of the unknown gest
+    :param weights: weights from the known gest
+    :return the minimum distance between tho given gests
+
+    """
+    r, c = data1.shape[1], data2.shape[1]
+    window = max(min(r, c) // 3, abs(r-c))
+
+    D = np.empty((r+1, c+1))
+    D[:, :] = np.inf
+    D[0, 0] = 0.
+
+    for i in range(1, r+1):
+        bottom = max(1, i-window)
+        top = min(c+1, i+window)
+        for j in range(bottom, top, 1):
+            cost = dist_measure(data1[:,i-1,:], data2[:,j-1,:], weights)
+            D[i, j] = cost + min(D[i-1, j-1], D[i-1, j], D[i, j-1])
+
+    dist = D[-1, -1] / (r + c)
+
+    return dist
+
+
+def dist_measure(fdata1, fdata2, weights):
     """
     :param fdata1, fdata2: (#markers, 3) framed points
     :return: dist, w.r.t. the same markers
     """
-    if weights == None:
-        weights = np.ones(fdata1.shape[0])
+    # weights = np.ones(fdata1.shape[0])
     return np.sum(norm(fdata1 - fdata2, axis=1) * weights)
 
 
@@ -39,6 +66,11 @@ def swap_first_two_cols(data):
 
 
 def modify_weights(gest, thrown_labels):
+    """
+    :param gest: known gest
+    :param thrown_labels: labels to be thrown out
+    :return: aligned and re-normalized weights
+    """
     weights_ordered = []
     for marker in gest.labels:
         if marker not in thrown_labels:
@@ -49,6 +81,11 @@ def modify_weights(gest, thrown_labels):
 
 
 def align_data_shape(known_gest, unknown_gest):
+    """
+    :param known_gest: sequence known to be in some gesture class
+    :param unknown_gest: unknown test sequence
+    :return: aligned both data to the same markers dimension
+    """
     throw_labels_known = []
     throw_labels_unknown = []
     for known_label in known_gest.labels:
@@ -76,19 +113,45 @@ def compare(known_gest, unknown_gest):
     :param unknown_gest: unknown test sequence
     :return: (float), similarity of the given gestures
     """
+    # data1 = known_gest.get_hand_norm_data()
+    # data2 = unknown_gest.get_hand_norm_data()
+    # weights = known_gest.get_hand_weights()
+
     data1 = known_gest.get_norm_data()
     data2 = unknown_gest.get_norm_data()
     weights = known_gest.get_weights()
-    # print data1.shape, data2.shape, weights.shape
+
+    if data1.shape[0] != data2.shape[0]:
+        data1, data2, weights = align_data_shape(known_gest, unknown_gest)
+        # print "aligned to ", data1.shape, data2.shape
+
+    if not data1.any() or not data2.any():
+        print "Incompatible data dimensions."
+        return np.inf
+
+    dist = mydtw(data1, data2, weights)
+
+    return dist
+
+
+def show_comparison(known_gest, unknown_gest):
+    """
+     Shows the result of gestures comparison.
+    :param known_gest, unknown_gest: some 3d-gestures
+    """
+    data1 = known_gest.get_norm_data()
+    data2 = unknown_gest.get_norm_data()
+    weights = known_gest.get_weights()
 
     if data1.shape[0] != data2.shape[0]:
         data1, data2, weights = align_data_shape(known_gest, unknown_gest)
         print "aligned to ", data1.shape, data2.shape
 
-
     if not data1.any() or not data2.any():
         print "Incompatible data dimensions."
         return np.inf
+
+    print mydtw(data1, data2, weights)
 
     # was: data.shape == (#markers, frames, 3)
     data1 = swap_first_two_cols(data1)
@@ -98,16 +161,6 @@ def compare(known_gest, unknown_gest):
     dist_measure_weighted = partial(dist_measure, weights=weights)
     dist, cost, path = dtw(data1, data2, dist=dist_measure_weighted)
 
-    return dist, cost, path
-
-
-def show_comparison(known_gest, unknown_gest):
-    """
-     Shows the result of gestures comparison.
-    :param known_gest, unknown_gest: some 3d-gestures
-    """
-    dist, cost, path = compare(known_gest, unknown_gest)
-    # print unknown_gest.shoulder_length * dist * cost.shape[0] / 20. * 100.
     print 'Minimum distance found: %.4f' % dist
     # print "x-path (first gesture frames):\n", path[0]
     # print "y-path (second gesture frames):\n", path[1]
