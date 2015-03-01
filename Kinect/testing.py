@@ -11,9 +11,10 @@ def in_folder():
     folder = KINECT_PATH + "Training\\RightHandPushUp\\"
     for log in os.listdir(folder):
         if log.endswith(".txt"):
-            gest = Humanoid(folder + log)
+            gest = HumanoidKinect(folder + log)
+            # gest.animate()
             gest.show_displacement()
-            gest.compute_displacement("oneHand")
+            gest.show_displacement("oneHand")
             gest.compute_weights()
             gest.set_weights()
             # gest.show_displacement("oneHand")
@@ -29,7 +30,7 @@ def compare_training():
     gestures = []
     for log in os.listdir(folder):
         if log.endswith(".txt"):
-            gest = Humanoid(folder + log)
+            gest = HumanoidKinect(folder + log)
             gest.set_weights()
             gestures.append(gest)
 
@@ -44,7 +45,7 @@ def collect_patterns():
     for root, _, logs in os.walk(KINECT_PATH + "Training\\"):
         if any(logs) and logs[0].endswith(".txt"):
             full_filename = os.path.join(root, logs[0])
-            gest = Humanoid(full_filename)
+            gest = HumanoidKinect(full_filename)
             pattern_gestures.append(gest)
     print "Took %d patterns as the first log in each training dir." % \
           len(pattern_gestures)
@@ -63,7 +64,7 @@ def compare_test():
         for test_log in logs:
             full_filename = os.path.join(root, test_log)
             if full_filename.endswith(".txt"):
-                unknown_gest = Humanoid(full_filename)
+                unknown_gest = HumanoidKinect(full_filename)
                 offset = []
                 for known_gest in patterns:
                     dist = compare(known_gest, unknown_gest)[0]
@@ -84,5 +85,5 @@ def compare_test():
     return Etest
 
 
-compare_test()
-# in_folder()
+# compare_test()
+in_folder()

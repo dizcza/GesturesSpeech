@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from reader import *
+from splitter import *
 import os
 
 

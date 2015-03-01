@@ -4,6 +4,10 @@ import numpy as np
 
 
 def gather_labels(acq):
+    """
+    :param acq: BTK acquisition
+    :return: label (marker) names
+    """
     labels = []
     for i in range(acq.GetPoints().GetItemNumber()):
         label = acq.GetPoint(i).GetLabel().split(":")[-1]
@@ -93,12 +97,8 @@ def get_hands_ids(given_labels):
     """
     hands_labels = get_hand_labels()
     hands_ids = []
-    # FIXME add logic: do not delete markers
-    given_labels.remove("RIDX3")
-    given_labels.remove("RPNK3")
     for label in hands_labels:
-        if label in given_labels:
-            hands_ids.append(given_labels.index(label))
+        hands_ids.append(given_labels.index(label))
     return hands_ids
 
 
