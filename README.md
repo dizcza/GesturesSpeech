@@ -97,6 +97,7 @@ Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. As shown below
         </td>
     </tr>
 </table>
+
 <p>The second difference between the projects is that MoCap has only 1 training example and 1 testing example per unique gesture, while Kinect provides 20 training and 8 testing ones. Thus, we cannot compute the within class variance for the MoCap project -- only between class variance is availible for demonstration confidence measure (or discriminant ratio).</p>
 
 <p>When all hidden parameters are calculated and all weights are set for each gesture class, it's time to use WDTW to compare some unknown sequence (from a testing set) with a known one (from a training set).</p>
