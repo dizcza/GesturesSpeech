@@ -1,7 +1,9 @@
 # coding = utf-8
 
 from mreader import *
-from gDTW import compare, show_comparison
+from numpy.linalg import norm
+from Kinect.ksetting import init_info
+from gDTW import compare, show_comparison, wdtw, wdtw_windowed
 import os
 import time
 import json
@@ -34,7 +36,7 @@ def compute_weights(beta=1e-2):
     print "New weights are saved in MOCAP_INFO.json"
 
 
-def compute_between_variance():
+def compute_between_variance(frame_step):
     """
      Computes aver between variance from the Training dataset.
     """
@@ -49,11 +51,11 @@ def compute_between_variance():
     trn_logs = os.listdir(trn_folder)
     for log in trn_logs:
         fname = os.path.join(trn_folder, log)
-        samples.append(HumanoidUkr(fname))
+        samples.append(HumanoidUkr(fname, frame_step))
 
     for first_id in range(len(trn_logs)):
         for other_id in range(first_id, len(trn_folder)):
-            dist = compare(samples[first_id], samples[other_id])
+            dist = compare(samples[first_id], samples[other_id], dtw_chosen=wdtw)
             one_vs_others_var.append(dist)
 
     BETWEEN_VAR = np.average(one_vs_others_var)
@@ -67,81 +69,61 @@ def compute_between_variance():
     info += "between-std: %g\n" % between_std
     print info
 
-
-def init_info():
-    """
-     Initializes empty MOCAP_INFO.
-    """
-    MOCAP_INFO = {
-        "path": None,
-        "weights": {},
-        "beta": 1e-2,
-        "within_variance": 1.,
-        "between_variance": 1.,
-        "within_std": 0.,
-        "between_std": 0.,
-        "d-ratio": None
-    }
-    json.dump(MOCAP_INFO, open("MOCAP_INFO.json", 'w'))
-    return MOCAP_INFO
+    return BETWEEN_VAR, between_std
 
 
-def print_ratio():
-    """
-     Prints out discriminant ration from MOCAP_INFO.json
-    """
-    MOCAP_INFO = json.load(open("MOCAP_INFO.json", 'r'))
-    print "Loaded discriminant ratio: %g" % MOCAP_INFO["d-ratio"]
+def fps_dependency():
+    frame_step_range = np.arange(5, 100, 5)
+    between_vars, stds = [], []
+    for step in frame_step_range:
+        print "FRAME STEP: \t %d" % step
+        var, std = compute_between_variance(step)
+        between_vars.append(var)
+        stds.append(std)
+    freq = 120. / frame_step_range
+    plt.errorbar(freq, between_vars, stds, marker='^', ms=8)
+    plt.xlabel("data freq (fps), 1/s")
+    mean_std = 100. * np.average(stds)
+    plt.ylabel("between variance, std=%.1f%%" % mean_std)
+    plt.title("FPS dependency")
+    plt.savefig("fps.png")
+    plt.show()
 
 
-def update_ratio(beta=1e-4):
-    """
-     Updates weights, within and between variance for the given beta param.
-    :param beta: to be choosing to yield the biggest ratio
-    :return: discriminant ratio
-    """
-    if not os.path.exists("MOCAP_INFO.json"):
-        init_info()
-
-    compute_weights(beta)
-    compute_between_variance()
-    MOCAP_INFO = json.load(open("MOCAP_INFO.json", 'r'))
-    between_var = MOCAP_INFO["between_variance"]
-
-    MOCAP_INFO["d-ratio"] = between_var
-    print "(!) New discriminant ratio: %g" % MOCAP_INFO["d-ratio"]
-    json.dump(MOCAP_INFO, open("MOCAP_INFO.json", 'w'))
-
-    return MOCAP_INFO["d-ratio"]
-
-
-def choose_beta():
+def choose_beta(frame_step):
     """
      Choosing the best beta to yield the biggest discriminant ratio.
     """
     begin = time.time()
-    possible_betas = [1e-6, 1e-4, 1e-2, 1., 1e1, 1e2, 1e3]
-    obtained_ratios = []
-    for beta in possible_betas:
-        ratio = update_ratio(beta)
-        obtained_ratios.append(ratio)
+    beta_range = [1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]
+    between_vars = []
+    between_stds = []
+    for beta in beta_range:
+        print "BETA: %1.e" % beta
+        compute_weights(beta)
+        var, std = compute_between_variance(frame_step)
+        between_vars.append(var)
+        between_stds.append(std)
 
-    print zip(possible_betas, obtained_ratios)
-    best_ratio = max(obtained_ratios)
-    ind = np.argmax(obtained_ratios)
-    best_beta = possible_betas[ind]
+    print zip(beta_range, between_vars, between_stds)
+    best_ratio = max(between_vars)
+    ind = np.argmax(between_vars)
+    best_beta = beta_range[ind]
     print "BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta)
     end = time.time()
-    print "\t Duration: ~%d m" % (end - begin) / 60.
+    print "\t Duration: ~%d m" % ((end - begin) / 60.)
 
-    plt.plot(np.log(possible_betas), obtained_ratios, 'o')
-    plt.xlabel("betas, log")
-    plt.ylabel("discriminant ratio")
-    plt.title("Picking up the best beta, which yields the biggest ratio")
+    plt.errorbar(np.log(beta_range), between_vars, between_stds, marker='^', ms=8)
+    plt.xlabel("beta, log")
+    std_mean = np.average(np.array(between_stds)/np.array(between_vars)) * 100.
+    plt.ylabel("between variance,  std=%.1f%%" % std_mean)
+    plt.title("Choosing the best beta")
+    plt.savefig("choosing_beta_stepxxx.png")
     plt.show()
 
 
-# update_ratio()
-# choose_beta()
-# compute_weights()
-compute_between_variance()
+if __name__ == "__main__":
+    # update_ratio()
+    # TODO run me...
+    choose_beta(frame_step=30)
+    # fps_dependency()

@@ -36,6 +36,9 @@ class HumanoidBasic(object):
         self.maxy = 0.
 
     def __str__(self):
+        """
+        :return: string representation of gesture
+        """
         s = "GESTURE: %s\n" % self.name
         s += "\t shoulder length: \t %.3f m\n" % self.shoulder_length
         s += "\t frames: \t\t\t %d\n" % self.frames
@@ -72,18 +75,20 @@ class HumanoidBasic(object):
             return ids
 
     def get_hand_weights(self):
+        """
+        :return array: (#hand_markers,) weights, pertains to hand markers
+        """
         if not any(self.moving_markers):
             self.define_moving_markers(None)
         hweights_ordered = []
         for marker in self.labels:
             if marker in self.hand_markers:
                 hweights_ordered.append(self.weights[marker])
-        return hweights_ordered
+        return np.array(hweights_ordered)
 
     def get_weights(self):
         """
-        :param mode: seek only prime body joints or not
-        :return: (#markers,) ravelled array of weights
+        :return array: (#markers,) ravelled array of weights
         """
         weights_ordered = []
         for marker in self.labels:
@@ -117,7 +122,7 @@ class HumanoidBasic(object):
     def define_moving_markers(self, mode):
         """
          Sets moving markers, w.r.t. mode.
-        :param mode: whether use one or both hands
+        :param mode: use both hand (by default) or only prime one
         """
         self.moving_markers = []
         for marker in self.labels:
@@ -127,6 +132,7 @@ class HumanoidBasic(object):
     def compute_displacement(self, mode=None):
         """
          Computes joints displacements.
+        :param mode: use both hand (by default) or only prime one
         """
         self.define_moving_markers(mode)
         for markerID in range(self.norm_data.shape[0]):
@@ -144,12 +150,15 @@ class HumanoidBasic(object):
             self.joint_displace[marker] = offset
             self.joint_std[marker] = j_std
 
-    def show_displacement(self, mode=None, rotation=0, fontsize=12):
+    def plot_displacement(self, mode, rotation, fontsize, add_error):
         """
          Plots a chart bar of joints displacements.
+        :param mode: use both hand (by default) or only prime one
+        :param rotation: labeled bar text rotation (Ox axis)
+        :param fontsize: labeled bar text font size (Ox axis)
+        :param add_error: whether to add bar error on plot or not
         """
-        if not any(self.joint_displace):
-            self.compute_displacement(mode)
+        self.compute_displacement(mode)
 
         self.fig = plt.figure()
         ax = self.fig.add_subplot(111)
@@ -162,16 +171,18 @@ class HumanoidBasic(object):
 
         ind = np.arange(len(offset_list))
         width = 0.5
-        ax.bar(ind, offset_list, width, yerr=joint_std_list,
-               error_kw=dict(elinewidth=2, ecolor='red'))
+        if add_error:
+            ax.bar(ind, offset_list, width, yerr=joint_std_list,
+                   error_kw=dict(elinewidth=2, ecolor='red'))
+        else:
+            ax.bar(ind, offset_list, width)
         ax.set_xlim(xmin=0)
         ax.set_ylim(ymin=0)
         ax.set_xticks(ind+width/2)
         ax.set_title("%s joint displacements" % self.name)
-        ax.set_ylabel("displacement, norm units")
+        ax.set_ylabel("displacement / frames,  norm units")
         xtickNames = ax.set_xticklabels(self.moving_markers)
         plt.setp(xtickNames, rotation=rotation, fontsize=fontsize)
-        plt.show()
 
     def init_3d(self):
         """

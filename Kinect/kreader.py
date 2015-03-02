@@ -12,6 +12,7 @@ Reference:
 """
 
 from humanoid import HumanoidBasic
+import matplotlib.pyplot as plt
 import numpy as np
 
 KINECT_PATH = "D:\GesturesDataset\KINECT\\"
@@ -103,11 +104,10 @@ class HumanoidKinect(HumanoidBasic):
         self.preprocessing()
         self.set_weights()
 
-
     def define_moving_markers(self, mode):
         """
          Sets moving markers, w.r.t. mode.
-        :param mode: whether use one or both hands
+        :param mode: use both hand (by default) or only prime one
         """
         self.moving_markers = np.array([])
         if mode == "oneHand":
@@ -116,3 +116,17 @@ class HumanoidKinect(HumanoidBasic):
                     self.moving_markers = np.append(self.moving_markers, marker)
         else:
             HumanoidBasic.define_moving_markers(self, mode)
+
+    def show_displacement(self, mode=None):
+        """
+        :param mode: use both hand (by default) or only prime one
+        """
+        HumanoidBasic.plot_displacement(self, mode, rotation=0, fontsize=12, add_error=True)
+        plt.show()
+
+
+if __name__ == "__main__":
+    gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\LeftHandWave\LeftHandWave_000.txt")
+    # gest.animate()
+    print gest
+    gest.show_displacement()

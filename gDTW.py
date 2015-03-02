@@ -15,7 +15,7 @@ from numpy.linalg import norm
 from functools import partial
 
 
-def mydtw(data1, data2, weights):
+def wdtw_windowed(data1, data2, weights):
     """ Computes the DTW of two sequences.
 
     :param ndarray data1: (#markers, #frames1, 3) data of the known gest
@@ -25,7 +25,7 @@ def mydtw(data1, data2, weights):
 
     """
     r, c = data1.shape[1], data2.shape[1]
-    window = max(min(r, c) // 3, abs(r-c))
+    window = max(r // 2, abs(r-c))
 
     D = np.empty((r+1, c+1))
     D[:, :] = np.inf
@@ -35,6 +35,31 @@ def mydtw(data1, data2, weights):
         bottom = max(1, i-window)
         top = min(c+1, i+window)
         for j in range(bottom, top, 1):
+            cost = dist_measure(data1[:,i-1,:], data2[:,j-1,:], weights)
+            D[i, j] = cost + min(D[i-1, j-1], D[i-1, j], D[i, j-1])
+
+    dist = D[-1, -1] / (r + c)
+
+    return dist
+
+
+def wdtw(data1, data2, weights):
+    """ Computes the DTW of two sequences.
+
+    :param ndarray data1: (#markers, #frames1, 3) data of the known gest
+    :param ndarray data1: (#markers, #frames2, 3) data of the unknown gest
+    :param weights: weights from the known gest
+    :return the minimum distance between tho given gests
+
+    """
+    r, c = data1.shape[1], data2.shape[1]
+
+    D = np.zeros((r+1, c+1))
+    D[0, 1:] = np.inf
+    D[1:, 0] = np.inf
+
+    for i in range(1, r+1):
+        for j in range(1, c+1):
             cost = dist_measure(data1[:,i-1,:], data2[:,j-1,:], weights)
             D[i, j] = cost + min(D[i-1, j-1], D[i-1, j], D[i, j-1])
 
@@ -106,7 +131,7 @@ def align_data_shape(known_gest, unknown_gest):
     return data1, data2, weights
 
 
-def compare(known_gest, unknown_gest):
+def compare(known_gest, unknown_gest, dtw_chosen=wdtw):
     """
      Input gestures must have get_norm_data() and get_weights() methods!
     :param known_gest: sequence known to be in some gesture class
@@ -126,10 +151,12 @@ def compare(known_gest, unknown_gest):
         # print "aligned to ", data1.shape, data2.shape
 
     if not data1.any() or not data2.any():
-        print "Incompatible data dimensions."
+        print "Incompatible data dimensions. Returned np.inf"
         return np.inf
 
-    dist = mydtw(data1, data2, weights)
+    dist = dtw_chosen(data1, data2, weights)
+    if dist == np.inf:
+        print "WARNING: dtw comparison gave np.inf"
 
     return dist
 
@@ -150,8 +177,6 @@ def show_comparison(known_gest, unknown_gest):
     if not data1.any() or not data2.any():
         print "Incompatible data dimensions."
         return np.inf
-
-    print mydtw(data1, data2, weights)
 
     # was: data.shape == (#markers, frames, 3)
     data1 = swap_first_two_cols(data1)

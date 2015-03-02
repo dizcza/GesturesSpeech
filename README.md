@@ -4,7 +4,9 @@
 </head>
 
 <body>
-<p align="center"><i>This repo provides the instruments to work with Motion Capture data, which include Ukrainian gestures.</i></p>
+<p align="center"><i>This repo provides the instruments for both projects:
+(1) Ukrainian gestures, captured with MoCap C3D technology, and (2) basic hand motions,
+captured with Microsoft Kinect sensor.</i></p>
 
 <video src="video_example.mp4" width="320" height="200" controls preload></video>
 
@@ -50,90 +52,87 @@
     </ul>
 </ul>
 
+
+<p>The main idea in gesture recognition is to maximize between class variance <i>Db</i> and minimize within class variance <i>Dw</i> by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">proposed</a>.</p>
+
+<p>It's obvious, that a joint which is active in one gesture class may not be active in another gesture class. Hence weights have to be adjusted accordingly.
+As Reyes et al. (2011) has observed, only six out of the 20 joints contribute in identifying a hand gesture: left hand, right hand, left wrist, right wrist, left elbow, right elbow. For example, for the right-hand-push-up gesture, one would expect the right hand, right elbow and right wrist joints to have large weights, but to have smaller weights for the left-hand-push-up gesture. We propose to use only 3 of them, w.r.t. to the left or right hand.</p>
+
+<p>The main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 6 hand markers while MoCap projects operates with 50 (25 x 2) hand markers. Their contribution in the motion is shown below as an average joint's displacement per frame (measured in normalized units).
+</p>
 <table style="width:100%">
-  <tr>
-    <th>Project</th>
-    <th>script</th>
-    <th>file info</th>	
-  </tr>
-  
-  <tr>
-    <td rowspan="10">MoCap</td>
-    <td>files_modifier.py</td>
-    <td>changes orientation XYZ by default (Z should measure human height)</td>	
-  </tr>
-  <tr>
-    <td>mreader.py</td>
-    <td>MoCap C3D files reader</td>
-  </tr>
-  <tr>
-    <td>msetting.py</td>
-    <td>MoCap training part</td>
-  </tr>
-  <tr>
-    <td>mtesting.py</td>
-    <td>MoCap testing part</td>
-  </tr>
-  <tr>
-    <td>helper.py</td>
-    <td>prints info about open .c3d file</td>
-  </tr>
-  <tr>
-    <td>labelling.py</td>
-    <td>contains all 83 markers (labels) names with init (relaxed) frame for each .c3d file</td>
-  </tr>
-  <tr>
-    <td>math_kernel.py</td>
-    <td>provides necessary math function</td>
-  </tr>
-  <tr>
-    <td>splitter.py</td>
-    <td>HumanoidUkrSplitter class implementation</td>
-  </tr>
-  <tr>
-    <td>troubles_hunter.py</td>
-    <td>checks split C3D files for having troubles and shows them if any</td>
-  </tr>
-  <tr>
-    <td>valid_labels.txt</td>
-    <td>list of 83 valid body joints names</td>
-  </tr>  
-  
-  <tr>
-    <td rowspan="4">Kinect</td>
-    <td>kreader.py</td>
-    <td>Kinect txt files reader</td>
-  </tr>
-  <tr>
-    <td>ksetting.py</td>
-    <td>Kinect training part</td>
-  </tr>
-  <tr>
-    <td>ktesting.py</td>
-    <td>Kinect testing part</td>
-  </tr>
-  <tr>
-    <td>KINECT_INFO.json</td>
-    <td>includes the necessary info and chosen params for the Kinect project</td>
-  </tr>
-  
-</table> 
+	<tr>
+		<th>Kinect</th>
+		<th>MoCap</th>
+	<tr>
+    <tr>
+        <td>
+            <img src="Kinect/joint_displacements.png"/>
+        </td>
+        <td>
+            <img src="MOCAP/joint_displacements.png"/>
+        </td>
+    </tr>
+</table>
+<p>Data preprocessing includes 2 steps:</p>
+<ol>
+    <li>Subtracting the shoulder center from all joints, which accounts for cases where the user is not in the center of the depth image.</li>
+    <li>Normalizing the data with the distance between the left and the right shoulders to account for the variations due to the person's size.</li>
+</ol>
+
+<p>Using the total displacement values of joints, the joint <i>j</i>'s weight value of class <i>g</i> is calculated via
+<div align="center"><img src="Kinect/formula_weights.PNG" align="middle"/></div>
+Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. As shown below, the max(<i>R</i>) is obtained when beta vanishes.</p>
+<table style="width:100%">
+	<tr>
+		<th>Kinect</th>
+		<th>MoCap</th>
+	<tr>
+    <tr>
+        <td>
+            <img src="Kinect/choosing_beta.png"/>
+        </td>
+        <td>
+            <img src="MOCAP/choosing_beta.png"/>
+        </td>
+    </tr>
+</table>
+
+<p>When all hidden parameters are calculated and all weights are set for each gesture class, it's time to use WDTW to compare some unknown sequence (from a testing set) with a known one (from a training set).</p>
+<table style="width:100%">
+	<tr>
+		<th>Kinect</th>
+		<th>MoCap</th>
+	<tr>
+    <tr>
+        <td>
+            <img src="Kinect/dtw_path.png"/>
+        </td>
+        <td>
+            <img src="MOCAP/dtw_path.png"/>
+        </td>
+    </tr>
+</table>
+
+<p>Using weighted DTW algorithm with only 3 crucial (hand) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) DTW algorithm with the same 3 body joints yields 22.5% out-of-sample error.</p>
+<p>At the same time, in MoCap project simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly,  there is only 1 training and 1 testing example per unique gesture in MoCap project and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.</p>
 
 <p>Free 3D Motion Capture visualizers:</p>
 <ul>
   <li><a href="http://b-tk.googlecode.com/svn/web/mokka/index.html">Mokka</a></li>
-  <li>A powerfull <a href="http://www.blender.org/">Blender</a> suite (look at <a href="http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender">here</a> to be able to import .c3d files)</li>
+  <li>A powerful <a href="http://www.blender.org/">Blender</a> suite (look at <a href="http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender">here</a> to be able to import C3D files)</li>
   <li><a href="http://www.c-motion.com/free-downloads/">Free CMO Reader</a></li>
 </ul>
 
 <p>Obligatory <a href="https://www.python.org/ftp/python/2.7/python-2.7.msi">Python 2.7</a> packages (can be found at http://www.lfd.uci.edu/~gohlke/pythonlibs/):</p>
 <ul>
   <li><a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">The Biomechanical ToolKit</a>
-  		to read and modify data from .c3d files</li>
+  		to read and modify data from C3D files</li>
   <li><a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <b>pyparsing</b>, <b>dateutil</b>, <b>pytz</b> and <b>six</b>)</li>
   <li><a href="http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download"> 		numpy</a></li>
   <li><a href="https://pypi.python.org/pypi/dtw/1.0">dtw</a> (dynamic time warping)</li>
 </ul>
+
 
 </body>
 </html>

@@ -1,18 +1,24 @@
 # coding = utf-8
 
-from kreader import *
+from kreader import HumanoidKinect, KINECT_PATH
+from numpy.linalg import norm
+import matplotlib.pyplot as plt
+import numpy as np
 from gDTW import compare, show_comparison
 import os
-import time
 import json
-import matplotlib.pyplot as plt
+import time
 
 
 def compute_weights(beta, mode="oneHand"):
     """
      Computes aver weights from the Training dataset.
     """
-    KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
+    try:
+        KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
+    except ValueError:
+        KINECT_INFO = init_info()
+
     weights_aver = {}
     for root, _, logs in os.walk(KINECT_PATH + "Training\\"):
         weights_within = []
@@ -57,11 +63,11 @@ def compute_within_variance():
             for another_log in log_examples[1:]:
                 full_filename = os.path.join(root, another_log)
                 goingGest = HumanoidKinect(full_filename)
-                dist = compare(firstGest, goingGest)[0]
+                # print first_log, another_log
+                dist = compare(firstGest, goingGest)
                 one_vs_the_same_var.append(dist)
 
             log_examples.pop(0)
-
 
     WITHIN_VAR = np.average(one_vs_the_same_var)
     within_std = np.std(one_vs_the_same_var)
@@ -90,18 +96,17 @@ def compute_between_variance():
     while len(roots) > 1:
         first_dir = roots[0]
         dirs_left = roots[1:]
-        print "\tComparing %s with the others ..." % first_dir.split("\\")[-1]
+        # print "\tComparing %s with the others ..." % first_dir.split("\\")[-1]
 
         for first_log in os.listdir(first_dir):
             first_log_full = os.path.join(first_dir, first_log)
             firstGest = HumanoidKinect(first_log_full)
 
             for other_dir in dirs_left:
-                indir_var = []
                 for other_log in os.listdir(other_dir):
                     full_filename = os.path.join(other_dir, other_log)
                     goingGest = HumanoidKinect(full_filename)
-                    dist = compare(firstGest, goingGest)[0]
+                    dist = compare(firstGest, goingGest)
                     one_vs_others_var.append(dist)
 
         roots.pop(0)
@@ -120,50 +125,49 @@ def compute_between_variance():
 
 def init_info():
     """
-     Initializes empty KINECT_INFO.
+     Initializes empty MOCAP_INFO.
     """
-    KINECT_INFO = {
-        "path": KINECT_PATH,
+    _INFO = {
         "weights": {},
-        "beta": 0.1,
-        "within_variance": 0.0407470426572,
-        "between_variance": 0.665986610366,
-        "within_std": .0,
-        "between_std": .0,
-        "d-ratio": 16.34441586273796
+        "beta": 1e-2,
+        "within_variance": 1.,
+        "between_variance": 1.,
+        "within_std": 0.,
+        "between_std": 0.,
+        "d-ratio": None,
+        "d-ratio-std": None
     }
-    json.dump(KINECT_INFO, open("KINECT_INFO.json", 'w'))
+    return _INFO
 
 
-def print_ratio():
-    """
-     Prints out discriminant ration from KINECT_INFO.json
-    """
-    KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
-    print "Loaded discriminant ratio: %g" % KINECT_INFO["d-ratio"]
-
-
-def update_ratio(beta=1e-4):
+def update_ratio(beta):
     """
      Updates weights, within and between variance for the given beta param.
     :param beta: to be choosing to yield the biggest ratio
     :return: discriminant ratio
     """
-    if not os.path.exists("KINECT_INFO.json"):
-        init_info()
 
     compute_weights(beta)
     compute_within_variance()
     compute_between_variance()
-    KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
-    between_var = KINECT_INFO["between_variance"]
-    within_var = KINECT_INFO["within_variance"]
+    _INFO = json.load(open("KINECT_INFO.json", 'r'))
 
-    KINECT_INFO["d-ratio"] = between_var / within_var
-    print "(!) New discriminant ratio: %g" % KINECT_INFO["d-ratio"]
-    json.dump(KINECT_INFO, open("KINECT_INFO.json", 'w'))
+    within_var = _INFO["within_variance"]
+    within_std = _INFO["within_std"]
+    between_var = _INFO["between_variance"]
+    between_std = _INFO["between_std"]
 
-    return KINECT_INFO["d-ratio"]
+    sigma_b = between_std / within_var
+    sigma_w = within_std * between_var / within_var ** 2
+    ratio_std = norm([sigma_b, sigma_w])
+
+    _INFO["d-ratio"] = between_var / within_var
+    _INFO["d-ratio-std"] = ratio_std
+
+    print "(!) New discriminant ratio: %g" % _INFO["d-ratio"]
+    json.dump(_INFO, open("KINECT_INFO.json", 'w'))
+
+    return _INFO["d-ratio"], ratio_std
 
 
 def choose_beta():
@@ -171,28 +175,33 @@ def choose_beta():
      Choosing the best beta to yield the biggest discriminant ratio.
     """
     begin = time.time()
-    possible_betas = [1e-6, 1e-4, 1e-2, 1., 1e1, 1e2, 1e3]
-    obtained_ratios = []
-    for beta in possible_betas:
-        ratio = update_ratio(beta)
-        obtained_ratios.append(ratio)
+    beta_range = [1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]
+    gained_ratios = []
+    gained_stds = []
+    for beta in beta_range:
+        print "BETA: %f" % beta
+        ratio, std = update_ratio(beta)
+        gained_ratios.append(ratio)
+        gained_stds.append(std)
 
-    print zip(possible_betas, obtained_ratios)
-    best_ratio = max(obtained_ratios)
-    ind = np.argmax(obtained_ratios)
-    best_beta = possible_betas[ind]
+    print zip(beta_range, gained_ratios, gained_stds)
+    best_ratio = max(gained_ratios)
+    ind = np.argmax(gained_ratios)
+    best_beta = beta_range[ind]
     print "BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta)
     end = time.time()
-    print "\t Duration: ~%d m" % (end - begin) / 60.
+    print "\t Duration: ~%d m" % ((end - begin) / 60.)
 
-    plt.plot(np.log(possible_betas), obtained_ratios, 'o')
-    plt.xlabel("betas, log")
+    plt.errorbar(np.log(beta_range), gained_ratios, gained_stds,
+                 linestyle='None', marker='^', ms=8)
+    plt.xlabel("beta, log")
     plt.ylabel("discriminant ratio")
-    plt.title("Picking up the best beta, which yields the biggest ratio")
+    plt.title("Choosing the best beta")
+    plt.savefig("choosing_beta.png")
     plt.show()
 
 
-# update_ratio()
-choose_beta()
-
+if __name__ == "__main__":
+    # update_ratio(beta=1e-2)
+    choose_beta()
 
