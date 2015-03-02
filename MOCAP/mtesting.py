@@ -13,14 +13,14 @@ def compare_workout():
     trn_folder = "D:\GesturesDataset\splitAll\Training"
     trn_logs = os.listdir(trn_folder)
 
-    first, second = trn_logs[0], trn_logs[74]
+    first, second = trn_logs[0], trn_logs[1:]
     first = os.path.join(trn_folder, first)
-    second = os.path.join(trn_folder, second)
+    firstGest = HumanoidUkr(first, frame_step=1)
 
-    firstGest = HumanoidUkr(first)
-    secondGest = HumanoidUkr(second)
-
-    show_comparison(firstGest, secondGest)
+    for log in second:
+        log = os.path.join(trn_folder, log)
+        secondGest = HumanoidUkr(log, frame_step=1)
+        show_comparison(firstGest, secondGest)
 
 
 def compare_them_all():
@@ -59,5 +59,5 @@ def compare_them_all():
     Etest = misclassified / total_samples
     print "Etest: %.2f" % Etest
 
-# compare_workout()
-compare_them_all()
+compare_workout()
+# compare_them_all()

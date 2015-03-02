@@ -86,4 +86,5 @@ def compare_test():
 
 
 # compare_test()
-in_folder()
+compare_training()
+# in_folder()

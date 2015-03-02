@@ -3,6 +3,7 @@
 import btk
 from humanoid import HumanoidBasic
 import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 from labelling import *
 from helper import init_frame
 
@@ -18,15 +19,16 @@ def gather_points_data(acq, step):
         data = np.dstack((data, acq.GetPoint(label_id).GetValues().T))
     data = np.delete(data.T, 0, axis=0)  # first marker is noisy for this file (truly)
     frames_kept = np.arange(0, data.shape[1], step)
-    return data[:, frames_kept, :]
+
+    # dealing with mm --> m
+    return data[:, frames_kept, :] / 1e3
 
 
 class HumanoidUkr(HumanoidBasic):
     """
      Creates an instance of Ukrainian Motion Capture gesture, saved in .c3d-format.
     """
-
-    def __init__(self, c3d_file):
+    def __init__(self, c3d_file, frame_step=5):
         HumanoidBasic.__init__(self)
         # TODO think about self.name: parse xlsx info
         self.project = "MoCap"
@@ -37,7 +39,7 @@ class HumanoidUkr(HumanoidBasic):
 
         # set info
         acq = reader.GetOutput()
-        self.fps = acq.GetPointFrequency()
+        self.fps = acq.GetPointFrequency() / frame_step
 
         # dealing with markers
         self.labels = gather_labels(acq)
@@ -46,7 +48,7 @@ class HumanoidUkr(HumanoidBasic):
         self.shoulder_markers = ["LBSH", "CLAV", "RBSH"]
 
         # dealing with data
-        self.data = gather_points_data(acq, step=15)
+        self.data = gather_points_data(acq, step=frame_step)
         self.frames = self.data.shape[1]
         relaxed_frame = init_frame(c3d_file)
         self.init_pos = self.data[:, relaxed_frame, :]
@@ -58,10 +60,16 @@ class HumanoidUkr(HumanoidBasic):
         self.preprocessing()
         self.set_weights()
 
-        # dealing with mm --> m
-        self.shoulder_length /= 1e3
-        self.std /= 1e3
-
+    def __str__(self):
+        """
+        :return: string representation of gesture
+        """
+        s = HumanoidBasic.__str__(self)
+        self.estimate_hand_contribution()
+        rhand = self.rhand_contib * 100.
+        lhand = 100. - rhand
+        s += "\n\t rhand x lhand: \t %.1f%% x %.1f%%" % (rhand, lhand)
+        return s
 
     def estimate_hand_contribution(self):
         """
@@ -78,22 +86,27 @@ class HumanoidUkr(HumanoidBasic):
                 lhand_contrib += deviation
         self.rhand_contib = rhand_contrib / (rhand_contrib + lhand_contrib)
 
-
-    def __str__(self):
-        s = HumanoidBasic.__str__(self)
-        self.estimate_hand_contribution()
-        rhand = self.rhand_contib * 100.
-        lhand = 100. - rhand
-        s += "\n\t rhand x lhand: \t %.1f%% x %.1f%%" % (rhand, lhand)
-        return s
-
-
-    def show_displacement(self, mode=None, rotation=0, fontsize=12):
+    def show_displacement(self, mode=None, rotation=80, fontsize=7, add_error=True):
         """
-         Plots a chart bar of joints displacements.
+            Plots a chart bar of joints displacements.
+        :param mode: use both hand (by default) or only prime one
+        :param rotation: labeled bar text rotation (Ox axis)
+        :param fontsize: labeled bar text font size (Ox axis)
+        :param add_error: whether to add bar error on plot or not
         """
-        HumanoidBasic.show_displacement(self, rotation=80, fontsize=7)
+        HumanoidBasic.plot_displacement(self, mode, rotation, fontsize, add_error)
+        plt.show()
 
+    def save_displacement(self, mode=None, rotation=80, fontsize=7, add_error=False):
+        """
+            Saves joint displacements in png.
+        :param mode: use both hand (by default) or only prime one
+        :param rotation: labeled bar text rotation (Ox axis)
+        :param fontsize: labeled bar text font size (Ox axis)
+        :param add_error: whether to add bar error on plot or not
+        """
+        HumanoidBasic.plot_displacement(self, mode, rotation, fontsize, add_error)
+        plt.savefig("joint_displacements.png")
 
     def animate(self, faster=7):
         """
@@ -101,7 +114,6 @@ class HumanoidUkr(HumanoidBasic):
          :param faster: how much faster animate it
         """
         HumanoidBasic.animate(self, faster)
-
 
     def save_anim(self, faster=7):
         """
@@ -125,4 +137,5 @@ if __name__ == "__main__":
     gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest1_sample0.c3d")
     # gest.animate()
     print gest
+    # gest.save_displacement()
     gest.show_displacement()

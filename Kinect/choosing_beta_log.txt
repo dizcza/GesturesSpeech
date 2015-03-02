@@ -1,0 +1,108 @@
+C:\Python27\python.exe D:/Данилыч/КПИ/Магистр.Диплом/GesturesSpeech/Kinect/ksetting.py
+BETA: 0.000001
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0422084 
+	 within-std: 0.0141697
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.594343 
+	 between-std: 0.253369
+
+(!) New discriminant ratio: 14.0811
+BETA: 0.000100
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0422084 
+	 within-std: 0.0141697
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.594343 
+	 between-std: 0.253369
+
+(!) New discriminant ratio: 14.0811
+BETA: 0.010000
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0422083 
+	 within-std: 0.0141696
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.594334 
+	 between-std: 0.253366
+
+(!) New discriminant ratio: 14.081
+BETA: 0.100000
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0422072 
+	 within-std: 0.0141688
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.594261 
+	 between-std: 0.253345
+
+(!) New discriminant ratio: 14.0796
+BETA: 1.000000
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0421965 
+	 within-std: 0.0141613
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.593527 
+	 between-std: 0.253126
+
+(!) New discriminant ratio: 14.0658
+BETA: 10.000000
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0420915 
+	 within-std: 0.0140886
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.586434 
+	 between-std: 0.25096
+
+(!) New discriminant ratio: 13.9324
+BETA: 100.000000
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0414313 
+	 within-std: 0.0136786
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.547452 
+	 between-std: 0.233501
+
+(!) New discriminant ratio: 13.2135
+BETA: 1000.000000
+New weights are saved in KINECT_INFO.json
+COMPUTING WITHIN VARIANCE
+Done with: 
+	 within-var: 0.0411712 
+	 within-std: 0.0135355
+
+COMPUTING BETWEEN VARIANCE
+Done with: 
+	 between-var: 0.536135 
+	 between-std: 0.22441
+
+(!) New discriminant ratio: 13.0221
+[(1e-06, 14.081139305558757, 7.6406484891271473), (0.0001, 14.081137778713124, 7.6406477655985388), (0.01, 14.080985117717137, 7.6405754294798482), (0.1, 14.079597717387001, 7.6399180239295399), (1.0, 14.065763741894175, 7.6333572368619675), (10.0, 13.932369376871822, 7.5693745244272828), (100.0, 13.21349848348074, 7.1269725019718235), (1000.0, 13.022094467981216, 6.9309437215372967)]
+BEST RATIO: 14.0811, w.r.t. beta = 1e-06
+	 Duration: ~28 m
