@@ -1,7 +1,7 @@
 # coding = utf-8
 
 from mreader import HumanoidUkr
-from gDTW import compare, show_comparison
+from gDTW import compare, show_comparison, wdtw_windowed, wdtw
 import os
 import numpy as np
 
@@ -23,30 +23,29 @@ def compare_workout():
         show_comparison(firstGest, secondGest)
 
 
-def compare_them_all():
+def compare_them_all(frame_step):
     """
      TESTING func
     """
     trn_folder = "D:\GesturesDataset\splitAll\Training"
     tst_folder = "D:\GesturesDataset\splitAll\Testing"
     misclassified = 0.
-
     total_samples = len(os.listdir(trn_folder))
 
     patterns = []
-    for trn_log in os.listdir(trn_folder)[:total_samples]:
+    for trn_log in os.listdir(trn_folder):
         trn_filename = os.path.join(trn_folder, trn_log)
-        patterns.append(HumanoidUkr(trn_filename))
+        patterns.append(HumanoidUkr(trn_filename, frame_step))
 
-    print "Testing..."
+    print "Testing with frame step: %d ..." % frame_step
 
-    for tst_log in os.listdir(tst_folder)[:total_samples]:
-        print "\tComparing %s..." % tst_log
+    for tst_log in os.listdir(tst_folder):
+        # print "\tComparing %s..." % tst_log
         tst_filename = os.path.join(tst_folder, tst_log)
-        unknown = HumanoidUkr(tst_filename)
+        unknown = HumanoidUkr(tst_filename, frame_step)
         costs = []
         for knownGest in patterns:
-            dist = compare(knownGest, unknown)
+            dist = compare(knownGest, unknown, dtw_chosen=wdtw)
             costs.append(dist)
 
         ind = np.argmin(costs)
@@ -59,5 +58,6 @@ def compare_them_all():
     Etest = misclassified / total_samples
     print "Etest: %.2f" % Etest
 
-compare_workout()
-# compare_them_all()
+
+# compare_workout()
+compare_them_all(frame_step=12)

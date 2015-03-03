@@ -90,6 +90,9 @@ class HumanoidKinect(HumanoidBasic):
         self.hand_markers = ["HandLeft",  "WristLeft",  "ElbowLeft",
                              "HandRight", "WristRight", "ElbowRight"]
         swap = {"left": "right", "right": "left"}
+        # Note: 'prime' and 'free' hands are the attributes only for training.
+        # Although they are determined each time the gesture is created,
+        # they aren't used (and not relevant at all) during the testing.
         self.prime_hand = filename.split('\\')[-1].split("Hand")[0].lower()
         self.free_hand = swap[self.prime_hand]
         self.shoulder_markers = ["ShoulderLeft", "ShoulderCenter", "ShoulderRight"]
@@ -115,9 +118,9 @@ class HumanoidKinect(HumanoidBasic):
                 if self.prime_hand in marker.lower() and marker in self.hand_markers:
                     self.moving_markers = np.append(self.moving_markers, marker)
         else:
-            HumanoidBasic.define_moving_markers(self, mode)
+            HumanoidBasic.define_moving_markers(self, mode="bothHands")
 
-    def show_displacement(self, mode=None):
+    def show_displacement(self, mode="bothHands"):
         """
         :param mode: use both hand (by default) or only prime one
         """
@@ -127,6 +130,7 @@ class HumanoidKinect(HumanoidBasic):
 
 if __name__ == "__main__":
     gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\LeftHandWave\LeftHandWave_000.txt")
-    # gest.animate()
+    gest.animate()
     print gest
     gest.show_displacement()
+    gest.compute_weights(mode="oneHand", beta=1e-4)

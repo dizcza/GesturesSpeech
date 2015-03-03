@@ -10,7 +10,7 @@ import json
 import time
 
 
-def compute_weights(beta, mode="oneHand"):
+def compute_weights(mode, beta):
     """
      Computes aver weights from the Training dataset.
     """
@@ -29,7 +29,7 @@ def compute_weights(beta, mode="oneHand"):
                 gest = HumanoidKinect(full_filename)
                 gesture_class = gest.name
                 gest.compute_displacement(mode)
-                gest.compute_weights(beta)
+                gest.compute_weights(mode, beta)
                 w = gest.get_weights()
                 weights_within.append(w)
 
@@ -146,8 +146,7 @@ def update_ratio(beta):
     :param beta: to be choosing to yield the biggest ratio
     :return: discriminant ratio
     """
-
-    compute_weights(beta)
+    compute_weights(mode="oneHand", beta=beta)
     compute_within_variance()
     compute_between_variance()
     _INFO = json.load(open("KINECT_INFO.json", 'r'))

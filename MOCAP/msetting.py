@@ -10,7 +10,7 @@ import json
 import matplotlib.pyplot as plt
 
 
-def compute_weights(beta=1e-2):
+def compute_weights(beta):
     """
      Computes aver weights from the Training dataset.
     """
@@ -25,8 +25,8 @@ def compute_weights(beta=1e-2):
     for trn_file in os.listdir(trn_folder):
         if trn_file.endswith(".c3d"):
             filename = os.path.join(trn_folder, trn_file)
-            gest = HumanoidUkr(filename)
-            gest.compute_weights(beta)
+            gest = HumanoidUkr(filename, frame_step=5)
+            gest.compute_weights(mode="bothHands", beta=beta)
             w = gest.get_weights().tolist()
             weights_info[gest.name] = w
 
@@ -124,6 +124,5 @@ def choose_beta(frame_step):
 
 if __name__ == "__main__":
     # update_ratio()
-    # TODO run me...
     choose_beta(frame_step=30)
     # fps_dependency()

@@ -8,7 +8,8 @@ import os
 
 class HumanoidUkrSplitter(HumanoidUkr):
     def __init__(self, filename):
-        HumanoidUkr.__init__(self, filename)
+        HumanoidUkr.__init__(self, filename, frame_step=1)
+        self.markers_total = len(self.labels)
         self.corrupted = get_corrupted_frames(self.data)
 
 

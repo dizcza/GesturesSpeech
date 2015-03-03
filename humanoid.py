@@ -8,6 +8,10 @@ from numpy.linalg import norm
 import json
 
 
+# TODO set confidence measure
+# TODO check frame step when RR goes down
+
+
 class HumanoidBasic(object):
     """
      Constructs a humanoid with empty fields and basic methods.
@@ -32,8 +36,6 @@ class HumanoidBasic(object):
         self.moving_markers = []
         self.joint_displace = {}
         self.joint_std = {}
-        self.miny = 0.
-        self.maxy = 0.
 
     def __str__(self):
         """
@@ -125,11 +127,12 @@ class HumanoidBasic(object):
         :param mode: use both hand (by default) or only prime one
         """
         self.moving_markers = []
-        for marker in self.labels:
-            if marker in self.hand_markers:
-                self.moving_markers.append(marker)
+        if mode == "bothHands":
+            for marker in self.labels:
+                if marker in self.hand_markers:
+                    self.moving_markers.append(marker)
 
-    def compute_displacement(self, mode=None):
+    def compute_displacement(self, mode):
         """
          Computes joints displacements.
         :param mode: use both hand (by default) or only prime one
@@ -184,10 +187,18 @@ class HumanoidBasic(object):
         xtickNames = ax.set_xticklabels(self.moving_markers)
         plt.setp(xtickNames, rotation=rotation, fontsize=fontsize)
 
+
+    def init_3dbox(self):
+        self.xmin = 0.
+        self.xmax = 0.
+        self.ymin = 0.1
+        self.ymax = 0.1
+
     def init_3d(self):
         """
          Initialize empty 3d plots.
         """
+        self.init_3dbox()
         self.fig = plt.figure(figsize=(10, 10))
         self.ax = Axes3D(self.fig)
         self.ax.view_init(15, 110)
@@ -195,11 +206,11 @@ class HumanoidBasic(object):
         for marker in range(self.data.shape[0]):
             self.pts += self.ax.plot([], [], [], 'o', color='black', markersize=4)
 
-        self.ax.set_xlim3d([np.nanmin(self.data[:, :, 0]),
-                            np.nanmax(self.data[:, :, 0])])
+        self.ax.set_xlim3d([np.nanmin(self.data[:, :, 0]) - self.xmin,
+                            np.nanmax(self.data[:, :, 0]) + self.xmax])
 
-        self.ax.set_ylim3d([np.nanmin(self.data[:, :, 1]) - self.miny,
-                            np.nanmax(self.data[:, :, 1]) + self.maxy])
+        self.ax.set_ylim3d([np.nanmin(self.data[:, :, 1]) - self.ymin,
+                            np.nanmax(self.data[:, :, 1]) + self.ymax])
 
         self.ax.set_zlim3d([np.nanmin(self.data[:, :, 2]),
                             np.nanmax(self.data[:, :, 2])])
@@ -224,17 +235,16 @@ class HumanoidBasic(object):
         anim = animation.FuncAnimation(self.fig,
                                        func=self.next_frame,
                                        frames=int(self.frames/faster),
-                                       interval=1.,
+                                       interval=1.,     # in ms
                                        blit=True)
         plt.show(self.fig)
 
-    def compute_weights(self, beta=1e-4):
+    def compute_weights(self, mode, beta):
         """
          Computes weights to be used in DTW.
         :param beta: param to be chosen during the training
         """
-        if not any(self.joint_displace):
-            self.compute_displacement()
+        self.compute_displacement(mode)
 
         displacements = np.array(self.joint_displace.values())
         denom = np.sum(1. - np.exp(-beta * displacements))

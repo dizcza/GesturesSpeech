@@ -8,7 +8,9 @@
 (1) Ukrainian gestures, captured with MoCap C3D technology, and (2) basic hand motions,
 captured with Microsoft Kinect sensor.</i></p>
 
-<video src="video_example.mp4" width="320" height="200" controls preload></video>
+<video controls>
+  <source src="video_example.mp4" type="video/mp4">
+</video>
 
 <p>Projects kernel summary:</p>
 <table style="width:100%">
@@ -52,6 +54,7 @@ captured with Microsoft Kinect sensor.</i></p>
     </ul>
 </ul>
 
+<p>Note: the Kinect project is based on <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">this</a> paper and their <a href="http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar">data</a> to compare its results with our MoCap project.</p>
 
 <p>The main idea in gesture recognition is to maximize between class variance <i>Db</i> and minimize within class variance <i>Dw</i> by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">proposed</a>.</p>
 
@@ -134,7 +137,6 @@ Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. As shown below
   <li><a href="http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download"> 		numpy</a></li>
   <li><a href="https://pypi.python.org/pypi/dtw/1.0">dtw</a> (dynamic time warping)</li>
 </ul>
-
 
 </body>
 </html>

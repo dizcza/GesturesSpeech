@@ -28,11 +28,18 @@ class HumanoidUkr(HumanoidBasic):
     """
      Creates an instance of Ukrainian Motion Capture gesture, saved in .c3d-format.
     """
-    def __init__(self, c3d_file, frame_step=5):
+    def __init__(self, c3d_file, frame_step):
         HumanoidBasic.__init__(self)
         # TODO think about self.name: parse xlsx info
         self.project = "MoCap"
+
+        # setting unique gesture name
+        # FIXME for unsplit files
+        # FIXME animate: X axis is stretched
         self.name = c3d_file.split('\\')[-1][:-12]
+        # print self.name, c3d_file.split('\\')
+
+        # setting up BTK reader to gather acquisition
         reader = btk.btkAcquisitionFileReader()
         reader.SetFilename(c3d_file)
         reader.Update()
@@ -43,7 +50,6 @@ class HumanoidUkr(HumanoidBasic):
 
         # dealing with markers
         self.labels = gather_labels(acq)
-        self.markers_total = len(self.labels)
         self.hand_markers = get_hand_labels(self.labels)
         self.shoulder_markers = ["LBSH", "CLAV", "RBSH"]
 
@@ -52,10 +58,6 @@ class HumanoidUkr(HumanoidBasic):
         self.frames = self.data.shape[1]
         relaxed_frame = init_frame(c3d_file)
         self.init_pos = self.data[:, relaxed_frame, :]
-
-        # dealing with animation
-        self.miny = 400
-        self.maxy = 400
 
         self.preprocessing()
         self.set_weights()
@@ -76,7 +78,7 @@ class HumanoidUkr(HumanoidBasic):
          Estimates how much each hand has been moving along the prev positions.
         """
         if not any(self.joint_displace):
-            self.compute_displacement(self)
+            self.compute_displacement(mode="bothHands")
         rhand_contrib = 0.
         lhand_contrib = 0.
         for marker, deviation in self.joint_displace.iteritems():
@@ -86,7 +88,7 @@ class HumanoidUkr(HumanoidBasic):
                 lhand_contrib += deviation
         self.rhand_contib = rhand_contrib / (rhand_contrib + lhand_contrib)
 
-    def show_displacement(self, mode=None, rotation=80, fontsize=7, add_error=True):
+    def show_displacement(self, mode="bothHands", rotation=80, fontsize=7, add_error=True):
         """
             Plots a chart bar of joints displacements.
         :param mode: use both hand (by default) or only prime one
@@ -97,7 +99,7 @@ class HumanoidUkr(HumanoidBasic):
         HumanoidBasic.plot_displacement(self, mode, rotation, fontsize, add_error)
         plt.show()
 
-    def save_displacement(self, mode=None, rotation=80, fontsize=7, add_error=False):
+    def save_displacement(self, mode="bothHands", rotation=80, fontsize=7, add_error=False):
         """
             Saves joint displacements in png.
         :param mode: use both hand (by default) or only prime one
@@ -107,6 +109,12 @@ class HumanoidUkr(HumanoidBasic):
         """
         HumanoidBasic.plot_displacement(self, mode, rotation, fontsize, add_error)
         plt.savefig("joint_displacements.png")
+
+    def init_3dbox(self):
+        self.xmin = 0.4
+        self.xmax = 0.4
+        self.ymin = 0.4
+        self.ymax = 0.4
 
     def animate(self, faster=7):
         """
@@ -126,16 +134,16 @@ class HumanoidUkr(HumanoidBasic):
         anim = animation.FuncAnimation(self.fig,
                                        func=self.next_frame,
                                        frames=int(self.frames/faster),
-                                       interval=1.,
+                                       interval=1.,     # in ms
                                        blit=True)
         mp4_file = self.name + '.mp4'
         anim.save(mp4_file, writer='ffmpeg', fps=50)
-        print "Saved in %s" % mp4_file
+        print "Animation is saved in %s" % mp4_file
 
 
 if __name__ == "__main__":
-    gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest1_sample0.c3d")
-    # gest.animate()
+    gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest1_sample0.c3d", frame_step=1)
+    gest.animate()
     print gest
     # gest.save_displacement()
     gest.show_displacement()
