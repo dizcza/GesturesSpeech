@@ -70,10 +70,10 @@ As Reyes et al. (2011) has observed, only six out of the 20 joints contribute in
 	<tr>
     <tr>
         <td>
-            <img src="Kinect/joint_displacements.png"/>
+            <img src="Kinect/png/joint_displacements.png"/>
         </td>
         <td>
-            <img src="MOCAP/joint_displacements.png"/>
+            <img src="MOCAP/png/joint_displacements.png"/>
         </td>
     </tr>
 </table>
@@ -84,8 +84,8 @@ As Reyes et al. (2011) has observed, only six out of the 20 joints contribute in
 </ol>
 
 <p>Using the total displacement values of joints, the joint <i>j</i>'s weight value of class <i>g</i> is calculated via
-<div align="center"><img src="Kinect/formula_weights.PNG" align="middle"/></div>
-Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. As shown below, the max(<i>R</i>) is obtained when beta vanishes.</p>
+<div align="center"><img src="Kinect/png/formula_weights.PNG" align="middle"/></div>
+Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. Although within variance <i>Dw</i> goes up with decreasing the beta, the max(<i>R</i>) is obtained when beta vanishes. </p>
 <table style="width:100%">
 	<tr>
 		<th>Kinect</th>
@@ -93,15 +93,15 @@ Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. As shown below
 	<tr>
     <tr>
         <td>
-            <img src="Kinect/choosing_beta.png"/>
+            <img src="Kinect/png/choosing_beta.png"/>
         </td>
         <td>
-            <img src="MOCAP/choosing_beta.png"/>
+            <img src="MOCAP/png/choosing_beta.png"/>
         </td>
     </tr>
 </table>
 
-<p>The second difference between the projects is that MoCap has only 1 training example and 1 testing example per unique gesture, while Kinect provides 20 training and 8 testing ones. Thus, we cannot compute the within class variance for the MoCap project -- only between class variance is availible for demonstration confidence measure (or discriminant ratio).</p>
+<p>The secondary difference between the projects is that MoCap has only 1 training example and 1 testing example per unique gesture, while Kinect provides 20 training and 8 testing ones. Thus, we cannot compute the within class variance for the MoCap project -- only between class variance is availible for demonstration confidence measure (or discriminant ratio).</p>
 
 <p>When all hidden parameters are calculated and all weights are set for each gesture class, it's time to use WDTW to compare some unknown sequence (from a testing set) with a known one (from a training set).</p>
 <table style="width:100%">
@@ -111,10 +111,10 @@ Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. As shown below
 	<tr>
     <tr>
         <td>
-            <img src="Kinect/dtw_path.png"/>
+            <img src="Kinect/png/dtw_path.png"/>
         </td>
         <td>
-            <img src="MOCAP/dtw_path.png"/>
+            <img src="MOCAP/png/dtw_path.png"/>
         </td>
     </tr>
 </table>

@@ -8,7 +8,7 @@ from labelling import *
 from helper import init_frame
 
 
-def gather_points_data(acq, step):
+def gather_points_data(acq):
     """
     :param acq: acquisition from .c3d-file
     :return: (#markers, #frames, 3) ndarray of 3d points data
@@ -18,35 +18,39 @@ def gather_points_data(acq, step):
         label_id = acq.GetPoint(i).GetLabel()
         data = np.dstack((data, acq.GetPoint(label_id).GetValues().T))
     data = np.delete(data.T, 0, axis=0)  # first marker is noisy for this file (truly)
-    frames_kept = np.arange(0, data.shape[1], step)
 
     # dealing with mm --> m
-    return data[:, frames_kept, :] / 1e3
+    return data / 1e3
+
+
+def parse_fname(fname):
+    short_name = fname.split('\\')[-1]
+    if "_sample" in short_name:
+        return short_name[:-12]
+    else:
+        return short_name
 
 
 class HumanoidUkr(HumanoidBasic):
     """
      Creates an instance of Ukrainian Motion Capture gesture, saved in .c3d-format.
     """
-    def __init__(self, c3d_file, frame_step):
+    def __init__(self, c3d_file, fps=None):
         HumanoidBasic.__init__(self)
         # TODO think about self.name: parse xlsx info
         self.project = "MoCap"
 
         # setting unique gesture name
-        # FIXME for unsplit files
-        # FIXME animate: X axis is stretched
-        self.name = c3d_file.split('\\')[-1][:-12]
-        # print self.name, c3d_file.split('\\')
+        self.name = parse_fname(c3d_file)
 
         # setting up BTK reader to gather acquisition
         reader = btk.btkAcquisitionFileReader()
         reader.SetFilename(c3d_file)
         reader.Update()
-
-        # set info
         acq = reader.GetOutput()
-        self.fps = acq.GetPointFrequency() / frame_step
+
+        # initial fps (should be 120)
+        self.fps = acq.GetPointFrequency()
 
         # dealing with markers
         self.labels = gather_labels(acq)
@@ -54,8 +58,10 @@ class HumanoidUkr(HumanoidBasic):
         self.shoulder_markers = ["LBSH", "CLAV", "RBSH"]
 
         # dealing with data
-        self.data = gather_points_data(acq, step=frame_step)
+        self.data = gather_points_data(acq)
         self.frames = self.data.shape[1]
+        if fps is not None:
+            self.set_fps(fps)
         relaxed_frame = init_frame(c3d_file)
         self.init_pos = self.data[:, relaxed_frame, :]
 
@@ -142,8 +148,7 @@ class HumanoidUkr(HumanoidBasic):
 
 
 if __name__ == "__main__":
-    gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest1_sample0.c3d", frame_step=1)
-    gest.animate()
+    gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest1_sample0.c3d")
+    gest.set_fps(24)
     print gest
-    # gest.save_displacement()
-    gest.show_displacement()
+    gest.animate(faster=1)

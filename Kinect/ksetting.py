@@ -4,7 +4,8 @@ from kreader import HumanoidKinect, KINECT_PATH
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import numpy as np
-from gDTW import compare, show_comparison
+from gDTW import wdtw_windowed, wdtw
+from comparison import compare, show_comparison
 import os
 import json
 import time
@@ -46,7 +47,7 @@ def compute_within_variance():
      Computes aver within variance from the Training dataset.
     """
     
-    print "COMPUTING WITHIN VARIANCE"
+    print "(Kinect project) COMPUTING WITHIN VARIANCE"
     
     KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
     one_vs_the_same_var = []
@@ -86,7 +87,7 @@ def compute_between_variance():
      Computes aver between variance from the Training dataset.
     """
     
-    print "COMPUTING BETWEEN VARIANCE"
+    print "(Kinect project) COMPUTING BETWEEN VARIANCE"
     
     KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
     one_vs_others_var = []
@@ -169,10 +170,11 @@ def update_ratio(beta):
     return _INFO["d-ratio"], ratio_std
 
 
-def choose_beta():
+def choose_beta(fps):
     """
      Choosing the best beta to yield the biggest discriminant ratio.
     """
+    print "(Kinect project) choosing the beta with fps = %s" % fps
     begin = time.time()
     beta_range = [1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]
     gained_ratios = []
@@ -196,11 +198,11 @@ def choose_beta():
     plt.xlabel("beta, log")
     plt.ylabel("discriminant ratio")
     plt.title("Choosing the best beta")
-    plt.savefig("choosing_beta.png")
+    plt.savefig("png/choosing_beta.png")
     plt.show()
 
 
 if __name__ == "__main__":
     # update_ratio(beta=1e-2)
-    choose_beta()
+    choose_beta(fps=None)
 

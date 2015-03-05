@@ -8,6 +8,7 @@ from numpy.linalg import norm
 import json
 
 
+# TODO rename filesSplitter --> dev
 # TODO set confidence measure
 # TODO check frame step when RR goes down
 
@@ -61,6 +62,22 @@ class HumanoidBasic(object):
         """
         hand_ids = self.get_ids(*self.hand_markers)
         return self.norm_data[hand_ids, ::]
+
+    def set_fps(self, new_fps):
+        """
+            Modify data, w.r.t. new fps.
+        :param new_fps: fps (or points frequency) to be made in the data
+        """
+        if new_fps >= self.fps:
+            # does nothing
+            return
+
+        step_to_throw = float(self.fps) / (self.fps - new_fps)
+        indices_thrown = np.arange(self.frames) * step_to_throw
+        indices_thrown = indices_thrown.astype(dtype="int")
+        self.data = np.delete(self.data, indices_thrown, axis=1)
+        self.frames = self.data.shape[1]
+        self.fps = new_fps
 
     def get_ids(self, *args):
         """

@@ -6,13 +6,17 @@ A gesture DTW implementation.
 =====
 """
 
-
-from dtw import dtw
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from numpy.linalg import norm
-from functools import partial
+
+
+def dist_measure(fdata1, fdata2, weights):
+    """
+    :param fdata1, fdata2: (#markers, 3) framed points
+    :return: dist, w.r.t. the same markers
+    """
+    # weights = np.ones(fdata1.shape[0])
+    return np.sum(norm(fdata1 - fdata2, axis=1) * weights)
 
 
 def wdtw_windowed(data1, data2, weights):
@@ -68,133 +72,86 @@ def wdtw(data1, data2, weights):
     return dist
 
 
-def dist_measure(fdata1, fdata2, weights):
-    """
-    :param fdata1, fdata2: (#markers, 3) framed points
-    :return: dist, w.r.t. the same markers
-    """
-    # weights = np.ones(fdata1.shape[0])
-    return np.sum(norm(fdata1 - fdata2, axis=1) * weights)
+class DtwBackward(object):
+    def __init__(self, seq1, seq2, distance_func=None):
+        """
+        seq1, seq2 are two lists,
+        distance_func is a function for calculating
+        the local distance between two elements.
+        """
+        self._seq1 = np.array(seq1)
+        self._seq2 = np.array(seq2)
+        if distance_func is None:
+            self._distance_func = lambda seq1, seq2: norm(seq1 - seq2)
+        else:
+            self._distance_func = distance_func
+        self._map = {(-1, -1): 0.0}
+        self._distance_matrix = {}
+        self._path = []
 
+    def get_distance(self, i1, i2):
+        ret = self._distance_matrix.get((i1, i2))
+        if not ret:
+            ret = self._distance_func(self._seq1[i1], self._seq2[i2])
+            self._distance_matrix[(i1, i2)] = ret
+        return ret
 
-def swap_first_two_cols(data):
-    """
-     Swaps markers with frames columns.
-    :param data: (#markers, frames, 3) ndarray
-    :return: (#frames, #markers, 3) data
-    """
-    new_shape = data.shape[1], data.shape[0], data.shape[2]
-    swapped_data = np.empty(shape=new_shape)
-    for frame in range(data.shape[1]):
-        swapped_data[frame, ::] = data[:, frame, :]
-    return swapped_data
+    def calculate_backward(self, i1, i2):
+        """
+        Calculate the dtw distance between
+        seq1[:i1 + 1] and seq2[:i2 + 1]
+        """
+        global calls
+        calls += 1
 
+        if self._map.get((i1, i2)) is not None:
+            return self._map[(i1, i2)]
 
-def modify_weights(gest, thrown_labels):
-    """
-    :param gest: known gest
-    :param thrown_labels: labels to be thrown out
-    :return: aligned and re-normalized weights
-    """
-    weights_ordered = []
-    for marker in gest.labels:
-        if marker not in thrown_labels:
-            weights_ordered.append(gest.weights[marker])
-    weights_ordered = np.array(weights_ordered)
-    weights_ordered /= sum(weights_ordered)
-    return weights_ordered
+        if i1 == -1 or i2 == -1:
+            self._map[(i1, i2)] = float('inf')
+            return float('inf')
 
+        min_i1, min_i2 = min((i1 - 1, i2), (i1, i2 - 1), (i1 - 1, i2 - 1),
+                             key=lambda x: self.calculate_backward(*x))
 
-def align_data_shape(known_gest, unknown_gest):
-    """
-    :param known_gest: sequence known to be in some gesture class
-    :param unknown_gest: unknown test sequence
-    :return: aligned both data to the same markers dimension
-    """
-    throw_labels_known = []
-    throw_labels_unknown = []
-    for known_label in known_gest.labels:
-        if known_label not in unknown_gest.labels:
-            throw_labels_known.append(known_label)
-    for unknown_label in unknown_gest.labels:
-        if unknown_label not in known_gest.labels:
-            throw_labels_unknown.append(unknown_label)
+        self._map[(i1, i2)] = self.get_distance(i1, i2) + \
+            self.calculate_backward(min_i1, min_i2)
 
-    del_ids1 = known_gest.get_ids(*throw_labels_known)
-    del_ids2 = unknown_gest.get_ids(*throw_labels_unknown)
+        return self._map[(i1, i2)]
 
-    data1 = np.delete(known_gest.get_norm_data(), del_ids1, axis=0)
-    data2 = np.delete(unknown_gest.get_norm_data(), del_ids2, axis=0)
+    def get_path(self):
+        """
+        Calculate the path mapping.
+        Must be called after calculate()
+        """
+        i1, i2 = (len(self._seq1) - 1, len(self._seq2) - 1)
+        while (i1, i2) != (-1, -1):
+            self._path.append((i1, i2))
+            min_i1, min_i2 = min((i1 - 1, i2), (i1, i2 - 1), (i1 - 1, i2 - 1),
+                                 key=lambda x: self._map[x[0], x[1]])
+            i1, i2 = min_i1, min_i2
+        return self._path
 
-    weights = modify_weights(known_gest, throw_labels_known)
+    def calculate(self):
+        return self.calculate_backward(len(self._seq1) - 1,
+                                       len(self._seq2) - 1)
 
-    return data1, data2, weights
+if __name__ == "__main__":
+    global full_pairs, calls
+    full_pairs = []
+    calls = 0
+    x = np.arange(20)
+    y = np.arange(50)
 
+    for xi in x:
+        l = [(xi, yi) for yi in y]
+        full_pairs += l
 
-def compare(known_gest, unknown_gest, dtw_chosen=wdtw):
-    """
-     Input gestures must have get_norm_data() and get_weights() methods!
-    :param known_gest: sequence known to be in some gesture class
-    :param unknown_gest: unknown test sequence
-    :return: (float), similarity of the given gestures
-    """
-    # data1 = known_gest.get_hand_norm_data()
-    # data2 = unknown_gest.get_hand_norm_data()
-    # weights = known_gest.get_hand_weights()
-
-    data1 = known_gest.get_norm_data()
-    data2 = unknown_gest.get_norm_data()
-    weights = known_gest.get_weights()
-
-    if data1.shape[0] != data2.shape[0]:
-        data1, data2, weights = align_data_shape(known_gest, unknown_gest)
-        # print "aligned to ", data1.shape, data2.shape
-
-    if not data1.any() or not data2.any():
-        print "Incompatible data dimensions. Returned np.inf"
-        return np.inf
-
-    dist = dtw_chosen(data1, data2, weights)
-    if dist == np.inf:
-        print "WARNING: dtw comparison gave np.inf"
-
-    return dist
-
-
-def show_comparison(known_gest, unknown_gest):
-    """
-     Shows the result of gestures comparison.
-    :param known_gest, unknown_gest: some 3d-gestures
-    """
-    data1 = known_gest.get_norm_data()
-    data2 = unknown_gest.get_norm_data()
-    weights = known_gest.get_weights()
-
-    if data1.shape[0] != data2.shape[0]:
-        data1, data2, weights = align_data_shape(known_gest, unknown_gest)
-        print "aligned to ", data1.shape, data2.shape
-
-    if not data1.any() or not data2.any():
-        print "Incompatible data dimensions."
-        return np.inf
-
-    # was: data.shape == (#markers, frames, 3)
-    data1 = swap_first_two_cols(data1)
-    data2 = swap_first_two_cols(data2)
-    # now: data.shape == (#frames, #markers, 3)
-
-    dist_measure_weighted = partial(dist_measure, weights=weights)
-    dist, cost, path = dtw(data1, data2, dist=dist_measure_weighted)
-
-    print 'Minimum distance found: %.4f' % dist
-    # print "x-path (first gesture frames):\n", path[0]
-    # print "y-path (second gesture frames):\n", path[1]
-    plt.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest')
-    plt.plot(path[0], path[1], 'w')
-    plt.xlim((-0.5, cost.shape[0]-0.5))
-    plt.ylim((-0.5, cost.shape[1]-0.5))
-    plt.xlabel("FRAMES #1: %s" % known_gest.name)
-    plt.ylabel("FRAMES #2: (unknown)")
-    plt.title("Weighted DTW frames path")
-    plt.show()
-
+    d = DtwBackward(x, y)
+    # print d.calculate_backward(5, 5)
+    print d.calculate()
+    print float(calls) / len(x) / len(y)
+    # path = d.get_path()
+    # x_path, y_path = zip(*d.get_path())
+    # print x_path, y_path
+    # print d.get_distance(4, 3)

@@ -1,28 +1,12 @@
 # coding = utf-8
-from gDTW import compare, show_comparison
+
+from gDTW import wdtw_windowed, wdtw
+from comparison import compare, show_comparison
 from kreader import *
 import os
 
 
-def in_folder():
-    """
-     Reads all logs in the chosen folder.
-    """
-    folder = KINECT_PATH + "Training\\RightHandPushUp\\"
-    for log in os.listdir(folder):
-        if log.endswith(".txt"):
-            gest = HumanoidKinect(folder + log)
-            # gest.animate()
-            gest.show_displacement()
-            gest.show_displacement("oneHand")
-            gest.compute_weights()
-            gest.set_weights()
-            # gest.show_displacement("oneHand")
-            # gest.animate()
-    # print "Tmin: %f; \t Tmax: %f" % (Tmin, Tmax)
-
-
-def compare_training():
+def compare_workout():
     """
      Compares some two gestures from the Training set.
     """
@@ -31,7 +15,6 @@ def compare_training():
     for log in os.listdir(folder):
         if log.endswith(".txt"):
             gest = HumanoidKinect(folder + log)
-            gest.set_weights()
             gestures.append(gest)
 
     show_comparison(gestures[5], gestures[3])
@@ -39,7 +22,7 @@ def compare_training():
 
 def collect_patterns():
     """
-    :return: patters from Training set (took only first log per class)
+    :return: patters from Training set (taken as the first file in each folder)
     """
     pattern_gestures = []
     for root, _, logs in os.walk(KINECT_PATH + "Training\\"):
@@ -52,11 +35,12 @@ def collect_patterns():
     return pattern_gestures
 
 
-def compare_test():
+def compare_them_all():
     """
      Main testing function.
     :return: out-of-sample error
     """
+    print "(Kinect project) comparing them all ..."
     patterns = collect_patterns()
     misclassified = 0.
     total_samples = 0
@@ -85,6 +69,5 @@ def compare_test():
     return Etest
 
 
-# compare_test()
-compare_training()
-# in_folder()
+if __name__ == "__main__":
+    compare_workout()
