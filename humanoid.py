@@ -8,9 +8,8 @@ from numpy.linalg import norm
 import json
 
 
-# TODO rename filesSplitter --> dev
 # TODO set confidence measure
-# TODO check frame step when RR goes down
+# TODO formula formatting HTML
 
 
 class HumanoidBasic(object):
@@ -68,7 +67,7 @@ class HumanoidBasic(object):
             Modify data, w.r.t. new fps.
         :param new_fps: fps (or points frequency) to be made in the data
         """
-        if new_fps >= self.fps:
+        if new_fps is None or new_fps >= self.fps:
             # does nothing
             return
 

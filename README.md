@@ -119,8 +119,16 @@ Best beta yields the biggest discriminant ratio <i>R = Db/Dw</i>. Although withi
     </tr>
 </table>
 
+
+
 <p>Using weighted DTW algorithm with only 3 crucial (hand) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) DTW algorithm with the same 3 body joints yields 22.5% out-of-sample error.</p>
 <p>At the same time, in MoCap project simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly,  there is only 1 training and 1 testing example per unique gesture in MoCap project and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.</p>
+
+<p>Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 10 is enough for both project data.</p>
+<div align="center">
+	<img src="rrate_fps.png"/>
+</div>
+
 
 <p>Free 3D Motion Capture visualizers:</p>
 <ul>

@@ -78,7 +78,7 @@ class HumanoidKinect(HumanoidBasic):
             http://datascience.sehir.edu.tr/visapp2013/
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, fps=None):
         """
          Creates a gesture from Kinect folder.
         :param filename: txt-file path
@@ -104,6 +104,7 @@ class HumanoidKinect(HumanoidBasic):
             self.data, self.fps = read_body(rlines)
 
         self.frames = self.data.shape[1]
+        self.set_fps(fps)
         self.preprocessing()
         self.set_weights()
 

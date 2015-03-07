@@ -136,6 +136,7 @@ class DtwBackward(object):
         return self.calculate_backward(len(self._seq1) - 1,
                                        len(self._seq2) - 1)
 
+
 if __name__ == "__main__":
     global full_pairs, calls
     full_pairs = []

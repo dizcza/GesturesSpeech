@@ -84,7 +84,8 @@ def compare_them_all(fps):
             misclassified += 1.
 
     Etest = misclassified / total_samples
-    print "Etest: %.2f; \t confidence: %.2f" % (Etest, np.average(confidence))
+    print "Etest: %g <----> (%d / %d)" % (Etest, misclassified, total_samples)
+    # print "Etest: %.2f; \t confidence: %.2f" % (Etest, np.average(confidence))
     return Etest, np.average(confidence)
 
 
@@ -111,11 +112,15 @@ def error_vs_fps():
     """
      Plots the E-test VS fps dependency.
     """
-    fps_range = np.arange(5, 12, 1)
+    fps_range = range(5, 13, 1)
     test_errors = []
     for fps in fps_range:
         Etest, conf = compare_them_all(fps)
         test_errors.append(Etest)
+
+    fps_range += [20, 120]
+    test_errors += [0., 0.]
+
     plt.plot(fps_range, test_errors, marker='o', ms=8)
     plt.xlabel("data freq (fps), 1/s")
     plt.ylabel("Etest")
@@ -125,4 +130,6 @@ def error_vs_fps():
 
 
 if __name__ == "__main__":
-    compare_workout()
+    # error_vs_fps()
+    # compare_workout()
+    compare_them_all(fps=1)

@@ -60,8 +60,7 @@ class HumanoidUkr(HumanoidBasic):
         # dealing with data
         self.data = gather_points_data(acq)
         self.frames = self.data.shape[1]
-        if fps is not None:
-            self.set_fps(fps)
+        self.set_fps(fps)
         relaxed_frame = init_frame(c3d_file)
         self.init_pos = self.data[:, relaxed_frame, :]
 
