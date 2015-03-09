@@ -67,7 +67,8 @@ def wdtw(data1, data2, weights):
             cost = dist_measure(data1[:,i-1,:], data2[:,j-1,:], weights)
             D[i, j] = cost + min(D[i-1, j-1], D[i-1, j], D[i, j-1])
 
-    dist = D[-1, -1] / (r + c)
+    # dist = D[-1, -1] / (r + c)
+    dist = D[-1, -1]
 
     return dist
 

@@ -40,7 +40,7 @@ def plot_rrate_vs_fps():
     plt.ylim(ymax=1.02)
     plt.ylabel("recognition rate")
     plt.xlabel("fps")
-    plt.title("rRate VS fps (WDTD is used)")
+    plt.title("rRate VS fps (WDTW is used)")
 
     plt.grid()
     plt.show()

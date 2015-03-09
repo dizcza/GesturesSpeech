@@ -9,7 +9,6 @@ import json
 
 
 # TODO set confidence measure
-# TODO formula formatting HTML
 
 
 class HumanoidBasic(object):
@@ -168,6 +167,19 @@ class HumanoidBasic(object):
                 j_std = 0
             self.joint_displace[marker] = offset
             self.joint_std[marker] = j_std
+
+    def get_internal_energy(self, mode):
+        """
+         Internal energy is computed as overall joint displacements
+         along the frames.
+        :param mode: bothHands or oneHand
+        :return: internal energy in normal units
+        """
+        self.compute_displacement(mode)
+        d = np.array(self.joint_displace.values())
+        w = np.array(self.weights.values())
+        U = np.sum(d * w) * (self.frames - 1)
+        return U
 
     def plot_displacement(self, mode, rotation, fontsize, add_error):
         """

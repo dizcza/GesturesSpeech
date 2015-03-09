@@ -48,6 +48,50 @@ def pick_two_min(array):
     return argMin, the_smallest, upcoming
 
 
+def probAnd(array):
+    """ 
+    :param array: (A, B) list
+    :return: P(A and B)
+    """
+    if len(array) == 1:
+        # exit
+        return array[0]
+    return probOr(array[:-1]) * array[-1]
+
+
+def probOr(array):
+    """ 
+    :param array: (A, B) list
+    :return: P(A orB)
+    """
+    if len(array) == 1:
+        # exit
+        return array[0]
+    return probOr(array[:-1]) + array[-1] - probAnd(array)
+
+
+def test_inclusion_exclusion():
+    a, b, c = 0.99, 0.99, 0.9
+    should_be = a + b + c - a*b - a*c - b*c + a*b*c
+    array = [a, b, c]
+    got = probOr(array)
+    print should_be, got
+
+
+def estimate_activation_prob(U, costs):
+    """
+    :param U: internal energy of the unknown-known gestures system
+    :param costs: energy levels
+    :return: (float) activation probability
+    """
+    costs = np.sort(costs)
+    argMin = np.argmin(costs)
+    higher_energies = np.delete(costs, argMin)
+    single_activation_prob = np.exp((costs[argMin] - higher_energies) / U)
+    activation_prob = probOr(single_activation_prob[:10])
+    return activation_prob
+
+
 def compare_them_all(fps):
     """
      TESTING func
@@ -69,23 +113,26 @@ def compare_them_all(fps):
     for tst_log in os.listdir(tst_folder):
         # print "\tComparing %s..." % tst_log
         tst_filename = os.path.join(tst_folder, tst_log)
-        unknown = HumanoidUkr(tst_filename, fps)
+        unknownGest = HumanoidUkr(tst_filename, fps)
         costs = []
         for knownGest in patterns:
-            dist = compare(knownGest, unknown, dtw_chosen=wdtw)
+            dist = compare(knownGest, unknownGest, dtw_chosen=wdtw)
             costs.append(dist)
 
-        argMin, the_smallest_cost, upcoming = pick_two_min(costs)
-        confidence.append(1. - the_smallest_cost / upcoming)
+        argMin = np.argmin(costs)
         possibleGest = patterns[argMin]
 
-        if possibleGest.name != unknown.name:
-            print "\t\tgot %s, should be %s" % (possibleGest.name, unknown.name)
-            misclassified += 1.
+        # U = unknownGest.get_internal_energy(mode="bothHands")
+        # act_prob = estimate_activation_prob(U, costs)
+        # confidence.append(1. - act_prob)
+        # print "Pact: %f" % act_prob
 
+        if possibleGest.name != unknownGest.name:
+            print "\t\tgot %s, should be %s" % (possibleGest.name, unknownGest.name)
+            misclassified += 1.
     Etest = misclassified / total_samples
     print "Etest: %g <----> (%d / %d)" % (Etest, misclassified, total_samples)
-    # print "Etest: %.2f; \t confidence: %.2f" % (Etest, np.average(confidence))
+
     return Etest, np.average(confidence)
 
 
@@ -132,4 +179,5 @@ def error_vs_fps():
 if __name__ == "__main__":
     # error_vs_fps()
     # compare_workout()
-    compare_them_all(fps=1)
+    compare_them_all(fps=5)
+    # test_inclusion_exclusion()
