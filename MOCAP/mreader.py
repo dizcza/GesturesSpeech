@@ -24,6 +24,10 @@ def gather_points_data(acq):
 
 
 def parse_fname(fname):
+    """
+    :param fname: path to .c3d-file
+    :return: class name of the instance
+    """
     short_name = fname.split('\\')[-1]
     if "_sample" in short_name:
         return short_name[:-12]
