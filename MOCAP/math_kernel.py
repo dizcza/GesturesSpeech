@@ -47,7 +47,7 @@ def moving_average(data, wsize=5):
     new_shape[1] -= 2 * step
     data_smooth = np.empty(shape=new_shape)
     for marker in range(data.shape[0]):
-        for ordinate in range(3):
+        for ordinate in range(data.shape[2]):
             xs = data[marker, :, ordinate]
             data_smooth[marker, :, ordinate] = moving_average_simple(xs, wsize)
     return data_smooth

@@ -61,9 +61,8 @@ class HumanoidBasic(object):
         if new_fps is None or new_fps >= self.fps:
             # does nothing
             return
-
         step_to_throw = float(self.fps) / (self.fps - new_fps)
-        indices_thrown = np.arange(self.frames) * step_to_throw
+        indices_thrown = np.arange(self.data.shape[1]) * step_to_throw
         indices_thrown = indices_thrown.astype(dtype="int")
         self.data = np.delete(self.data, indices_thrown, axis=1)
         self.frames = self.data.shape[1]
@@ -253,7 +252,10 @@ class HumanoidBasic(object):
                                        frames=int(self.frames/faster),
                                        interval=1.,     # in ms
                                        blit=True)
-        plt.show(self.fig)
+        try:
+            plt.show(self.fig)
+        except AttributeError:
+            pass
 
     def compute_weights(self, mode, beta):
         """
