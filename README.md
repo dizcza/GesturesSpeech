@@ -37,7 +37,7 @@ captured with Microsoft Kinect sensor</i></p>
       <li>body joints: 83</li>
       <li>data is measured in millimeters</li>
       <li>FPS: 120</li>
-      <li>unique gesture classes: ~150</li>
+      <li>unique gesture classes: 139</li>
       <li>samples per gesture: 2</li>
     </ul>
   </li>
@@ -78,7 +78,7 @@ captured with Microsoft Kinect sensor</i></p>
 
 
 <h2 id="art">State of art</h2>
-<p>The main idea in gesture recognition is to maximize between class variance <i>Db</i> and minimize within class variance <i>D_w</i> by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">proposed</a>.</p>
+<p>The main idea in gesture recognition is to maximize between class variance <i>Db</i> and minimize within class variance <i>Dw</i> by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">proposed</a>.</p>
 
 <p>It's obvious, that a joint which is active in one gesture class may not be active in another gesture class. Hence weights have to be adjusted accordingly.
 As Reyes et al. (2011) has observed, only six out of the 20 joints contribute in identifying a hand gesture: left hand, right hand, left wrist, right wrist, left elbow, right elbow. For example, for the right-hand-push-up gesture, one would expect the right hand, right elbow and right wrist joints to have large weights, but to have smaller weights for the left-hand-push-up gesture. We propose to use only 3 of them, w.r.t. to the left or right hand.</p>
@@ -184,7 +184,7 @@ Best beta yields the biggest discriminant ratio <img src="http://latex.codecogs.
 <ul>
   <li><a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">The Biomechanical ToolKit</a>
   		to read and modify data from C3D files</li>
-  <li><a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <b>pyparsing</b>, <b>dateutil</b>, <b>pytz</b> and <b>six</b>)</li>
+  <li><a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <b>pyparsing</b>, <b>dateutil</b>, <b>setuptools</b> and <b>six</b>)</li>
   <li><a href="http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download">numpy</a></li>
   <li><a href="https://pypi.python.org/pypi/dtw/1.0">dtw</a> (dynamic time warping)</li>
 </ul>

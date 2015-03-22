@@ -47,6 +47,5 @@ def check_them_all(folder):
 
 
 if __name__ == "__main__":
-    splitAll_folder = "D:\GesturesDataset\splitAll"
-    # NOTE: splitAll folder is OK (01.03.15)
-    # check_them_all(splitAll_folder)
+    # NOTE: splitAll folder status is OK (01.03.15)
+    check_them_all(MOCAP_PATH)

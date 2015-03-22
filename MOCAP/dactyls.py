@@ -67,5 +67,6 @@ def split_dactyl(folder_path):
             split_file(folder_path, c3d_filename, double_pairs)
 
 
-dactyl_folder = "D:\GesturesDataset\Dactyl\\"
-# split_dactyl(dactyl_folder)
+if __name__ == "__main__":
+    dactyl_folder = "D:\GesturesDataset\MoCap\Dactyl\\"
+    # split_dactyl(dactyl_folder)

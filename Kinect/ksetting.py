@@ -9,6 +9,7 @@ from comparison import compare, show_comparison
 import os
 import json
 import time
+from pprint import pprint
 
 
 def compute_weights(mode, beta):
@@ -54,8 +55,8 @@ def compute_within_variance():
     for root, _, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
         log_examples = [_log for _log in logs if _log.endswith(".txt")]
 
-        if not any(log_examples):
-            continue
+        # if not any(log_examples):
+        #     continue
 
         while len(log_examples) > 1:
             first_log = os.path.join(root, log_examples[0])
@@ -202,7 +203,41 @@ def choose_beta(fps):
     plt.show()
 
 
+def compute_lowest_weights_discrepancy(fps):
+    """
+     Computes the lowest weights discrepancy threshold for KINECT project
+     as the biggest one from the training folder.
+    :param fps: data fps to be set during reading the files
+    """
+    print "(Kinect project) compute_weights_discrepancy_infimum"
+    weights_discr = {}
+    for root, dirs, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
+        for class_name in dirs:
+            weights_discr[class_name] = []
+
+    for root, _, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
+        log_examples = [_log for _log in logs if _log.endswith(".txt")]
+        while len(log_examples) > 1:
+            first_log = os.path.join(root, log_examples[0])
+            firstGest = HumanoidKinect(first_log, fps)
+            gesture_class = firstGest.name
+            for another_log in log_examples[1:]:
+                full_filename = os.path.join(root, another_log)
+                goingGest = HumanoidKinect(full_filename, fps)
+                if gesture_class != goingGest.name:
+                    raise KeyError
+                discr_snapshot = firstGest.get_weights_discrepancy(goingGest, mode="bothHands")
+                weights_discr[gesture_class].append(discr_snapshot)
+            log_examples.pop(0)
+
+    LOWEST_WEIGHTS_DISCR_THR = {}
+    for class_name, discr_array in weights_discr.iteritems():
+        LOWEST_WEIGHTS_DISCR_THR[class_name] = max(discr_array)
+    pprint(LOWEST_WEIGHTS_DISCR_THR)
+    print "The lowest weights dicr thr: %f" % max(LOWEST_WEIGHTS_DISCR_THR.values())
+
+
 if __name__ == "__main__":
     # update_ratio(beta=1e-2)
-    choose_beta(fps=None)
-
+    # choose_beta(fps=None)
+    compute_lowest_weights_discrepancy(fps=None)

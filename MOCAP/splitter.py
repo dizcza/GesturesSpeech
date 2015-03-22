@@ -1,6 +1,7 @@
 # coding=utf-8
 
-from mreader import *
+from mreader import HumanoidUkr, MOCAP_PATH
+import numpy as np
 from helper import get_corrupted_frames
 import matplotlib.pyplot as plt
 import os
@@ -8,7 +9,7 @@ import os
 
 class HumanoidUkrSplitter(HumanoidUkr):
     def __init__(self, filename):
-        HumanoidUkr.__init__(self, filename, frame_step=1)
+        HumanoidUkr.__init__(self, filename, fps=None)
         self.markers_total = len(self.labels)
         self.corrupted = get_corrupted_frames(self.data)
 
@@ -128,6 +129,6 @@ def plot_them_all(folder):
 
 
 if __name__ == "__main__":
-    gest = HumanoidUkrSplitter("D:\GesturesDataset\Meet\M7_01.c3d")
+    gest = HumanoidUkrSplitter("D:\GesturesDataset\MoCap\Meet\M7_01.c3d")
     # gest.animate()
     gest.plot_relaxed_indices()

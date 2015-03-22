@@ -1,11 +1,12 @@
 # coding = utf-8
 
+from humanoid import align_gestures
 import numpy as np
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 from dtw import dtw
 from gDTW import wdtw, wdtw_windowed, dist_measure
-import matplotlib.pyplot as plt
 from functools import partial
-import matplotlib.cm as cm
 
 
 def swap_first_two_cols(data):
@@ -62,24 +63,23 @@ def align_data_shape(known_gest, unknown_gest):
     return data1, data2, weights
 
 
-def compare(known_gest, unknown_gest, dtw_chosen=wdtw):
+def compare(known_gest, unknown_gest, dtw_chosen=wdtw, compare_weights=False):
     """
      Input gestures must have get_norm_data() and get_weights() methods!
     :param known_gest: sequence known to be in some gesture class
     :param unknown_gest: unknown test sequence
-    :return: (float), similarity of the given gestures
+    :return: (float), similarity (cost) of the given gestures
     """
-    # data1 = known_gest.get_hand_norm_data()
-    # data2 = unknown_gest.get_hand_norm_data()
-    # weights = known_gest.get_hand_weights()
+    # when joint displacement snapshot isn't the same
+    if compare_weights and not unknown_gest.is_comparable_with(known_gest, thr=0.16):
+        return np.inf
 
-    data1 = known_gest.get_norm_data()
-    data2 = unknown_gest.get_norm_data()
-    weights = known_gest.get_weights()
-
-    if data1.shape[0] != data2.shape[0]:
+    if known_gest.labels == unknown_gest.labels:
+        data1 = known_gest.get_norm_data()
+        data2 = unknown_gest.get_norm_data()
+        weights = known_gest.get_weights()
+    else:
         data1, data2, weights = align_data_shape(known_gest, unknown_gest)
-        # print "aligned to ", data1.shape, data2.shape
 
     if not data1.any() or not data2.any():
         print "Incompatible data dimensions. Returned np.inf"

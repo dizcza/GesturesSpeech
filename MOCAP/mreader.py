@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from labelling import *
 from helper import init_frame
 
+MOCAP_PATH = "D:\GesturesDataset\MoCap\splitAll\\"
+
 
 def gather_points_data(acq):
     """
@@ -41,7 +43,6 @@ class HumanoidUkr(HumanoidBasic):
     """
     def __init__(self, c3d_file, fps=None):
         HumanoidBasic.__init__(self)
-        # TODO think about self.name: parse xlsx info
         self.project = "MoCap"
 
         # setting unique gesture name
@@ -82,6 +83,20 @@ class HumanoidUkr(HumanoidBasic):
         s += "\n\t rhand x lhand: \t %.1f%% x %.1f%%" % (rhand, lhand)
         return s
 
+    def define_plot_style(self):
+        """
+         Setting bar char plot style.
+        """
+        self.rotation = 80
+        self.fontsize = 7
+        self.add_error = False
+
+    def init_3dbox(self):
+        self.xmin = 0.4
+        self.xmax = 0.4
+        self.ymin = 0.4
+        self.ymax = 0.4
+
     def estimate_hand_contribution(self):
         """
          Estimates how much each hand has been moving along the prev positions.
@@ -97,33 +112,13 @@ class HumanoidUkr(HumanoidBasic):
                 lhand_contrib += deviation
         self.rhand_contib = rhand_contrib / (rhand_contrib + lhand_contrib)
 
-    def show_displacement(self, mode="bothHands", rotation=80, fontsize=7, add_error=True):
-        """
-            Plots a chart bar of joints displacements.
-        :param mode: use both hand (by default) or only prime one
-        :param rotation: labeled bar text rotation (Ox axis)
-        :param fontsize: labeled bar text font size (Ox axis)
-        :param add_error: whether to add bar error on plot or not
-        """
-        HumanoidBasic.plot_displacement(self, mode, rotation, fontsize, add_error)
-        plt.show()
-
-    def save_displacement(self, mode="bothHands", rotation=80, fontsize=7, add_error=False):
+    def save_displacement(self, mode="bothHands"):
         """
             Saves joint displacements in png.
         :param mode: use both hand (by default) or only prime one
-        :param rotation: labeled bar text rotation (Ox axis)
-        :param fontsize: labeled bar text font size (Ox axis)
-        :param add_error: whether to add bar error on plot or not
         """
-        HumanoidBasic.plot_displacement(self, mode, rotation, fontsize, add_error)
+        HumanoidBasic.plot_displacement(self, mode)
         plt.savefig("joint_displacements.png")
-
-    def init_3dbox(self):
-        self.xmin = 0.4
-        self.xmax = 0.4
-        self.ymin = 0.4
-        self.ymax = 0.4
 
     def animate(self, faster=7):
         """
@@ -151,7 +146,4 @@ class HumanoidUkr(HumanoidBasic):
 
 
 if __name__ == "__main__":
-    gest = HumanoidUkr("D:\GesturesDataset\splitAll\C1_mcraw_gest1_sample0.c3d")
-    gest.set_fps(24)
-    print gest
-    gest.animate(faster=1)
+    gest = HumanoidUkr(MOCAP_PATH + "Training\\C1_mcraw_gest0_sample0.c3d")

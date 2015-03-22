@@ -114,9 +114,9 @@ def separate_dataset():
      0's samples will be for training
      1's samples will be for testing
     """
-    splitAll = "D:\GesturesDataset\splitAll"
-    trn_folder = splitAll + "\\Training"
-    tst_folder = splitAll + "\\Testing"
+    splitAll = "D:\GesturesDataset\MoCap\splitAll\\"
+    trn_folder = splitAll + "Training"
+    tst_folder = splitAll + "Testing"
 
     if not os.path.exists(trn_folder):
         os.mkdir(trn_folder)

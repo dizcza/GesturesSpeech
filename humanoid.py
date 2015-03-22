@@ -53,14 +53,6 @@ class HumanoidBasic(object):
         """
         return self.norm_data
 
-    def get_hand_norm_data(self):
-        """
-        :return: (#hand_markers, #frames, 3) normalized data,
-                 pertains to hand joints
-        """
-        hand_ids = self.get_ids(*self.hand_markers)
-        return self.norm_data[hand_ids, ::]
-
     def set_fps(self, new_fps):
         """
             Modify data, w.r.t. new fps.
@@ -91,18 +83,6 @@ class HumanoidBasic(object):
         else:
             return ids
 
-    def get_hand_weights(self):
-        """
-        :return array: (#hand_markers,) weights, pertains to hand markers
-        """
-        if not any(self.moving_markers):
-            self.define_moving_markers(None)
-        hweights_ordered = []
-        for marker in self.labels:
-            if marker in self.hand_markers:
-                hweights_ordered.append(self.weights[marker])
-        return np.array(hweights_ordered)
-
     def get_weights(self):
         """
         :return array: (#markers,) ravelled array of weights
@@ -116,11 +96,6 @@ class HumanoidBasic(object):
         """
          2 steps data pre-processing.
         """
-        # step 0: moving average smoothing (omitted)
-        # wsize = 5
-        # self.data = moving_average(self.data, wsize)
-        # self.frames -= wsize - 1
-
         # step 1: subtract shoulder center from all joints
         sh_left, sh_center, sh_right = self.shoulder_markers
         center_id = self.get_ids(sh_center)
@@ -157,10 +132,11 @@ class HumanoidBasic(object):
             marker = self.labels[markerID]
             if marker in self.moving_markers:
                 # delta_per_frame.shape == (frames-1, 3)
-                delta_per_frame = self.norm_data[markerID, 1:, :] - \
-                                  self.norm_data[markerID, :-1, :]
+                delta_per_frame = np.subtract(self.norm_data[markerID, 1:, :],
+                                              self.norm_data[markerID, :-1, :])
                 dist_per_frame = norm(delta_per_frame, axis=1)
-                offset = np.average(dist_per_frame)
+                # offset: average --> sum
+                offset = np.sum(dist_per_frame)
                 j_std = np.std(dist_per_frame, dtype=np.float64)
             else:
                 offset = 0
@@ -181,14 +157,12 @@ class HumanoidBasic(object):
         U = np.sum(d * w) * (self.frames - 1)
         return U
 
-    def plot_displacement(self, mode, rotation, fontsize, add_error):
+    def plot_displacement(self, mode):
         """
          Plots a chart bar of joints displacements.
         :param mode: use both hand (by default) or only prime one
-        :param rotation: labeled bar text rotation (Ox axis)
-        :param fontsize: labeled bar text font size (Ox axis)
-        :param add_error: whether to add bar error on plot or not
         """
+        self.define_plot_style()
         self.compute_displacement(mode)
 
         self.fig = plt.figure()
@@ -202,7 +176,7 @@ class HumanoidBasic(object):
 
         ind = np.arange(len(offset_list))
         width = 0.5
-        if add_error:
+        if self.add_error:
             ax.bar(ind, offset_list, width, yerr=joint_std_list,
                    error_kw=dict(elinewidth=2, ecolor='red'))
         else:
@@ -211,10 +185,24 @@ class HumanoidBasic(object):
         ax.set_ylim(ymin=0)
         ax.set_xticks(ind+width/2)
         ax.set_title("%s joint displacements" % self.name)
-        ax.set_ylabel("displacement / frames,  norm units")
+        ax.set_ylabel("marker motion measure,  norm units")
         xtickNames = ax.set_xticklabels(self.moving_markers)
-        plt.setp(xtickNames, rotation=rotation, fontsize=fontsize)
+        plt.setp(xtickNames, rotation=self.rotation, fontsize=self.fontsize)
 
+    def show_displacements(self, mode="bothHands"):
+        """
+        :param mode: use both hand (by default) or only prime one
+        """
+        self.plot_displacement(mode)
+        plt.show()
+
+    def define_plot_style(self):
+        """
+         Setting bar char plot style.
+        """
+        self.rotation = 0
+        self.fontsize = 12
+        self.add_error = False
 
     def init_3dbox(self):
         self.xmin = 0.
@@ -273,7 +261,6 @@ class HumanoidBasic(object):
         :param beta: param to be chosen during the training
         """
         self.compute_displacement(mode)
-
         displacements = np.array(self.joint_displace.values())
         denom = np.sum(1. - np.exp(-beta * displacements))
         for marker in self.labels:
@@ -287,6 +274,90 @@ class HumanoidBasic(object):
         json_file = self.project.upper() + "_INFO.json"
         dic_info = json.load(open(json_file, 'r'))
         weights_aver_dic = dic_info["weights"]
-        weights_arr = weights_aver_dic[self.name]
-        for markerID, marker_name in enumerate(self.labels):
-            self.weights[marker_name] = weights_arr[markerID]
+        if self.name in weights_aver_dic:
+            # if _INFO file provides weights for current gesture
+            weights_arr = weights_aver_dic[self.name]
+            for markerID, marker_name in enumerate(self.labels):
+                self.weights[marker_name] = weights_arr[markerID]
+        else:
+            # compute weights for unknown gesture
+            self.compute_weights(mode="bothHands", beta=0.)
+
+    def get_weights_discrepancy(self, other, mode):
+        """
+         Tells whether self joint displacement snapshot is
+         alike to the other joint displacement snapshot.
+        :param other: other gesture
+        :param mode: use both hand (by default) or only prime one
+        :return: weights discrepancy between self and other
+        """
+        self.compute_displacement(mode)
+        other.compute_displacement(mode)
+
+        present_markers = [mar for mar in self.labels if mar in other.labels]
+        if not any(present_markers):
+            return np.inf
+
+        active_self_displ = [self.joint_displace[marker] for marker in present_markers]
+        active_other_displ = [other.joint_displace[marker] for marker in present_markers]
+        diff = norm(np.subtract(active_self_displ, active_other_displ))
+        the_lowest_sum = min(sum(active_self_displ), sum(active_other_displ))
+        diff_rate = diff / the_lowest_sum
+        return diff_rate
+
+    def is_comparable_with(self, other, mode="bothHands", thr=0.16):
+        """
+         Tells whether self joint displacement snapshot is
+         alike to the other joint displacement snapshot.
+        :param other: other gesture
+        :param mode: use both hand (by default) or only prime one
+        :param thr: rate of the lowest displacement sum as a similarity measure
+        :return: if self-gest and other-gest can pertain to the same class
+                (DTW should go next to specify the answer)
+        """
+        diff_rate = self.get_weights_discrepancy(other, mode)
+        return diff_rate < thr
+
+
+def align_gestures(self, other):
+    """
+     Aligns data shapes by throwing out missed labels.
+    :param self: one gesture
+    :param other: another gesture
+    """
+    throw_labels = {
+        "self": [],
+        "other": []
+    }
+    instance = {
+        "self": self,
+        "other": other
+    }
+    for known_label in self.labels:
+        if known_label not in other.labels:
+            throw_labels["self"].append(known_label)
+    for unknown_label in other.labels:
+        if unknown_label not in self.labels:
+            throw_labels["other"].append(unknown_label)
+
+    for me in instance:
+        del_ids = instance[me].get_ids(*throw_labels[me])
+        instance[me].data = np.delete(instance[me].data, del_ids, axis=0)
+        instance[me].norm_data = np.delete(instance[me].norm_data, del_ids, axis=0)
+        for missed_marker in throw_labels[me]:
+            instance[me].labels.remove(missed_marker)
+            del instance[me].weights[missed_marker]
+            del instance[me].joint_displace[missed_marker]
+            del instance[me].joint_std[missed_marker]
+            if missed_marker in instance[me].moving_markers:
+                instance[me].moving_markers.remove(missed_marker)
+
+    # update weights
+    for me in instance:
+        weights_new_sum = sum(instance[me].weights.values())
+        # instance labels are already updated
+        for marker in instance[me].labels:
+            instance[me].weights[marker] /= weights_new_sum
+
+    # return aligned self and other gestures
+    return self, other

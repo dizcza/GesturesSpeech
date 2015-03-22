@@ -121,17 +121,10 @@ class HumanoidKinect(HumanoidBasic):
         else:
             HumanoidBasic.define_moving_markers(self, mode="bothHands")
 
-    def show_displacement(self, mode="bothHands"):
-        """
-        :param mode: use both hand (by default) or only prime one
-        """
-        HumanoidBasic.plot_displacement(self, mode, rotation=0, fontsize=12, add_error=True)
-        plt.show()
-
 
 if __name__ == "__main__":
     gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\LeftHandWave\LeftHandWave_000.txt")
-    gest.animate()
+    # gest.animate()
     print gest
-    gest.show_displacement()
+    gest.show_displacements()
     gest.compute_weights(mode="oneHand", beta=1e-4)

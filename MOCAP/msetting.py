@@ -1,6 +1,7 @@
 # coding = utf-8
 
-from mreader import *
+from mreader import HumanoidUkr, MOCAP_PATH
+import numpy as np
 from numpy.linalg import norm
 from Kinect.ksetting import init_info
 from gDTW import wdtw_windowed, wdtw
@@ -20,7 +21,7 @@ def compute_weights(beta):
     except ValueError:
         MOCAP_INFO = init_info()
 
-    trn_folder = "D:\GesturesDataset\splitAll\Training"
+    trn_folder = MOCAP_PATH + "Training"
     weights_info = {}
     
     for trn_file in os.listdir(trn_folder):
@@ -45,7 +46,7 @@ def compute_between_variance(fps):
     print "(MoCap project) COMPUTING BETWEEN VARIANCE with fps = %s" % fps
     
     MOCAP_INFO = json.load(open("MOCAP_INFO.json", 'r'))
-    trn_folder = "D:\GesturesDataset\splitAll\Training"
+    trn_folder = MOCAP_PATH + "Training"
     one_vs_others_var = []
 
     samples = []
