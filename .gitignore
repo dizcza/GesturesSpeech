@@ -4,3 +4,4 @@ training.py
 *.npy
 .idea
 MOCAP/animation
+fbx_reader.py

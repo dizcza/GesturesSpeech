@@ -30,7 +30,7 @@ captured with Microsoft Kinect sensor</i></p>
 
 <h2 id="info">Projects info</h2>
 <ul>
-  <li>MoCap (Motion Capture):
+  <li>MoCap (Graphics Lab Motion Capture):
     <ul>
       <li>covers common Ukrainian gestures</li>
       <li>file type: c3d</li>
@@ -95,7 +95,7 @@ As Reyes et al. (2011) has observed, only six out of the 20 joints contribute in
 
 
 <h2 id="displacements">Body joint displacements</h2>
-<p>The main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 6 hand markers while MoCap projects operates with 50 (25 x 2) hand markers. Their contribution in the motion is shown below as an average joint's displacement per frame (measured in normalized units).
+<p>The main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 6 hand markers while MoCap projects operates with 50 (25 x 2) hand markers. Their contribution in the motion is shown below as a  joint's displacement sum over gesture frames (measured in normalized units).
 </p>
 <table style="width:100%">
 	<tr>
@@ -173,7 +173,7 @@ Best beta yields the biggest discriminant ratio <img src="http://latex.codecogs.
 
 
 <h2 id="tools">Tools</h2>
-<p>Free 3D Motion Capture visualizers:</p>
+<p>Free 3D Graphics Lab Motion Capture visualizers:</p>
 <ul>
   <li><a href="http://b-tk.googlecode.com/svn/web/mokka/index.html">Mokka</a></li>
   <li>A powerful <a href="http://www.blender.org/">Blender</a> suite (look at <a href="http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender">here</a> to be able to import C3D files)</li>

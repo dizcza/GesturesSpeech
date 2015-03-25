@@ -1,12 +1,11 @@
 # coding=utf-8
 
-from humanoid import HumanoidBasic
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import cPickle as pickle
 
-FACE_PATH_DATA = "D:\GesturesDataset\FACE\\txt\\data"
+EMOTION_PATH_DATA = "D:\GesturesDataset\Emotion\\txt\\data"
 
 
 class Emotion(object):
@@ -48,7 +47,7 @@ class Emotion(object):
         anim = animation.FuncAnimation(self.fig,
                                        func=self.next_frame,
                                        frames=self.frames,
-                                       interval=10.,     # in ms
+                                       interval=50.,     # in ms
                                        blit=True)
         try:
             plt.show(self.fig)
@@ -57,6 +56,6 @@ class Emotion(object):
 
 
 if __name__ == "__main__":
-    em = Emotion("D:\GesturesDataset\FACE\\txt\data\\28-4-1.pkl")
-    # em.animate()
+    em = Emotion("D:\GesturesDataset\Emotion\\txt\data\\28-4-1.pkl")
+    em.animate()
     print em
