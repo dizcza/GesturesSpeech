@@ -1,8 +1,8 @@
 # coding=utf-8
 
-from mreader import HumanoidUkr, MOCAP_PATH
+from MOCAP.mreader import HumanoidUkr, MOCAP_PATH
+from MOCAP.helper import get_corrupted_frames
 import numpy as np
-from helper import get_corrupted_frames
 import matplotlib.pyplot as plt
 import os
 
@@ -121,10 +121,10 @@ def plot_them_all(folder):
             try:
                 fname = os.path.join(folder, c3d_file)
                 gest = HumanoidUkrSplitter(fname)
-                print "file: %s; \t frames: %d" % (c3d_file, gest.frames)
+                print("file: %s; \t frames: %d" % (c3d_file, gest.frames))
                 gest.plot_relaxed_indices()
             except:
-                print "cannot describe %s" % c3d_file
+                print("cannot describe %s" % c3d_file)
                 continue
 
 

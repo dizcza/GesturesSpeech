@@ -151,8 +151,8 @@ if __name__ == "__main__":
 
     d = DtwBackward(x, y)
     # print d.calculate_backward(5, 5)
-    print d.calculate()
-    print float(calls) / len(x) / len(y)
+    print(d.calculate())
+    print(float(calls) / len(x) / len(y))
     # path = d.get_path()
     # x_path, y_path = zip(*d.get_path())
     # print x_path, y_path

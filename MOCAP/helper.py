@@ -1,9 +1,16 @@
 # coding=utf-8
 
-import numpy as np
-import btk
 import os
 import shutil
+import warnings
+
+import numpy as np
+
+
+try:
+    import btk
+except ImportError:
+    from MOCAP import btk_fake as btk
 
 
 def print_info(filename):
@@ -22,19 +29,19 @@ def print_info(filename):
     print('Analog frequency: %.2f Hz' % acq.GetAnalogFrequency())
     print('Number of analog channels: %d' % acq.GetAnalogNumber())
     print('Number of events: %d' % acq.GetEventNumber())
-    print "Markers: %d" % acq.GetPoints().GetItemNumber()
+    print("Markers: %d" % acq.GetPoints().GetItemNumber())
 
-    print "\nALL METADATA:"
+    print("\nALL METADATA:")
     for i in range(acq.GetMetaData().GetChildNumber()):
         print(acq.GetMetaData().GetChild(i).GetLabel() + ':')
         for j in range(acq.GetMetaData().GetChild(i).GetChildNumber()):
-            print acq.GetMetaData().GetChild(i).GetChild(j).GetLabel(),
+            print(acq.GetMetaData().GetChild(i).GetChild(j).GetLabel(),)
         print('\n')
 
     for i in range(acq.GetPoints().GetItemNumber()):
-        print acq.GetPoint(i).GetLabel()
-        print acq.GetPoint(i).GetDescription()
-        # print acq.GetPoint(i).GetValues()
+        print(acq.GetPoint(i).GetLabel())
+        print(acq.GetPoint(i).GetDescription())
+        # print(acq.GetPoint(i).GetValues())
 
 
 def get_corrupted_frames(data):
@@ -50,7 +57,7 @@ def get_corrupted_frames(data):
     return corrupted_frames
 
 
-def init_frame(filename):
+def init_frame(filename, verbose=False):
     """
     :param filename: .c3d-file
     :return: init (relaxed) frame pertains to the filename.c3d
@@ -106,6 +113,9 @@ def init_frame(filename):
     if short_name in initFrames.keys():
         return initFrames[short_name]
     else:
+        if verbose:
+            message = "c3d filename %s has no init frame; returning 0" % short_name
+            warnings.warn(message)
         return 0
 
 

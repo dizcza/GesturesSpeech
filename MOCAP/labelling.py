@@ -12,7 +12,7 @@ def gather_labels(acq):
     for i in range(acq.GetPoints().GetItemNumber()):
         label = acq.GetPoint(i).GetLabel().split(":")[-1]
         labels.append(label)
-    return labels
+    return tuple(labels)
 
 
 def get_hand_labels(labels):
@@ -29,7 +29,7 @@ def get_hand_labels(labels):
     lhand_labels = [marker for marker in lhand_labels if marker in labels]
     rhand_labels = ["R" + label[1:] for label in lhand_labels]
     hands_labels = np.concatenate([lhand_labels, rhand_labels])
-    return hands_labels
+    return tuple(hands_labels)
 
 
 def save_labelling(gest):
@@ -37,6 +37,6 @@ def save_labelling(gest):
      Saves current gesture labelling.
     :param gest: HumanoidUkr instance
     """
-    print "%d markers have been saved in valid_labels.txt" % len(gest.labels)
+    print("%d markers have been saved in valid_labels.txt" % len(gest.labels))
     np.savetxt("valid_labels.txt", gest.labels, fmt="%s", delimiter='\n')
 

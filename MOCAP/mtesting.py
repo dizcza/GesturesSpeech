@@ -1,13 +1,14 @@
 # coding = utf-8
 
-from mreader import HumanoidUkr, MOCAP_PATH
+from MOCAP.mreader import HumanoidUkr, MOCAP_PATH
+from MOCAP.msetting import compute_between_variance
 from gDTW import wdtw_windowed, wdtw
 from comparison import compare, show_comparison
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from msetting import compute_between_variance
 import time
+
 
 def compare_workout():
     """
@@ -20,7 +21,7 @@ def compare_workout():
     first = os.path.join(trn_folder, first)
     firstGest = HumanoidUkr(first)
     firstGest.compute_displacement(mode="bothHands")
-    print sum(firstGest.joint_displace.values())
+    print(sum(firstGest.joint_displace.values()))
 
     for log in second:
         log = os.path.join(trn_folder, log)
@@ -75,7 +76,7 @@ def test_inclusion_exclusion():
     should_be = a + b + c - a*b - a*c - b*c + a*b*c
     array = [a, b, c]
     got = probOr(array)
-    print should_be, got
+    print(should_be, got)
 
 
 def estimate_activation_prob(U, costs):
@@ -96,7 +97,7 @@ def compare_them_all(fps):
     """
      TESTING func
     """
-    print "(MoCap project) comparing them all ..."
+    print("(MoCap project) comparing them all ...")
 
     trn_folder = MOCAP_PATH + "Training"
     tst_folder = MOCAP_PATH + "Testing"
@@ -108,10 +109,10 @@ def compare_them_all(fps):
         trn_filename = os.path.join(trn_folder, trn_log)
         patterns.append(HumanoidUkr(trn_filename, fps))
 
-    print "Testing with fps: %s ..." % fps
+    print("Testing with fps: %s ..." % fps)
     confidence = [0.]
     for tst_log in os.listdir(tst_folder):
-        print "\tComparing %s..." % tst_log
+        print("\tComparing %s..." % tst_log)
         tst_filename = os.path.join(tst_folder, tst_log)
         unknownGest = HumanoidUkr(tst_filename, fps)
         costs = []
@@ -128,10 +129,10 @@ def compare_them_all(fps):
         # print "Pact: %f" % act_prob
 
         if possibleGest.name != unknownGest.name:
-            print "\t\tgot %s, should be %s" % (possibleGest.name, unknownGest.name)
+            print("\t\tgot %s, should be %s" % (possibleGest.name, unknownGest.name))
             misclassified += 1.
     Etest = misclassified / total_samples
-    print "Etest: %g <----> (%d / %d)" % (Etest, misclassified, total_samples)
+    print("Etest: %g <----> (%d / %d)" % (Etest, misclassified, total_samples))
 
     return Etest, np.average(confidence)
 
@@ -174,7 +175,7 @@ def error_vs_fps():
 
 
 def how_many_incomparable(fps):
-    print "(MoCap project) how many incomparable gestures?"
+    print("(MoCap project) how many incomparable gestures?")
     begin = time.time()
 
     trn_folder = MOCAP_PATH + "Training"
@@ -187,23 +188,23 @@ def how_many_incomparable(fps):
         trn_filename = os.path.join(trn_folder, trn_log)
         patterns.append(HumanoidUkr(trn_filename, fps))
 
-    print "Running with fps: %s" % fps
+    print("Running with fps: %s" % fps)
     for i, tst_log in enumerate(os.listdir(tst_folder)):
         # print "\tComparing %s..." % tst_log
-        print "\rProgress: {0}%".format((float(i)/(total_samples-1))*100),
+        print("\rProgress: {0}%".format((float(i)/(total_samples-1))*100),)
         tst_filename = os.path.join(tst_folder, tst_log)
         unknownGest = HumanoidUkr(tst_filename, fps)
         for knownGest in patterns:
             if not unknownGest.is_comparable_with(knownGest, thr=0.1):
                 incomparable_total += 1.
-        print incomparable_total
+        print(incomparable_total)
 
     got_rid_of = incomparable_total / total_samples
     perc = got_rid_of / total_samples
-    print "got rid of: %g %% <----> (%d / %d)" % (perc, got_rid_of, total_samples)
+    print("got rid of: %g %% <----> (%d / %d)" % (perc, got_rid_of, total_samples))
 
     end = time.time()
-    print "\t Duration: ~%g sec" % (end - begin)
+    print("\t Duration: ~%g sec" % (end - begin))
 
 
 if __name__ == "__main__":

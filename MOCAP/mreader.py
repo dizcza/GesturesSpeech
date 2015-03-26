@@ -1,11 +1,18 @@
+# !/usr/bin/python
 # coding=utf-8
 
-import btk
-from humanoid import HumanoidBasic
+import numpy as np
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
-from labelling import *
-from helper import init_frame
+
+from humanoid import HumanoidBasic
+from MOCAP.labelling import gather_labels, get_hand_labels
+from MOCAP.helper import init_frame
+
+try:
+    import btk
+except ImportError:
+    from MOCAP import btk_fake as btk
 
 MOCAP_PATH = "D:\GesturesDataset\MoCap\splitAll\\"
 
@@ -15,14 +22,19 @@ def gather_points_data(acq):
     :param acq: acquisition from .c3d-file
     :return: (#markers, #frames, 3) ndarray of 3d points data
     """
-    data = np.empty((3, acq.GetPointFrameNumber(), 1))
-    for i in range(0, acq.GetPoints().GetItemNumber()):
-        label_id = acq.GetPoint(i).GetLabel()
-        data = np.dstack((data, acq.GetPoint(label_id).GetValues().T))
-    data = np.delete(data.T, 0, axis=0)  # first marker is noisy for this file (truly)
+    if hasattr(acq, "fake") and acq.fake is True:
+        # returning data read by c3d module
+        return acq.GetData()
+    else:
+        # returning data read by btk module
+        data = np.empty((3, acq.GetPointFrameNumber(), 1))
+        for i in range(0, acq.GetPoints().GetItemNumber()):
+            label_id = acq.GetPoint(i).GetLabel()
+            data = np.dstack((data, acq.GetPoint(label_id).GetValues().T))
+        data = np.delete(data.T, 0, axis=0)  # first marker is noisy for this file (truly)
 
-    # dealing with mm --> m
-    return data / 1e3
+        # dealing with mm --> m
+        return data / 1e3
 
 
 def parse_fname(fname):
@@ -60,7 +72,7 @@ class HumanoidUkr(HumanoidBasic):
         # dealing with markers
         self.labels = gather_labels(acq)
         self.hand_markers = get_hand_labels(self.labels)
-        self.shoulder_markers = ["LBSH", "CLAV", "RBSH"]
+        self.shoulder_markers = "LBSH", "CLAV", "RBSH"
 
         # dealing with data
         self.data = gather_points_data(acq)
@@ -105,7 +117,7 @@ class HumanoidUkr(HumanoidBasic):
             self.compute_displacement(mode="bothHands")
         rhand_contrib = 0.
         lhand_contrib = 0.
-        for marker, deviation in self.joint_displace.iteritems():
+        for marker, deviation in self.joint_displace.items():
             if marker[0] == "R":
                 rhand_contrib += deviation
             elif marker[0] == "L":
@@ -142,8 +154,10 @@ class HumanoidUkr(HumanoidBasic):
                                        blit=True)
         mp4_file = self.name + '.mp4'
         anim.save(mp4_file, writer='ffmpeg', fps=50)
-        print "Animation is saved in %s" % mp4_file
+        print("Animation is saved in %s" % mp4_file)
 
 
 if __name__ == "__main__":
     gest = HumanoidUkr(MOCAP_PATH + "Training\\C1_mcraw_gest0_sample0.c3d")
+    print(gest)
+    # gest.show_displacements()

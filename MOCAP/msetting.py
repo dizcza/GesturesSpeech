@@ -1,6 +1,6 @@
 # coding = utf-8
 
-from mreader import HumanoidUkr, MOCAP_PATH
+from MOCAP.mreader import HumanoidUkr, MOCAP_PATH
 import numpy as np
 from numpy.linalg import norm
 from Kinect.ksetting import init_info
@@ -35,7 +35,7 @@ def compute_weights(beta):
     MOCAP_INFO["weights"] = weights_info
 
     json.dump(MOCAP_INFO,  open("MOCAP_INFO.json",  'w'))
-    print "New weights are saved in MOCAP_INFO.json"
+    print("New weights are saved in MOCAP_INFO.json")
 
 
 def compute_between_variance(fps):
@@ -43,7 +43,7 @@ def compute_between_variance(fps):
      Computes aver between variance from the Training dataset.
     """
     
-    print "(MoCap project) COMPUTING BETWEEN VARIANCE with fps = %s" % fps
+    print("(MoCap project) COMPUTING BETWEEN VARIANCE with fps = %s" % fps)
     
     MOCAP_INFO = json.load(open("MOCAP_INFO.json", 'r'))
     trn_folder = MOCAP_PATH + "Training"
@@ -69,7 +69,7 @@ def compute_between_variance(fps):
 
     info = "Done with: \n\t between-var: %g \n\t " % BETWEEN_VAR
     info += "between-std: %g\n" % between_std
-    print info
+    print(info)
 
     return BETWEEN_VAR, between_std
 
@@ -78,25 +78,25 @@ def choose_beta(fps):
     """
      Choosing the best beta to yield the biggest discriminant ratio.
     """
-    print "(MoCap project) choosing the beta with fps = %s" % fps
+    print("(MoCap project) choosing the beta with fps = %s" % fps)
     begin = time.time()
     beta_range = [1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]
     between_vars = []
     between_stds = []
     for beta in beta_range:
-        print "BETA: %1.e" % beta
+        print("BETA: %1.e" % beta)
         compute_weights(beta)
         var, std = compute_between_variance(fps)
         between_vars.append(var)
         between_stds.append(std)
 
-    print zip(beta_range, between_vars, between_stds)
+    print(zip(beta_range, between_vars, between_stds))
     best_ratio = max(between_vars)
     ind = np.argmax(between_vars)
     best_beta = beta_range[ind]
-    print "BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta)
+    print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
     end = time.time()
-    print "\t Duration: ~%d m" % ((end - begin) / 60.)
+    print("\t Duration: ~%d m" % ((end - begin) / 60.))
 
     plt.errorbar(np.log(beta_range), between_vars, between_stds, marker='^', ms=8)
     plt.xlabel("beta, log")

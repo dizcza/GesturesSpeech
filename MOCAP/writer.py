@@ -1,7 +1,11 @@
 # coding=utf-8
 
-import os
-from splitter import *
+from MOCAP.splitter import *
+
+try:
+    import btk
+except ImportError:
+    from MOCAP import btk_fake as btk
 
 
 def rewrite_files_in(folder):
@@ -75,7 +79,7 @@ def fill_missed_frame_and_save(filename, markerID, frame_missed):
 
     acq.GetPoint(markerID).SetValues(framesXYZ)
 
-    print "%s[%d] vals set to %s" % (acq.GetPoint(markerID).GetLabel(), frame_missed, framesXYZ[frame_missed, :])
+    print("%s[%d] vals set to %s" % (acq.GetPoint(markerID).GetLabel(), frame_missed, framesXYZ[frame_missed, :]))
 
     writer.SetInput(acq)
     writer.SetFilename(filename)
@@ -86,11 +90,11 @@ def modify_orient_in(folder):
     """
     :param folder: path to folder with .c3d-files
     """
-    print "Reading..."
+    print("Reading...")
     for c3d in os.listdir(folder):
         if c3d.endswith(".c3d"):
             change_orientation(folder + c3d)
-    print "Done."
+    print("Done.")
 
 
 def split_file(folder_path, filename, double_pairs):
@@ -134,7 +138,7 @@ def split_file(folder_path, filename, double_pairs):
             writer.SetInput(clone)
             writer.SetFilename(new_folder_path + new_short_name)
             writer.Update()
-    print "%s was successfully split into 2x%d samples" % (short_name, len(double_pairs))
+    print("%s was successfully split into 2x%d samples" % (short_name, len(double_pairs)))
 
 
 def split_mult_files(folder_path, split_thr):

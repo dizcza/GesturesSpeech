@@ -2,7 +2,7 @@
 
 from gDTW import wdtw_windowed, wdtw
 from comparison import compare, show_comparison
-from kreader import *
+from Kinect.kreader import *
 import os
 
 
@@ -30,8 +30,8 @@ def collect_patterns(fps):
             full_filename = os.path.join(root, logs[0])
             gest = HumanoidKinect(full_filename, fps)
             pattern_gestures.append(gest)
-    print "Took %d patterns as the first log in each training dir." % \
-          len(pattern_gestures)
+    print("Took %d patterns as the first log in each training dir." % \
+          len(pattern_gestures))
     return pattern_gestures
 
 
@@ -40,7 +40,7 @@ def compare_them_all(fps):
      Main testing function.
     :return: out-of-sample error
     """
-    print "(Kinect project) comparing them all with fps = %s" % fps
+    print("(Kinect project) comparing them all with fps = %s" % fps)
     patterns = collect_patterns(fps)
     misclassified = 0.
     total_samples = 0
@@ -58,13 +58,13 @@ def compare_them_all(fps):
                 # show_comparison(possible_gest, unknown_gest)
 
                 if possible_gest.name != unknown_gest.name:
-                    print "got %s, should be %s" % (possible_gest.name, unknown_gest.name)
+                    print("got %s, should be %s" % (possible_gest.name, unknown_gest.name))
                     misclassified += 1.
 
                 total_samples += 1
 
     Etest = misclassified / float(total_samples)
-    print "Etest: %g <----> (%d / %d)" % (Etest, misclassified, total_samples)
+    print("Etest: %g <----> (%d / %d)" % (Etest, misclassified, total_samples))
 
     return Etest
 
@@ -105,7 +105,7 @@ def the_worst_between_comparison(fps):
                 dist = compare(theSamePattern, unknownGest)
                 the_same_costs.append(dist)
 
-            for class_name, gestsLeft in patterns.iteritems():
+            for class_name, gestsLeft in patterns.items():
                 if class_name != dir:
                     for knownGest in gestsLeft:
                         dist = compare(knownGest, unknownGest)
@@ -118,10 +118,10 @@ def the_worst_between_comparison(fps):
                 infimum[dir] += 1
 
     for dir in supremum.keys():
-        print dir, supremum[dir], infimum[dir]
+        print(dir, supremum[dir], infimum[dir])
     total_supremum = sum(supremum.values())
     total_infimum = sum(infimum.values())
-    print "inf: %d; \tsupr: %d" % (total_infimum, total_supremum)
+    print("inf: %d; \tsupr: %d" % (total_infimum, total_supremum))
 
     return total_infimum, total_supremum
 

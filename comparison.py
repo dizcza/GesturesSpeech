@@ -82,12 +82,12 @@ def compare(known_gest, unknown_gest, dtw_chosen=wdtw, compare_weights=False):
         data1, data2, weights = align_data_shape(known_gest, unknown_gest)
 
     if not data1.any() or not data2.any():
-        print "Incompatible data dimensions. Returned np.inf"
+        print("Incompatible data dimensions. Returned np.inf")
         return np.inf
 
     dist = dtw_chosen(data1, data2, weights)
     if dist == np.inf:
-        print "WARNING: dtw comparison gave np.inf"
+        print("WARNING: dtw comparison gave np.inf")
 
     return dist
 
@@ -103,10 +103,10 @@ def show_comparison(known_gest, unknown_gest):
 
     if data1.shape[0] != data2.shape[0]:
         data1, data2, weights = align_data_shape(known_gest, unknown_gest)
-        print "aligned to ", data1.shape, data2.shape
+        print("aligned to ", data1.shape, data2.shape)
 
     if not data1.any() or not data2.any():
-        print "Incompatible data dimensions."
+        print("Incompatible data dimensions.")
         return np.inf
 
     # was: data.shape == (#markers, frames, 3)
@@ -117,7 +117,7 @@ def show_comparison(known_gest, unknown_gest):
     dist_measure_weighted = partial(dist_measure, weights=weights)
     dist, cost, path = dtw(data1, data2, dist=dist_measure_weighted)
 
-    print 'Minimum distance found: %.4f' % dist
+    print('Minimum distance found: %.4f' % dist)
     # print "x-path (first gesture frames):\n", path[0]
     # print "y-path (second gesture frames):\n", path[1]
     plt.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest')

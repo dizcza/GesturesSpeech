@@ -26,7 +26,7 @@ def one_step_show():
     dir_path = "D:\GesturesDataset\Emotion\\txt\data"
     for i, log in enumerate(os.listdir(dir_path)[10:]):
         fig = plt.figure()
-        print log
+        print(log)
         fname = os.path.join(dir_path, log)
         info = pickle.load(open(fname, 'rb'))
         data = info["data"]

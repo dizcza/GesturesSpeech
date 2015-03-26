@@ -42,13 +42,13 @@ def verify_labels():
             if marker_log.endswith(".txt"):
                 label = marker_log[:-6]
                 labels_casket[directory].append(label)
-    gathered_labels = np.array(labels_casket.values())
+    gathered_labels = np.array(list(labels_casket.values()))
     the_same = gathered_labels == gathered_labels[0, :]
     okay = the_same.all()
     if okay:
-        print "Okay"
+        print("Okay")
     else:
-        print "Shit"
+        print("Shit")
         raise ValueError
     valid_labels = set(gathered_labels[0, :])
     np.savetxt("valid_labels.txt", np.array(list(valid_labels)), fmt="%s")
@@ -115,7 +115,7 @@ def find_key_by_val(casket, this_val):
     :param this_val: value to find in the dict
     :return: corresponding key
     """
-    for key, values in casket.iteritems():
+    for key, values in casket.items():
         if this_val in values:
             return key
     return "unknown"
@@ -128,7 +128,7 @@ def check_uniqueness(casket):
     """
     junk = list(itertools.chain(*casket.values()))
     if len(set(junk)) != len(junk):
-        print "the dict values isn't unique"
+        print("the dict values isn't unique")
         raise AttributeError
 
 
@@ -138,14 +138,14 @@ def check_missed(casket, casket_name, written_files):
     :param casket_name: dict name
     :param written_files: given txt files
     """
-    print "Checking missed logs in %s" % casket_name
+    print("Checking missed logs in %s" % casket_name)
     files_in_casket = list(itertools.chain(*casket.values()))
     for fname in files_in_casket:
         if fname not in written_files:
-            print "got %s in %s not in given files" % (fname, casket_name)
+            print("got %s in %s not in given files" % (fname, casket_name))
     for fname in written_files:
         if fname not in files_in_casket:
-            print fname
+            print(fname)
 
 
 def dump_pickles():

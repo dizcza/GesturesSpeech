@@ -1,6 +1,6 @@
 # coding = utf-8
 
-from kreader import HumanoidKinect, KINECT_PATH
+from Kinect.kreader import HumanoidKinect, KINECT_PATH
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,7 +40,7 @@ def compute_weights(mode, beta):
     KINECT_INFO["weights"] = weights_aver
 
     json.dump(KINECT_INFO,  open("KINECT_INFO.json",  'w'))
-    print "New weights are saved in KINECT_INFO.json"
+    print("New weights are saved in KINECT_INFO.json")
 
 
 def compute_within_variance():
@@ -48,7 +48,7 @@ def compute_within_variance():
      Computes aver within variance from the Training dataset.
     """
     
-    print "(Kinect project) COMPUTING WITHIN VARIANCE"
+    print("(Kinect project) COMPUTING WITHIN VARIANCE")
     
     KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
     one_vs_the_same_var = []
@@ -80,7 +80,7 @@ def compute_within_variance():
 
     info = "Done with: \n\t within-var: %g \n\t " % WITHIN_VAR
     info += "within-std: %g\n" % within_std
-    print info
+    print(info)
 
 
 def compute_between_variance():
@@ -88,7 +88,7 @@ def compute_between_variance():
      Computes aver between variance from the Training dataset.
     """
     
-    print "(Kinect project) COMPUTING BETWEEN VARIANCE"
+    print("(Kinect project) COMPUTING BETWEEN VARIANCE")
     
     KINECT_INFO = json.load(open("KINECT_INFO.json", 'r'))
     one_vs_others_var = []
@@ -122,7 +122,7 @@ def compute_between_variance():
 
     info = "Done with: \n\t between-var: %g \n\t " % BETWEEN_VAR
     info += "between-std: %g\n" % between_std
-    print info
+    print(info)
 
 
 def init_info():
@@ -165,7 +165,7 @@ def update_ratio(beta):
     _INFO["d-ratio"] = between_var / within_var
     _INFO["d-ratio-std"] = ratio_std
 
-    print "(!) New discriminant ratio: %g" % _INFO["d-ratio"]
+    print("(!) New discriminant ratio: %g" % _INFO["d-ratio"])
     json.dump(_INFO, open("KINECT_INFO.json", 'w'))
 
     return _INFO["d-ratio"], ratio_std
@@ -175,24 +175,24 @@ def choose_beta(fps):
     """
      Choosing the best beta to yield the biggest discriminant ratio.
     """
-    print "(Kinect project) choosing the beta with fps = %s" % fps
+    print("(Kinect project) choosing the beta with fps = %s" % fps)
     begin = time.time()
     beta_range = [1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]
     gained_ratios = []
     gained_stds = []
     for beta in beta_range:
-        print "BETA: %f" % beta
+        print("BETA: %f" % beta)
         ratio, std = update_ratio(beta)
         gained_ratios.append(ratio)
         gained_stds.append(std)
 
-    print zip(beta_range, gained_ratios, gained_stds)
+    print(zip(beta_range, gained_ratios, gained_stds))
     best_ratio = max(gained_ratios)
     ind = np.argmax(gained_ratios)
     best_beta = beta_range[ind]
-    print "BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta)
+    print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
     end = time.time()
-    print "\t Duration: ~%d m" % ((end - begin) / 60.)
+    print("\t Duration: ~%d m" % ((end - begin) / 60.))
 
     plt.errorbar(np.log(beta_range), gained_ratios, gained_stds,
                  linestyle='None', marker='^', ms=8)
@@ -209,7 +209,7 @@ def compute_lowest_weights_discrepancy(fps):
      as the biggest one from the training folder.
     :param fps: data fps to be set during reading the files
     """
-    print "(Kinect project) compute_weights_discrepancy_infimum"
+    print("(Kinect project) compute_weights_discrepancy_infimum")
     weights_discr = {}
     for root, dirs, logs in os.walk(KINECT_PATH + "Training\\", topdown=False):
         for class_name in dirs:
@@ -231,10 +231,10 @@ def compute_lowest_weights_discrepancy(fps):
             log_examples.pop(0)
 
     LOWEST_WEIGHTS_DISCR_THR = {}
-    for class_name, discr_array in weights_discr.iteritems():
+    for class_name, discr_array in weights_discr.items():
         LOWEST_WEIGHTS_DISCR_THR[class_name] = max(discr_array)
     pprint(LOWEST_WEIGHTS_DISCR_THR)
-    print "The lowest weights dicr thr: %f" % max(LOWEST_WEIGHTS_DISCR_THR.values())
+    print("The lowest weights dicr thr: %f" % max(LOWEST_WEIGHTS_DISCR_THR.values()))
 
 
 if __name__ == "__main__":

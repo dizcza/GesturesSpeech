@@ -14,6 +14,7 @@ Reference:
 from humanoid import HumanoidBasic
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 
 KINECT_PATH = "D:\GesturesDataset\KINECT\\"
 MARKERS = 20
@@ -40,7 +41,7 @@ def gather_labels(rlines):
     labels = []
     for noisy_label in label_names:
         labels.append(noisy_label[1:-1])
-    return labels
+    return tuple(labels)
 
 
 def read_body(rlines):
@@ -52,7 +53,13 @@ def read_body(rlines):
     BLOCK_SIZE = 82
     frames = int(rlines[4])
     data = np.zeros(shape=(MARKERS, frames, 3))
-    block_begins = [5 + i * BLOCK_SIZE for i in range(len(rlines) / BLOCK_SIZE)]
+    chunks = int((len(rlines) / BLOCK_SIZE))
+
+    if frames != chunks:
+        warnings.warn("frames != chunks; took min")
+        frames = min(frames, chunks)
+
+    block_begins = [5 + i * BLOCK_SIZE for i in range(frames)]
     time_events = []
     for begin in block_begins:
         frameID = int(rlines[begin][1:])
@@ -124,7 +131,7 @@ class HumanoidKinect(HumanoidBasic):
 
 if __name__ == "__main__":
     gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\LeftHandWave\LeftHandWave_000.txt")
-    # gest.animate()
-    print gest
+    gest.animate()
+    print(gest)
     gest.show_displacements()
     gest.compute_weights(mode="oneHand", beta=1e-4)

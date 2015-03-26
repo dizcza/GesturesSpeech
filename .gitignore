@@ -5,3 +5,4 @@ training.py
 .idea
 MOCAP/animation
 fbx_reader.py
+__pycache__/

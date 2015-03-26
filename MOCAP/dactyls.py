@@ -2,7 +2,8 @@
 
 import numpy as np
 import os
-from writer import split_file
+from MOCAP.writer import split_file
+
 
 UKR_ALPHABET = u"абвгґдеєжзиіїйклмнопрстуфхцчшщьюя'"
 

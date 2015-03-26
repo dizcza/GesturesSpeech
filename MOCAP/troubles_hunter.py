@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from splitter import *
+from MOCAP.splitter import *
 import os
 import matplotlib.pyplot as plt
 
@@ -30,19 +30,19 @@ def check_them_all(folder):
                 fname = os.path.join(folder, c3d_file)
                 gest = HumanoidUkrSplitter(fname)
                 if gest.markers_total < 83:
-                    print "Not enough markers in %s: \t %d < 83" % (c3d_file, gest.markers_total)
+                    print("Not enough markers in %s: \t %d < 83" % (c3d_file, gest.markers_total))
 
                 if any(gest.corrupted):
                     corrupted_share = float(len(gest.corrupted)) / gest.frames * 100.
                     add_bar_plane(gest.corrupted, gest.frames)
-                    print "%d (%.2f%%) corrupted frames in %s\n" % (len(gest.corrupted),
+                    print("%d (%.2f%%) corrupted frames in %s\n" % (len(gest.corrupted),
                                                                     corrupted_share,
-                                                                    gest.name)
-                    print np.array(gest.corrupted)
+                                                                    gest.name))
+                    print(np.array(gest.corrupted))
                     plt.title(c3d_file)
                     plt.show()
             except:
-                print "cannot describe %s" % c3d_file
+                print("cannot describe %s" % c3d_file)
                 continue
 
 

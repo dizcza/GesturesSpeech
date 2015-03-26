@@ -11,6 +11,7 @@ import json
 # TODO set confidence measure
 
 
+# noinspection PyTypeChecker
 class HumanoidBasic(object):
     """
      Constructs a humanoid with empty fields and basic methods.
@@ -151,8 +152,8 @@ class HumanoidBasic(object):
         :return: internal energy in normal units
         """
         self.compute_displacement(mode)
-        d = np.array(self.joint_displace.values())
-        w = np.array(self.weights.values())
+        d = np.array(list(self.joint_displace.values()))
+        w = np.array(list(self.weights.values()))
         U = np.sum(d * w) * (self.frames - 1)
         return U
 
@@ -263,7 +264,7 @@ class HumanoidBasic(object):
         :param beta: param to be chosen during the training
         """
         self.compute_displacement(mode)
-        displacements = np.array(self.joint_displace.values())
+        displacements = np.array(list(self.joint_displace.values()))
         denom = np.sum(1. - np.exp(-beta * displacements))
         for marker in self.labels:
             self.weights[marker] = (1. - np.exp(

@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import cPickle as pickle
+import pickle
 
 EMOTION_PATH_DATA = "D:\GesturesDataset\Emotion\\txt\\data"
 
@@ -58,4 +58,4 @@ class Emotion(object):
 if __name__ == "__main__":
     em = Emotion("D:\GesturesDataset\Emotion\\txt\data\\28-4-1.pkl")
     em.animate()
-    print em
+    print(em)
