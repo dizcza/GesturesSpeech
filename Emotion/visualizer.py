@@ -7,6 +7,8 @@ import matplotlib.animation as animation
 from MOCAP.math_kernel import moving_average
 import pickle
 
+EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
+
 
 def _update_plot(i, fig, scat, data):
     """
@@ -23,18 +25,16 @@ def one_step_show():
     """
      Animation.
     """
-    dir_path = "D:\GesturesDataset\Emotion\\txt\data"
-    for i, log in enumerate(os.listdir(dir_path)[10:]):
+    for i, pkl_log in enumerate(os.listdir(EMOTION_PATH_PICKLES)):
         fig = plt.figure()
-        print(log)
-        fname = os.path.join(dir_path, log)
+        fname = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
         info = pickle.load(open(fname, 'rb'))
         data = info["data"]
         data = moving_average(data, wsize=3)
 
         ax = fig.add_subplot(111)
         ax.grid(True, linestyle = '-', color = '0.75')
-        plt.title(log.strip(".pkl"))
+        plt.title(pkl_log.strip(".pkl"))
 
         scat = plt.scatter(data[:, 0, 0], data[:, 0, 1])
         anim = animation.FuncAnimation(fig,

@@ -1,6 +1,6 @@
 # coding = utf-8
 
-from gDTW import wdtw_windowed, wdtw
+from wdtw import wdtw_windowed, wdtw
 from comparison import compare, show_comparison
 from Kinect.kreader import *
 import os

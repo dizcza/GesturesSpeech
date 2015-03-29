@@ -4,7 +4,7 @@ from Kinect.kreader import HumanoidKinect, KINECT_PATH
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import numpy as np
-from gDTW import wdtw_windowed, wdtw
+from wdtw import wdtw_windowed, wdtw
 from comparison import compare, show_comparison
 import os
 import json

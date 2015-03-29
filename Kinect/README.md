@@ -28,12 +28,12 @@
     <td>plots training results</td>
   </tr>
   <tr>
-    <td>KINECT_INFO.json</td>
-    <td>includes the necessary info and chosen params for the Kinect project</td>
-  </tr>
-  <tr>
     <td>choosing_beta_log.txt</td>
     <td>gathers the log session during the training process</td>
+  </tr>
+  <tr>
+    <td>KINECT_INFO.json</td>
+    <td>includes the necessary info and chosen params for the Kinect project</td>
   </tr>
 </table>
 

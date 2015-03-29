@@ -5,11 +5,13 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pickle
 
-EMOTION_PATH_DATA = "D:\GesturesDataset\Emotion\\txt\\data"
-
 
 class Emotion(object):
     def __init__(self, obj_path, fps=None):
+        """
+        :param obj_path: path to pickled data
+        :param fps: new fps to be set
+        """
         self.project = "Emotion"
         self.name = obj_path.split('\\')[-1].strip(".pkl")
         # self.labels = np.genfromtxt('valid_labels.txt', dtype='str')
@@ -82,6 +84,6 @@ class Emotion(object):
 
 
 if __name__ == "__main__":
-    em = Emotion(r"D:\GesturesDataset\Emotion\txt\data\28-4-1.pkl")
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\28-4-1.pkl")
     em.animate()
     print(em)

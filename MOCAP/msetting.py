@@ -4,7 +4,7 @@ from MOCAP.mreader import HumanoidUkr, MOCAP_PATH
 import numpy as np
 from numpy.linalg import norm
 from Kinect.ksetting import init_info
-from gDTW import wdtw_windowed, wdtw
+from wdtw import wdtw_windowed, wdtw
 from comparison import compare, show_comparison
 import os
 import time

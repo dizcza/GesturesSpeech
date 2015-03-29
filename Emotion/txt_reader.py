@@ -78,23 +78,6 @@ def to_array(data_dic):
     return array
 
 
-def dump_data():
-    """
-     Dumps data.npy
-    """
-    data_folder = os.path.join(EMOTION_PATH_TXT, "data")
-    for directory in os.listdir(EMOTION_PATH_TXT + "\\old_format"):
-        data_dic = {}
-        dir_path = os.path.join(EMOTION_PATH_TXT, "old_format", directory)
-        for marker_log in os.listdir(dir_path):
-            if marker_log.endswith(".txt"):
-                log_path = os.path.join(dir_path, marker_log)
-                data_dic[marker_log] = np.loadtxt(log_path, delimiter='\n')
-        data = to_array(data_dic)
-        file_path = os.path.join(data_folder, directory)
-        np.save(file_path, data)
-
-
 def create_dict(folder_path):
     """
     :param folder_path: path with txt files

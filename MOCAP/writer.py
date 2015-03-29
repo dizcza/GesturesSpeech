@@ -1,9 +1,9 @@
 # coding=utf-8
 
 ########################################################################################################################
-# NOTE: to be able to modify C3D files, switch to Python 2.7 version and use native btk module
-#       (https://code.google.com/p/b-tk).
-#       For more details, look at btk_fake.py source header in the current project scope.
+# NOTE: to be able to modify C3D files, switch to Python 2.7 version and use native btk module                         #
+#       (https://code.google.com/p/b-tk).                                                                              #
+#       For more details, look at btk_fake.py source header in the current project scope.                              #
 ########################################################################################################################
 
 from MOCAP.splitter import *

@@ -2,7 +2,7 @@
 
 from MOCAP.mreader import HumanoidUkr, MOCAP_PATH
 from MOCAP.msetting import compute_between_variance
-from gDTW import wdtw_windowed, wdtw
+from wdtw import wdtw_windowed, wdtw
 from comparison import compare, show_comparison
 import os
 import numpy as np

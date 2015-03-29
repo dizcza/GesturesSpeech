@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 from dtw import dtw
-from gDTW import wdtw, wdtw_windowed, dist_measure
+from wdtw import wdtw, wdtw_windowed, dist_measure
 from functools import partial
 
 

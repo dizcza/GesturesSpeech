@@ -87,8 +87,9 @@ class HumanoidKinect(HumanoidBasic):
 
     def __init__(self, filename, fps=None):
         """
-         Creates a gesture from Kinect folder.
+         Creates a gesture from a Kinect folder.
         :param filename: txt-file path
+        :param fps: new fps to be set
         """
         HumanoidBasic.__init__(self)
         self.project = "Kinect"

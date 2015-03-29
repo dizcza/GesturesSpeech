@@ -12,12 +12,12 @@
   </tr>
 
   <tr>
-    <td>files_modifier.py</td>
-    <td>changes orientation XYZ by default (Z should measure human height)</td>
-  </tr>
-  <tr>
     <td>mreader.py</td>
     <td>MoCap C3D files reader</td>
+  </tr>
+  <tr>
+    <td>btk_fake.py</td>
+    <td>provides all necessary functions to use c3d package as native btk</td>
   </tr>
   <tr>
     <td>msetting.py</td>

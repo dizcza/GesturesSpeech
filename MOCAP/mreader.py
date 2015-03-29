@@ -53,6 +53,11 @@ class HumanoidUkr(HumanoidBasic):
      Creates an instance of Ukrainian Motion Capture gesture, saved in .c3d-format.
     """
     def __init__(self, c3d_file, fps=None):
+        """
+         Reads Motion Capture C3D file.
+        :param c3d_file: path to file.c3d
+        :param fps: new fps to be set
+        """
         HumanoidBasic.__init__(self)
         self.project = "MoCap"
 
