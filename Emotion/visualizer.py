@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from MOCAP.math_kernel import moving_average
-import cPickle as pickle
+import pickle
 
 
 def _update_plot(i, fig, scat, data):
@@ -13,7 +13,7 @@ def _update_plot(i, fig, scat, data):
     :param i: frame ID
     :param fig:
     :param scat: 2d array
-    :param data:
+    :param 2darray data: (#markers, frames, 2)
     """
     scat.set_offsets(data[:, i, :])
     return []
@@ -48,4 +48,6 @@ def one_step_show():
         except:
             continue
 
-one_step_show()
+
+if __name__ == "__main__":
+    one_step_show()

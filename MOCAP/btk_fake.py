@@ -1,5 +1,19 @@
 # coding=utf-8
 
+"""
+ This is a fake btk module to simulate native btk (https://code.google.com/p/b-tk)
+ on Python 3.x, using c3d module from https://github.com/EmbodiedCognition/py-c3d.
+
+ NOTE: This is a very cut btk package.
+       Most of methods, used in native btk module, are omitted here.
+       If you want to get full access onto .c3d files,
+         switch to Python 2.7 version and use native btk module.
+       The purpose of creating this fake btk module is to be able to
+         switch easily from Python 2.7 onto Python 3.x,
+         since native btk module uses Python 2.7, whereas blender package
+         (its versions 2.5 and higher) works only on Python 3.x.
+"""
+
 import c3d
 import numpy as np
 
@@ -72,9 +86,13 @@ class Acquisition(object):
             self.frames = reader.last_frame() - reader.first_frame() + 1
             self.labels = gather_labels(reader)
             self.data = gather_data(reader)
+            assert self.frames == self.data.shape[1], "#frames don't match with data.shape"
 
     def GetData(self):
         return self.data
+
+    def GetMetaData(self):
+        return MetaData()
 
     def GetPoints(self):
         """
@@ -83,7 +101,7 @@ class Acquisition(object):
         return AcqPoints(self.labels)
 
     def GetPoint(self, _id):
-        return Point(self.labels[_id])
+        return Point(self.labels[_id], _id)
 
     def GetPointFrequency(self):
         return self.fps
@@ -122,8 +140,23 @@ class AcqPoints(object):
 
 
 class Point(object):
-    def __init__(self, label):
+    def __init__(self, label, index):
+        """
+        :param label: (str) point label
+        """
         self._label = label
+        self._index = index
 
     def GetLabel(self):
         return self._label
+
+    def GetDescription(self):
+        return self._index
+
+
+class MetaData(object):
+    def __init__(self):
+        pass
+
+    def GetChildNumber(self):
+        return 0

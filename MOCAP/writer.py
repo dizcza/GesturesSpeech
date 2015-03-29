@@ -1,11 +1,17 @@
 # coding=utf-8
 
+########################################################################################################################
+# NOTE: to be able to modify C3D files, switch to Python 2.7 version and use native btk module
+#       (https://code.google.com/p/b-tk).
+#       For more details, look at btk_fake.py source header in the current project scope.
+########################################################################################################################
+
 from MOCAP.splitter import *
 
 try:
     import btk
 except ImportError:
-    from MOCAP import btk_fake as btk
+    import MOCAP.btk_fake as btk
 
 
 def rewrite_files_in(folder):

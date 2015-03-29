@@ -115,11 +115,15 @@ As Reyes et al. (2011) has observed, only six out of the 20 joints contribute in
 
 
 <h2 id="weights">Body joint weights. Discriminant ratio</h2>
-<p>Using the total displacement values of joints, the joint <i>j</i>'s weight value of class <i>g</i> is calculated via
-<div align="center"><img src="http://latex.codecogs.com/gif.latex?\omega_j^g = \frac{1-e^{-\beta D_j^g}}{\sum_{k}(1-e^{-\beta D_k^g})}"/>
+<p>Using the total displacement values of joints, the joint <i>j</i>'s weight value of class <i>g</i> is calculated via </p>
+<div align="center"><img src="http://latex.codecogs.com/gif.latex?\omega_j^g = \frac{1-e^{-\beta D_j^g}}{\sum_{k}(1-e^{-\beta D_k^g})},"/>
 </div>
+<p>where <img src="http://latex.codecogs.com/gif.latex?D_j^g"/> is the <i>j'</i>s marker total displacement, averaged over all training samples in the gesture class "<i>g</i>", <img src="http://latex.codecogs.com/gif.latex?\beta"/> is a hidden parameter. </p>
+<p>Total displacement of the marker "<i>j</i>" in one example is computed by</p>
+<div align="center"><img src="http://latex.codecogs.com/gif.latex?D_j=\sum_{i=2}^N \|  \overrightarrow{X}_i^j - \overrightarrow{X}_{i-1}^j  \|,"/></div>
+<p>where <img src="http://latex.codecogs.com/gif.latex?\overrightarrow{X}_i^j = \big( x_i^j, y_i^j, z_i^j \big) "/> is a <i>j'</i>s marker position in the  frame "<i>i</i>".</p>
 
-Best beta yields the biggest discriminant ratio <img src="http://latex.codecogs.com/gif.latex?R = \rfrac{D_b}{/D_w}"/>. In our case, although within variance <i>Dw</i> goes up with the <img src="http://latex.codecogs.com/gif.latex?\beta"/> decreasing, the <img src="http://latex.codecogs.com/gif.latex?R_{max}"/> is obtained when  <img src="http://latex.codecogs.com/gif.latex?\beta"/> vanishes. That means,</p>
+<p>Best <img src="http://latex.codecogs.com/gif.latex?\beta"/> yields the biggest discriminant ratio <img src="http://latex.codecogs.com/gif.latex?R = \rfrac{D_b}{/D_w}"/>. In our case, although within variance <i>Dw</i> goes up with the <img src="http://latex.codecogs.com/gif.latex?\beta"/> decreasing, the <img src="http://latex.codecogs.com/gif.latex?R_{max}"/> is obtained when  <img src="http://latex.codecogs.com/gif.latex?\beta"/> vanishes. That means</p>
 <div align="center"><img src="http://latex.codecogs.com/gif.latex?\omega_j^g \xrightarrow{\beta \to 0} \frac{D_j^g}{\sum_{k}D_k^g}"/>
 </div>
 
@@ -180,10 +184,18 @@ Best beta yields the biggest discriminant ratio <img src="http://latex.codecogs.
   <li><a href="http://www.c-motion.com/free-downloads/">Free CMO Reader</a></li>
 </ul>
 
-<p>Obligatory <a href="https://www.python.org/ftp/python/2.7/python-2.7.msi">Python 2.7</a> packages (can be found at <a href="http://www.lfd.uci.edu/~gohlke/pythonlibs">http://www.lfd.uci.edu/~gohlke/pythonlibs)</a>:</p>
+<p>The current project is portable: although it's built and maintained upon Python 3.4 x32 version, you can use 2.7.8 or higher 32 bit version of Python.</p>
+
+<p>Obligatory Python </a> packages (can be found at <a href="http://www.lfd.uci.edu/~gohlke/pythonlibs">http://www.lfd.uci.edu/~gohlke/pythonlibs)</a>:</p>
 <ul>
-  <li><a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">The Biomechanical ToolKit</a>
-  		to read and modify data from C3D files</li>
+  <li> reading and modifying data from C3D files:
+    <ul>
+      <li> <a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">The Biomechanical ToolKit</a>, if you use Python 2.7; </li>
+      <li> <a href="https://github.com/EmbodiedCognition/py-c3d">c3d</a>, if you use Python 3.x</li>
+    </ul>
+  </li>
+  
+
   <li><a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <b>pyparsing</b>, <b>dateutil</b>, <b>setuptools</b> and <b>six</b>)</li>
   <li><a href="http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download">numpy</a></li>
   <li><a href="https://pypi.python.org/pypi/dtw/1.0">dtw</a> (dynamic time warping)</li>

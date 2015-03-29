@@ -28,7 +28,7 @@ def moving_average_simple(xs, wsize=5):
     :param wsize: (2n+1) window size for averaging
     :return: smooth array
     """
-    step = wsize / 2
+    step = int(wsize / 2)
     xs_smooth = []
     for i in range(step, len(xs) - step):
         # +1 because the right boundary is *excluded*
@@ -42,7 +42,7 @@ def moving_average(data, wsize=5):
     :param wsize: (2n+1) window size for averaging
     :return: (#markers, #frames, 3) smooth data
     """
-    step = wsize / 2
+    step = int(wsize / 2)
     new_shape = list(data.shape)
     new_shape[1] -= 2 * step
     data_smooth = np.empty(shape=new_shape)

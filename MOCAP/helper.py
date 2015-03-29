@@ -10,7 +10,7 @@ import numpy as np
 try:
     import btk
 except ImportError:
-    from MOCAP import btk_fake as btk
+    import MOCAP.btk_fake as btk
 
 
 def print_info(filename):
@@ -32,12 +32,16 @@ def print_info(filename):
     print("Markers: %d" % acq.GetPoints().GetItemNumber())
 
     print("\nALL METADATA:")
+    if hasattr(acq, "fake") and acq.fake is True:
+        fake_btk_warn = "to print out acquisition metadata from %s, use native btk package" % filename
+        warnings.warn(fake_btk_warn)
     for i in range(acq.GetMetaData().GetChildNumber()):
         print(acq.GetMetaData().GetChild(i).GetLabel() + ':')
         for j in range(acq.GetMetaData().GetChild(i).GetChildNumber()):
             print(acq.GetMetaData().GetChild(i).GetChild(j).GetLabel(),)
         print('\n')
 
+    print("\nPOINT C3D info:")
     for i in range(acq.GetPoints().GetItemNumber()):
         print(acq.GetPoint(i).GetLabel())
         print(acq.GetPoint(i).GetDescription())
@@ -46,7 +50,7 @@ def print_info(filename):
 
 def get_corrupted_frames(data):
     """
-     Checks for values in data being zeros.
+     Checks data values for being zeros.
     :param data: (#markers, #frames, 3) ndarray of 3d points data
     :return list of corrupted frame IDs
     """
@@ -124,17 +128,17 @@ def separate_dataset():
      0's samples will be for training
      1's samples will be for testing
     """
-    splitAll = "D:\GesturesDataset\MoCap\splitAll\\"
-    trn_folder = splitAll + "Training"
-    tst_folder = splitAll + "Testing"
+    splitAll = r"D:\GesturesDataset\MoCap\splitAll"
+    mixed_folder = os.path.join(splitAll, "_Mixed")
+    trn_folder = os.path.join(splitAll, "Training")
+    tst_folder = os.path.join(splitAll, "Testing")
 
-    if not os.path.exists(trn_folder):
-        os.mkdir(trn_folder)
-    if not os.path.exists(tst_folder):
-        os.mkdir(tst_folder)
+    for folder in (trn_folder, tst_folder):
+        shutil.rmtree(folder, ignore_errors=True)
+        os.mkdir(folder)
 
-    for c3d_file in os.listdir(splitAll):
-        src = os.path.join(splitAll, c3d_file)
+    for c3d_file in os.listdir(mixed_folder):
+        src = os.path.join(mixed_folder, c3d_file)
         if c3d_file.endswith("_sample0.c3d"):
             shutil.copy(src, trn_folder)
         elif c3d_file.endswith("_sample1.c3d"):

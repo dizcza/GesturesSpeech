@@ -135,8 +135,10 @@ class HumanoidBasic(object):
                 delta_per_frame = np.subtract(self.norm_data[markerID, 1:, :],
                                               self.norm_data[markerID, :-1, :])
                 dist_per_frame = norm(delta_per_frame, axis=1)
+
                 # offset: average --> sum
                 offset = np.sum(dist_per_frame)
+
                 j_std = np.std(dist_per_frame, dtype=np.float64)
             else:
                 offset = 0
@@ -154,7 +156,7 @@ class HumanoidBasic(object):
         self.compute_displacement(mode)
         d = np.array(list(self.joint_displace.values()))
         w = np.array(list(self.weights.values()))
-        U = np.sum(d * w) * (self.frames - 1)
+        U = np.sum(d * w)
         return U
 
     def plot_displacement(self, mode):
@@ -324,7 +326,7 @@ class HumanoidBasic(object):
 
 def align_gestures(self, other):
     """
-     Aligns data shapes by throwing out missed labels.
+     Total gestures alignment of their data shapes by throwing out missed labels.
     :param self: one gesture
     :param other: another gesture
     """

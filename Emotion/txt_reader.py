@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import os
-import cPickle as pickle
+import pickle
 import numpy as np
 from pprint import pprint
 import itertools
@@ -57,12 +57,12 @@ def verify_labels():
 def to_array(data_dic):
     """
      Converts dic representation into an array.
-    :param data_dic: dic of listed data frames for each marker
+    :param data_dic: dic of 36 listed data frames for each txt marker
     :return array: (markers, frames, 2) the same 2D data
     """
     # handle missed frames
     frames = np.inf
-    for vals in data_dic.itervalues():
+    for vals in data_dic.values():
         if len(vals) < frames:
             frames = len(vals)
 
@@ -127,9 +127,7 @@ def check_uniqueness(casket):
     :return: if dict values are unique or not
     """
     junk = list(itertools.chain(*casket.values()))
-    if len(set(junk)) != len(junk):
-        print("the dict values isn't unique")
-        raise AttributeError
+    assert len(set(junk)) == len(junk), "the dict values aren't unique"
 
 
 def check_missed(casket, casket_name, written_files):
@@ -158,7 +156,7 @@ def dump_pickles():
     check_uniqueness(emotions)
     txt_dirs = os.listdir(EMOTION_PATH_TXT + "\\old_format")
     # check_missed(writers, "writers", txt_dirs)
-    check_missed(emotions, "emotions", txt_dirs)
+    # check_missed(emotions, "emotions", txt_dirs)
 
     pickle_folder = os.path.join(EMOTION_PATH_TXT, "data")
     for directory in txt_dirs:

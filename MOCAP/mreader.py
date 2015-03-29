@@ -1,4 +1,3 @@
-# !/usr/bin/python
 # coding=utf-8
 
 import numpy as np
@@ -6,13 +5,13 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
 from humanoid import HumanoidBasic
-from MOCAP.labelling import gather_labels, get_hand_labels
-from MOCAP.helper import init_frame
+import MOCAP.labelling as labelling
+import MOCAP.helper as helper
 
 try:
     import btk
 except ImportError:
-    from MOCAP import btk_fake as btk
+    import MOCAP.btk_fake as btk
 
 MOCAP_PATH = "D:\GesturesDataset\MoCap\splitAll\\"
 
@@ -70,17 +69,17 @@ class HumanoidUkr(HumanoidBasic):
         self.fps = acq.GetPointFrequency()
 
         # dealing with markers
-        self.labels = gather_labels(acq)
-        self.hand_markers = get_hand_labels(self.labels)
+        self.labels = labelling.gather_labels(acq)
+        self.hand_markers = labelling.get_hand_labels(self.labels)
         self.shoulder_markers = "LBSH", "CLAV", "RBSH"
 
         # dealing with data
         self.data = gather_points_data(acq)
         self.frames = self.data.shape[1]
-        self.set_fps(fps)
-        relaxed_frame = init_frame(c3d_file)
+        relaxed_frame = helper.init_frame(c3d_file)
         self.init_pos = self.data[:, relaxed_frame, :]
 
+        self.set_fps(fps)
         self.preprocessing()
         self.set_weights()
 
