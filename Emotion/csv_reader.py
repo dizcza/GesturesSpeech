@@ -10,6 +10,7 @@ import numpy as np
 from numpy import genfromtxt
 from pprint import pprint
 import itertools
+from Emotion.excel_parser import parse_xls, upd_column
 import win32com.client as win32
 
 EMOTION_PATH_CSV = r"D:\GesturesDataset\Emotion\csv"
@@ -59,7 +60,7 @@ def verify_labels():
     gathered_labels = np.array(list(labels_casket.values()))
     the_same = gathered_labels == gathered_labels[0, :]
     assert the_same.all(), "Shit"
-    print("Okay")
+    print("verify_labels: \tOkay. Ready for dumping the data.")
     # valid_labels = set(gathered_labels[0, :])
     # np.savetxt("valid_labels.txt", np.array(list(valid_labels)), fmt="%s")
 
@@ -68,8 +69,9 @@ def dump_pickles():
     """
      Dumps data.pkl
     """
-    writers = create_dict(EMOTION_PATH_ACTORS)
-    emotions = create_dict(EMOTION_PATH_EMOTIONS)
+    verify_labels()
+
+    emotions, writers = parse_xls(only_interest=True)
     check_uniqueness(writers)
     check_uniqueness(emotions)
 
@@ -89,7 +91,8 @@ def dump_pickles():
         file_info["labels"] = list(labels)
         fpath = os.path.join(EMOTION_PATH_PICKLES, directory + ".pkl")
         pickle.dump(file_info, open(fpath, 'wb'))
-    print("DONE.")
+    print("DONE DUMPING.")
+    upd_excel()
 
 
 def to_array(data_dic):
@@ -156,18 +159,18 @@ def check_missed(casket, casket_name, written_files):
     files_in_casket = list(itertools.chain(*casket.values()))
     for fname in files_in_casket:
         if fname not in written_files:
-            print("got %s in %s not in given files" % (fname, casket_name))
+            print("\t got %s in %s not in given files" % (fname, casket_name))
     missed = []
     for fname in written_files:
         if fname not in files_in_casket:
             missed.append(fname)
 
-    cell_name = "D"
+    col_name = "D"
     if casket_name == "emotions":
-        cell_name = "B"
+        col_name = "B"
     elif casket_name == "writers":
-        cell_name = "C"
-    upd_column(cell_name, missed)
+        col_name = "C"
+    upd_column(col_name, missed)
 
     print("%d files are missed in %s" % (len(missed), casket_name))
 
@@ -191,38 +194,31 @@ def check_data_shapes():
     upd_column("A", incompatible_shapes_in)
 
 
-def upd_column(cell_name, values):
-    """
-     Update cell_name column in missed_data.xlsx
-    :param cell_name: excel cell name
-    :param values: info list
-    """
-    excel = win32.gencache.EnsureDispatch('Excel.Application')
-    path = os.path.join(os.getcwd(), r"missed_data.xlsx")
-    wb = excel.Workbooks.Open(path)
-    ws = wb.Worksheets("missed")
-    for i, info in enumerate(values):
-        pointer = cell_name + str(i+2)
-        ws.Range(pointer).Value = str(info)
-    wb.Close()
-
-
 def upd_excel():
     """
      Updates missed_data.xlsx info file.
     """
-    writers = create_dict(EMOTION_PATH_ACTORS)
-    emotions = create_dict(EMOTION_PATH_EMOTIONS)
+    print("Updating missed_data.xlsx")
+    emotions, writers = parse_xls(only_interest=False)
     check_uniqueness(writers)
     check_uniqueness(emotions)
     given_csv_files = os.listdir(EMOTION_PATH_CSV)
+    check_data_shapes()
     check_missed(emotions, "emotions", given_csv_files)
     check_missed(writers, "writers", given_csv_files)
-    check_data_shapes()
 
+    excel = win32.gencache.EnsureDispatch('Excel.Application')
+    path = os.path.join(os.getcwd(), r"missed_data.xlsx")
+    wb = excel.Workbooks.Open(path)
+    ws = wb.Worksheets("missed")
+    ws.Range("A1").Value = "incompatible data shape (different number of frames)"
+    ws.Range("B1").Value = "unknown emotion in:"
+    ws.Range("C1").Value = "unknown author in:"
+    wb.Save()
+    wb.Close()
 
 if __name__ == "__main__":
-    # upd_excel()
-    # dump_pickles()
-    verify_labels()
     # clean_labels()
+    # verify_labels()
+    upd_excel()
+    # dump_pickles()

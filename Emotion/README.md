@@ -28,6 +28,10 @@
     <td>animates 2d data</td>
   </tr>
   <tr>
+    <td>excel_parser.py</td>
+    <td>reads and modifies excel data</td>
+  </tr>
+  <tr>
     <td>valid_labels.txt</td>
     <td>list of 18 valid face marker names</td>
   </tr>

@@ -118,10 +118,10 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 <p>Using the total displacement values of joints, the joint <i>j</i>'s weight value of class <i>g</i> is calculated via </p>
 <div align="center"><img src="http://latex.codecogs.com/gif.latex?\omega_j^g = \frac{1-e^{-\beta D_j^g}}{\sum_{k}(1-e^{-\beta D_k^g})},"/>
 </div>
-<p>where <img src="http://latex.codecogs.com/gif.latex?D_j^g"/> is the <i>j'</i>s marker total displacement, averaged over all training samples in the gesture class "<i>g</i>", <img src="http://latex.codecogs.com/gif.latex?\beta"/> is a hidden parameter. </p>
-<p>Total displacement of the marker "<i>j</i>" in one example is computed by</p>
+<p>where <img src="http://latex.codecogs.com/gif.latex?D_j^g"/> is the <i>j'</i>s joint total displacement, averaged over all training samples in the gesture class "<i>g</i>", <img src="http://latex.codecogs.com/gif.latex?\beta"/> is a hidden parameter. </p>
+<p>Total displacement of the joint "<i>j</i>" in one example is computed by</p>
 <div align="center"><img src="http://latex.codecogs.com/gif.latex?D_j=\sum_{i=2}^N \|  \overrightarrow{X}_i^j - \overrightarrow{X}_{i-1}^j  \|,"/></div>
-<p>where <img src="http://latex.codecogs.com/gif.latex?\overrightarrow{X}_i^j = \big( x_i^j, y_i^j, z_i^j \big) "/> is a <i>j'</i>s marker position in the  frame "<i>i</i>".</p>
+<p>where <img src="http://latex.codecogs.com/gif.latex?\overrightarrow{X}_i^j = \big( x_i^j, y_i^j, z_i^j \big) "/> is a <i>j'</i>s joint position in the  frame "<i>i</i>".</p>
 
 <p>Best <img src="http://latex.codecogs.com/gif.latex?\beta"/> yields the biggest discriminant ratio <img src="http://latex.codecogs.com/gif.latex?R = \rfrac{D_b}{/D_w}"/>. In our case, although within variance <i>Dw</i> goes up with the <img src="http://latex.codecogs.com/gif.latex?\beta"/> decreasing, the <img src="http://latex.codecogs.com/gif.latex?R_{max}"/> is obtained when  <img src="http://latex.codecogs.com/gif.latex?\beta"/> vanishes. That means</p>
 <div align="center"><img src="http://latex.codecogs.com/gif.latex?\omega_j^g \xrightarrow{\beta \to 0} \frac{D_j^g}{\sum_{k}D_k^g}"/>
@@ -164,6 +164,32 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 </table>
 
 <p>Using weighted DTW algorithm with only 3 crucial (hand) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) DTW algorithm with the same 3 body joints yields 22.5% out-of-sample error.</p>
+
+
+<table style="width:60%; margin:0 auto">
+	<caption><font size="2"><i>Single gesture recognition accuracy, % </i></font></caption>
+	<tr>
+		<th rowspan="2">Algorithm</th>
+		<th colspan="2">Data base</th>
+	</tr>
+	<tr>
+		<td>MoCap</td>
+		<td>Kinect</td>
+	</tr>
+	<tr>
+
+    	<td>WDTW</td>
+		<td>100 %</td>
+		<td>100 %</td>
+	</tr>
+	<tr>
+    	<td>DTW</td>
+		<td>100 %</td>
+		<td>77.5 %</td>
+	</tr>
+</table>
+
+
 <p>At the same time, MoCap's simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly,  there is only 1 training and 1 testing example per unique gesture in MoCap project and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.</p>
 
 

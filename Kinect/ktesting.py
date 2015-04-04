@@ -151,4 +151,5 @@ if __name__ == "__main__":
     # compare_workout()
     # error_vs_fps()
     # compare_them_all(fps=None)
+    # TODO compute the worst out-of-sample error
     the_worst_between_comparison(1)

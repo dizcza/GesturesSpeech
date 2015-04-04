@@ -78,10 +78,7 @@ class HumanoidBasic(object):
         ids = []
         for marker in args:
             ids.append(self.labels.index(marker))
-        if len(ids) == 1:
-            return ids[0]
-        else:
-            return ids
+        return tuple(ids)
 
     def get_weights(self):
         """
@@ -98,7 +95,7 @@ class HumanoidBasic(object):
         """
         # step 1: subtract shoulder center from all joints
         sh_left, sh_center, sh_right = self.shoulder_markers
-        center_id = self.get_ids(sh_center)
+        center_id = self.get_ids(sh_center)[0]
         shoulder_center = np.average(self.data[center_id, ::], axis=0)
         center_std = norm(np.std(self.data[center_id, ::], axis=0))
         self.data -= shoulder_center
