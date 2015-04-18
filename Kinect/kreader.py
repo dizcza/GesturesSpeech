@@ -91,7 +91,7 @@ class HumanoidKinect(HumanoidBasic):
         :param filename: txt-file path
         :param fps: new fps to be set
         """
-        HumanoidBasic.__init__(self)
+        HumanoidBasic.__init__(self, fps)
         self.project = "Kinect"
 
         # dealing with hand markers

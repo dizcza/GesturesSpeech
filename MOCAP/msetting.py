@@ -109,6 +109,5 @@ def choose_beta(fps):
 
 
 if __name__ == "__main__":
-    # TODO play with fast dtw
     # update_ratio()
     choose_beta(fps=None)

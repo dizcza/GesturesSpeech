@@ -1,8 +1,4 @@
 # coding=utf-8
-import csv
-
-
-# coding=utf-8
 
 import os
 import pickle
@@ -60,38 +56,71 @@ def verify_labels():
     gathered_labels = np.array(list(labels_casket.values()))
     the_same = gathered_labels == gathered_labels[0, :]
     assert the_same.all(), "Shit"
-    print("verify_labels: \tOkay. Ready for dumping the data.")
+    print("verify_labels: \tOKAY. Ready to dump data.")
     # valid_labels = set(gathered_labels[0, :])
     # np.savetxt("valid_labels.txt", np.array(list(valid_labels)), fmt="%s")
+
+
+def cut_frames_if_needed(gathered_data, boundaries_basket, file_name):
+    """
+    :param np.array gathered_data: (#markers, #frames, 2) gathered data from csv
+    :param boundaries_basket: a dic with (begin, end) frames to be cut
+                              for each file name
+    :param file_name: XX-X-X str format
+    :return: updated data
+    """
+    if file_name in boundaries_basket and boundaries_basket[file_name] is not None:
+        a_comment = str(boundaries_basket[file_name])
+        if "begin from " in a_comment:
+            a_comment = a_comment.strip("begin from ")
+            begin = int(a_comment.split(' ')[0])
+        else:
+            begin = 0
+        if "stop on " in a_comment:
+            a_comment = a_comment.split("stop on ")[-1]
+            end = int(a_comment)
+        else:
+            end = gathered_data.shape[1]
+        print("cut %s: \t %s" % (file_name, str(boundaries_basket[file_name])))
+        gathered_data = gathered_data[:, begin:end, :]
+
+    return gathered_data
 
 
 def dump_pickles():
     """
      Dumps data.pkl
     """
+    msg = "#################################################################\n" \
+          "#                   Prepare to dump pickles                     #\n" \
+          "#################################################################"
+    print(msg)
+    clean_labels()
     verify_labels()
 
-    emotions, writers = parse_xls(only_interest=True)
+    emotions, writers, boundaries = parse_xls(only_interest=True)
     check_uniqueness(writers)
     check_uniqueness(emotions)
 
+    msg = "#################################################################\n" \
+          "#                 Dumping the data: csv --> pkl                 #\n" \
+          "#################################################################"
+    print(msg)
     for directory in os.listdir(EMOTION_PATH_CSV):
         file_info = {}
         data_dic = {}
         dir_path = os.path.join(EMOTION_PATH_CSV, directory)
-        labels = set([])
         for marker_log in os.listdir(dir_path):
             if marker_log.endswith(".csv"):
                 log_path = os.path.join(dir_path, marker_log)
-                data_dic[marker_log] = np.genfromtxt(log_path, delimiter=',')
-                labels.add(marker_log[:-4])
-        file_info["data"] = to_array(data_dic)
+                data_dic[marker_log[:-4]] = np.genfromtxt(log_path, delimiter=',')
+        gathered_data = to_array(data_dic)
+        file_info["data"] = cut_frames_if_needed(gathered_data, boundaries, directory)
         file_info["author"] = find_key_by_val(writers, directory)
         file_info["emotion"] = find_key_by_val(emotions, directory)
-        file_info["labels"] = list(labels)
+        file_info["labels"] = list(data_dic.keys())
         fpath = os.path.join(EMOTION_PATH_PICKLES, directory + ".pkl")
         pickle.dump(file_info, open(fpath, 'wb'))
-    print("DONE DUMPING.")
     upd_excel()
 
 
@@ -99,7 +128,7 @@ def to_array(data_dic):
     """
      Converts dic representation into an array.
     :param data_dic: dic of 18 listed 2d data frames for each csv marker
-    :return array: (markers, frames, 2) the same 2D data
+    :return array: (#markers, #frames, 2) the same 2D data
     """
     # handle missed frames
     frames = np.inf
@@ -107,9 +136,9 @@ def to_array(data_dic):
         if vals.shape[0] < frames:
             frames = vals.shape[0]
 
-    array = np.empty(shape=(MARKERS, frames, 2))
-    for markerID, marker in enumerate(data_dic):
-        array[markerID, ::] = data_dic[marker][:frames, :]
+    array = np.empty(shape=(MARKERS, frames, 2), dtype=np.float64)
+    for jointID, marker in enumerate(data_dic):
+        array[jointID, ::] = data_dic[marker][:frames, :]
 
     return array
 
@@ -137,7 +166,7 @@ def find_key_by_val(casket, this_val):
     for key, values in casket.items():
         if this_val in values:
             return key
-    return "unknown"
+    return "undefined"
 
 
 def check_uniqueness(casket):
@@ -165,11 +194,8 @@ def check_missed(casket, casket_name, written_files):
         if fname not in files_in_casket:
             missed.append(fname)
 
-    col_name = "D"
-    if casket_name == "emotions":
-        col_name = "B"
-    elif casket_name == "writers":
-        col_name = "C"
+    my_scope = {"emotions": "B", "writers": "C"}
+    col_name = my_scope[casket_name]
     upd_column(col_name, missed)
 
     print("%d files are missed in %s" % (len(missed), casket_name))
@@ -179,7 +205,7 @@ def check_data_shapes():
     """
      Modifies excel info file with incompatible data shapes csv files.
     """
-    incompatible_shapes_in = []
+    incompatible_shapes_in = set([])
     for directory in os.listdir(EMOTION_PATH_CSV):
         data_dic = {}
         dir_path = os.path.join(EMOTION_PATH_CSV, directory)
@@ -187,10 +213,15 @@ def check_data_shapes():
             if marker_log.endswith(".csv"):
                 log_path = os.path.join(dir_path, marker_log)
                 data_dic[marker_log] = np.genfromtxt(log_path, delimiter=',')
-        shapes = np.array(list(map(len, data_dic.values())))
-        the_same_shape = shapes == shapes[0]
-        if not the_same_shape.all():
-            incompatible_shapes_in.append(directory)
+        for array in data_dic.values():
+            if np.isnan(array).any():
+                incompatible_shapes_in.add(directory)
+    msg = "check_data_shapes: "
+    if any(incompatible_shapes_in):
+        msg += "found %d csv files with np.nan" % len(incompatible_shapes_in)
+    else:
+        msg += "OKAY. All data shapes have the same dimension."
+    print(msg)
     upd_column("A", incompatible_shapes_in)
 
 
@@ -198,8 +229,11 @@ def upd_excel():
     """
      Updates missed_data.xlsx info file.
     """
-    print("Updating missed_data.xlsx")
-    emotions, writers = parse_xls(only_interest=False)
+    msg = "#################################################################\n" \
+          "#                 Updating missed_data.xlsx                     #\n" \
+          "#################################################################"
+    print(msg)
+    emotions, writers, _ = parse_xls(only_interest=False)
     check_uniqueness(writers)
     check_uniqueness(emotions)
     given_csv_files = os.listdir(EMOTION_PATH_CSV)
@@ -222,3 +256,4 @@ if __name__ == "__main__":
     # verify_labels()
     upd_excel()
     # dump_pickles()
+    # check_data_shapes()

@@ -58,7 +58,7 @@ class HumanoidUkr(HumanoidBasic):
         :param c3d_file: path to file.c3d
         :param fps: new fps to be set
         """
-        HumanoidBasic.__init__(self)
+        HumanoidBasic.__init__(self, fps)
         self.project = "MoCap"
 
         # setting unique gesture name

@@ -13,15 +13,15 @@
 
   <tr>
     <td>emotion.py</td>
-    <td>includes class Emotion</td>
+    <td>Emotion: a BasicMotion class wrapper</td>
   </tr>
   <tr>
     <td>csv_reader.py</td>
     <td>reads csv data and dumps it into pickles</td>
   </tr>
   <tr>
-    <td>txt_reader.py</td>
-    <td>reads txt data and dumps it into pickles</td>
+    <td>setting.py</td>
+    <td>instruments for training (setting) best parameters</td>
   </tr>
   <tr>
     <td>visualizer.py</td>

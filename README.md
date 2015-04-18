@@ -5,10 +5,7 @@
 </head>
 
 <body>
-<p align="center"><i>This repo provides the instruments for both projects:
-(1) Ukrainian gestures, captured with MoCap C3D technology, and (2) basic hand motions,
-captured with Microsoft Kinect sensor</i></p>
-
+<p align="center"><i>This repo provides the instruments for classification of signle signs and basic human emotions.</i><p>
 <nav class="contents">
   <h2>Contents </h2>
   <ol>
@@ -51,6 +48,16 @@ captured with Microsoft Kinect sensor</i></p>
       <li>unique gesture classes: 8</li>
       <li>samples per gesture: 28</li>
     </ul>
+  <li>Emotion:
+    <ul>
+      <li>covers basic human facial emotions</li>
+      <li>file type: csv and blend</li>
+      <li>facial joints: 18</li>
+      <li>data is measured in pixels</li>
+      <li>FPS: 24</li>
+      <li>unique gesture classes: 14</li>
+      <li>samples per gesture: 4 ... 39</li>
+    </ul>
 </ul>
 
 <p>Projects kernel summary:</p>
@@ -60,8 +67,12 @@ captured with Microsoft Kinect sensor</i></p>
     <th>file info</th>
   </tr>
   <tr>
+    <td>basic.py</td>
+    <td>BasicMotion: a super class for all projects</td>
+  </tr>
+  <tr>
     <td>humanoid.py</td>
-    <td>HumanoidBasic class: super class for both projects</td>
+    <td>HumanoidBasic: a BasicMotion wrapper super class for MoCap and Kinect projects</td>
   </tr>
   <tr>
     <td>gDTW.py</td>

@@ -3,33 +3,26 @@
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
-from matplotlib import rc
 import matplotlib.animation as animation
 import pickle
 import os
-
-font = {'family': 'Verdana',
-        'weight': 'normal'}
-rc('font', **font)
+from basic import BasicMotion
 
 
-class Emotion(object):
+class Emotion(BasicMotion):
     def __init__(self, obj_path, fps=None):
         """
         :param obj_path: path to pickled data
         :param fps: new fps to be set
         """
+        BasicMotion.__init__(self, fps=24)
         self.project = "Emotion"
         self.name = os.path.basename(obj_path).strip(".pkl")
-
-        # not for sure
-        # TODO check it out from blender
-        self.fps = 30
 
         # loading data from a pickle
         info = pickle.load(open(obj_path, 'rb'))
         self.data = info["data"]
-        self.norm_data = np.copy(self.data)
+        self.norm_data = None
         self.author = info["author"]
         self.emotion = info["emotion"]
         self.labels = info["labels"]
@@ -39,30 +32,31 @@ class Emotion(object):
         self.preprocessor()
 
     def __str__(self):
-        s = "File name:\t\t%s\n" % self.name
+        s = BasicMotion.__str__(self)
         s += "\temotion:\t%s\n" % self.emotion
         s += "\tauthor:\t\t%s\n" % self.author
-        s += "\tdata.shape:\t%s\n" % str(self.data.shape)
         return s
 
-    def get_ids(self, *args):
-        """
-         Gets specific data ids by marker_names keys.
-        :param marker_names: list of keys
-        :return: data ids, w.r.t. marker_names
-        """
-        ids = []
-        for marker in args:
-            ids.append(self.labels.index(marker))
-        return ids
-
     def preprocessor(self):
-        # step 1: subtracting nose pos
-        nose_index = self.get_ids("p0")[0]
-        nose_pos = np.average(self.data[nose_index,::], axis=0)
-        self.data -= nose_pos
-        print(nose_pos)
+        # step 0: dealing with first frame bug
+        self.data = self.data[:,1:,:]
+        self.frames -= 1
+        self.norm_data = self.data.copy()
 
+        # step 1: subtract nose pos of the first frame
+        nose, jaw, chr, chl = self.get_ids("p0", "jaw", "chr", "chl")
+        # nose_pos = np.average(self.data[nose_ind,::], axis=0)
+        first_frame = 0
+        while np.isnan(self.data[nose, first_frame, :]).any():
+            first_frame += 1
+        self.norm_data -= self.data[nose, first_frame, :]
+
+        # step 2: divide data by ? dist
+        jaw_to_nose_dist = norm(self.data[nose,0,:] - self.data[jaw,0,:])
+        cheeks_dist = norm(self.data[chr,0,:] - self.data[chl,0,:])
+        self.norm_data /= jaw_to_nose_dist * cheeks_dist
+
+    def slope_align(self):
         # step 2: slope aligning
         eyebrow_ids = self.get_ids("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
         eye_ids = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
@@ -76,8 +70,6 @@ class Emotion(object):
             print(xy_aver)
         median_points = np.resize(median_points, new_shape=(5, 2))
         self.coef = np.polyfit(median_points[:, 0], median_points[:, 1], deg=1)
-
-        # step 3: dividing data by ? dist
 
     def accumulate_noise(self):
         """
@@ -98,32 +90,28 @@ class Emotion(object):
                 else:
                     self.norm_data[:, frame, :] = self.data[:, prev_frame[jointID], :]
 
-    def set_fps(self, new_fps):
-        """
-            Modify data, w.r.t. new fps (taken from HumanoidBasic class).
-        :param new_fps: fps (or points frequency) to be made in the data
-        """
-        if new_fps is None or new_fps >= self.fps:
-            # does nothing
-            return
-        step_to_throw = float(self.fps) / (self.fps - new_fps)
-        indices_thrown = np.arange(self.data.shape[1]) * step_to_throw
-        indices_thrown = indices_thrown.astype(dtype="int")
-        self.data = np.delete(self.data, indices_thrown, axis=1)
-        self.frames = self.data.shape[1]
-        self.fps = new_fps
-
     def next_frame(self, frame):
         """
         :param frame: frame id
         """
         self.scat.set_offsets(self.data[:, frame, :])
-        a, b = self.coef
-        xs = np.arange(50)
-        ys = a * xs + b
-        plt.plot(xs, ys)
-        plt.plot(self.data[:, frame, 0], self.data[:, frame, 1], 'bo')
+        # a, b = self.coef
+        # xs = np.arange(-50, 0)
+        # ys = a * xs + b
+        # plt.plot(xs, ys)
+        # plt.plot(self.data[:, frame, 0], self.data[:, frame, 1], 'bo')
         return []
+
+    def visual_help(self):
+        eyebrow_ids = self.get_ids("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
+        eye_ids = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
+        cheek_ids = self.get_ids("chr", "wr", "wl", "chl")
+        lip_ids = self.get_ids("lir", "liup", "lidn", "lil")
+        jaw_id = self.get_ids("jaw")
+        self.data = self.data[eyebrow_ids, ::]
+        print(eyebrow_ids)
+        print(list(zip(range(len(self.labels)), self.labels)))
+        print("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
 
     def animate(self):
         """
@@ -134,12 +122,11 @@ class Emotion(object):
         self.scat = plt.scatter(self.data[:, 0, 0], self.data[:, 0, 1])
         self.ax.grid()
         self.ax.set_title(self.emotion)
-        # self.data = self.norm_data
 
         anim = animation.FuncAnimation(self.fig,
                                        func=self.next_frame,
                                        frames=self.frames,
-                                       interval=50.,     # in ms
+                                       interval=1e3/self.fps,     # in ms
                                        blit=True)
         try:
             plt.show(self.fig)
@@ -148,7 +135,8 @@ class Emotion(object):
 
 
 if __name__ == "__main__":
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\28-4-1.pkl")
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\45-4-1.pkl")
     # print(em)
     # em.preprocessor()
     em.animate()
+    em.compute_weights(None, 1e-6)

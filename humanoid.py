@@ -6,88 +6,33 @@ import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg import norm
 import json
-
+from basic import BasicMotion
 
 # TODO set confidence measure
 
 
 # noinspection PyTypeChecker
-class HumanoidBasic(object):
+class HumanoidBasic(BasicMotion):
     """
      Constructs a humanoid with empty fields and basic methods.
     """
 
-    def __init__(self):
+    def __init__(self, fps):
         """
          Necessary fields declaration.
         """
-        self.project = ""
-        self.name = ""
+        BasicMotion.__init__(self, fps)
         self.hand_markers = []
-        self.labels = []
-        self.weights = {}
-        self.data = np.array([])
-        self.norm_data = np.array([])
-        self.fps = 0.
-        self.frames = 0
-        self.std = 0.
         self.shoulder_markers = "", "", ""
         self.shoulder_length = 0.
-        self.moving_markers = []
-        self.joint_displace = {}
-        self.joint_std = {}
 
     def __str__(self):
         """
         :return: string representation of gesture
         """
-        s = "GESTURE: %s\n" % self.name
+        s = BasicMotion.__str__(self)
         s += "\t shoulder length: \t %.3f m\n" % self.shoulder_length
-        s += "\t frames: \t\t\t %d\n" % self.frames
-        s += "\t FPS: \t\t\t\t %d\n" % self.fps
-        s += "\t data std: \t\t\t %.5f m " % self.std
         return s
-
-    def get_norm_data(self):
-        """
-        :return: (#markers, #frames, 3) normalized data
-        """
-        return self.norm_data
-
-    def set_fps(self, new_fps):
-        """
-            Modify data, w.r.t. new fps.
-        :param new_fps: fps (or points frequency) to be made in the data
-        """
-        if new_fps is None or new_fps >= self.fps:
-            # does nothing
-            return
-        step_to_throw = float(self.fps) / (self.fps - new_fps)
-        indices_thrown = np.arange(self.data.shape[1]) * step_to_throw
-        indices_thrown = indices_thrown.astype(dtype="int")
-        self.data = np.delete(self.data, indices_thrown, axis=1)
-        self.frames = self.data.shape[1]
-        self.fps = new_fps
-
-    def get_ids(self, *args):
-        """
-         Gets specific data ids by marker_names keys.
-        :param marker_names: list of keys
-        :return: data ids, w.r.t. marker_names
-        """
-        ids = []
-        for marker in args:
-            ids.append(self.labels.index(marker))
-        return tuple(ids)
-
-    def get_weights(self):
-        """
-        :return array: (#markers,) ravelled array of weights
-        """
-        weights_ordered = []
-        for marker in self.labels:
-            weights_ordered.append(self.weights[marker])
-        return np.array(weights_ordered)
 
     def preprocessing(self):
         """
@@ -119,30 +64,6 @@ class HumanoidBasic(object):
                 if marker in self.hand_markers:
                     self.moving_markers.append(marker)
 
-    def compute_displacement(self, mode):
-        """
-         Computes joints displacements.
-        :param mode: use both hand (by default) or only prime one
-        """
-        self.define_moving_markers(mode)
-        for markerID in range(self.norm_data.shape[0]):
-            marker = self.labels[markerID]
-            if marker in self.moving_markers:
-                # delta_per_frame.shape == (frames-1, 3)
-                delta_per_frame = np.subtract(self.norm_data[markerID, 1:, :],
-                                              self.norm_data[markerID, :-1, :])
-                dist_per_frame = norm(delta_per_frame, axis=1)
-
-                # offset: average --> sum
-                offset = np.sum(dist_per_frame)
-
-                j_std = np.std(dist_per_frame, dtype=np.float64)
-            else:
-                offset = 0
-                j_std = 0
-            self.joint_displace[marker] = offset
-            self.joint_std[marker] = j_std
-
     def get_internal_energy(self, mode):
         """
          Internal energy is computed as overall joint displacements
@@ -155,53 +76,6 @@ class HumanoidBasic(object):
         w = np.array(list(self.weights.values()))
         U = np.sum(d * w)
         return U
-
-    def plot_displacement(self, mode):
-        """
-         Plots a chart bar of joints displacements.
-        :param mode: use both hand (by default) or only prime one
-        """
-        self.define_plot_style()
-        self.compute_displacement(mode)
-
-        self.fig = plt.figure()
-        ax = self.fig.add_subplot(111)
-
-        offset_list, joint_std_list = [], []
-        for marker in self.labels:
-            if marker in self.moving_markers:
-                offset_list.append(self.joint_displace[marker])
-                joint_std_list.append(self.joint_std[marker])
-
-        ind = np.arange(len(offset_list))
-        width = 0.5
-        if self.add_error:
-            ax.bar(ind, offset_list, width, yerr=joint_std_list,
-                   error_kw=dict(elinewidth=2, ecolor='red'))
-        else:
-            ax.bar(ind, offset_list, width)
-        ax.set_xlim(xmin=0)
-        ax.set_ylim(ymin=0)
-        ax.set_xticks(ind+width/2)
-        ax.set_title("%s joint displacements" % self.name)
-        ax.set_ylabel("marker motion measure,  norm units")
-        xtickNames = ax.set_xticklabels(self.moving_markers)
-        plt.setp(xtickNames, rotation=self.rotation, fontsize=self.fontsize)
-
-    def show_displacements(self, mode="bothHands"):
-        """
-        :param mode: use both hand (by default) or only prime one
-        """
-        self.plot_displacement(mode)
-        plt.show()
-
-    def define_plot_style(self):
-        """
-         Setting bar char plot style.
-        """
-        self.rotation = 0
-        self.fontsize = 12
-        self.add_error = False
 
     def init_3dbox(self):
         self.xmin = 0.
@@ -256,34 +130,6 @@ class HumanoidBasic(object):
             plt.show(self.fig)
         except AttributeError:
             pass
-
-    def compute_weights(self, mode, beta):
-        """
-         Computes weights to be used in DTW.
-        :param beta: param to be chosen during the training
-        """
-        self.compute_displacement(mode)
-        displacements = np.array(list(self.joint_displace.values()))
-        denom = np.sum(1. - np.exp(-beta * displacements))
-        for marker in self.labels:
-            self.weights[marker] = (1. - np.exp(
-                -beta * self.joint_displace[marker])) / denom
-
-    def set_weights(self):
-        """
-         Sets loaded weights from _INFO.json
-        """
-        json_file = self.project.upper() + "_INFO.json"
-        dic_info = json.load(open(json_file, 'r'))
-        weights_aver_dic = dic_info["weights"]
-        if self.name in weights_aver_dic:
-            # if _INFO file provides weights for current gesture
-            weights_arr = weights_aver_dic[self.name]
-            for markerID, marker_name in enumerate(self.labels):
-                self.weights[marker_name] = weights_arr[markerID]
-        else:
-            # compute weights for unknown gesture
-            self.compute_weights(mode="bothHands", beta=0.)
 
     def get_weights_discrepancy(self, other, mode):
         """

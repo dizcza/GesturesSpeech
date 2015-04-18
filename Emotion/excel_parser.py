@@ -64,7 +64,7 @@ def find_valid_label(cell_val):
 def upd_column(col_name, values):
     """
      Update cell_name column in missed_data.xlsx
-    :param col_name: excel cell name
+    :param col_name: excel column name
     :param values: info list
     """
     time.sleep(1)   # waiting to close prev events
@@ -72,7 +72,7 @@ def upd_column(col_name, values):
     path = os.path.join(os.getcwd(), r"missed_data.xlsx")
     wb = excel.Workbooks.Open(path)
     ws = wb.Worksheets("missed")
-    ws.Range(col_name + ":" + col_name).Delete()
+    ws.Range(col_name + ":" + col_name).ClearContents()
     for i, info in enumerate(values):
         pointer = col_name + str(i+2)
         ws.Range(pointer).Value = str(info)
@@ -103,12 +103,35 @@ def verify_excel_file():
         row += 1
         cell_pointer = col + str(row)
     wb.Close()
-    print("verify_excel_file: \tOkay. Ready for parsing xls.")
+    print("verify_excel_file: \tOKAY. Ready to parse xls.")
+
+
+def read_my_comments(cell_val):
+    """
+     Prints out lower and upper bound for some csv/blend files to be fit in.
+     :param cell_val: K's column cell value
+    """
+    if cell_val is not None:
+        a_comment = str(cell_val)
+        if "begin from " in a_comment:
+            a_comment = a_comment.strip("begin from ")
+            begin = int(a_comment.split(' ')[0])
+        else:
+            begin = 0
+        if "stop on " in a_comment:
+            a_comment = a_comment.split("stop on ")[-1]
+            end = int(a_comment)
+        else:
+            end = "--"
+        print("comment: %s; begin: %s, end: %s" % (str(cell_val), begin, end))
 
 
 def parse_xls(only_interest):
     """
-    :return: a basket of collections of file names for each gesture class
+    :returns:
+        (1) a collection of file names for each emotion class
+        (2) a collection of authors for each emotion class
+        (3) a collection of (begin, end) for some emotion file names
     """
     verify_excel_file()
 
@@ -121,8 +144,10 @@ def parse_xls(only_interest):
     author_col = "X"
     row = 3
     cell_pointer = my_labels_col + str(row)
+
     emotions_basket = init_container(init_unique_emotion_classes())
     authors_basket = init_container(get_authors())
+    boundaries_basket = {}
 
     while ws.Range(cell_pointer).Value is not None:
         cell_val = str(ws.Range(cell_pointer).Value)
@@ -134,6 +159,7 @@ def parse_xls(only_interest):
         secondname_val = secondname_val.replace("e", "-")
         joined_fname = firsname_val + secondname_val
         author = str(ws.Range(author_col + str(row)))
+        # read_my_comments(ws.Range("K" + str(row)).Value)
 
         row += 1
         cell_pointer = my_labels_col + str(row)
@@ -147,12 +173,23 @@ def parse_xls(only_interest):
 
         emotions_basket[valid_label].append(joined_fname)
         authors_basket[author].append(joined_fname)
+        boundaries_basket[joined_fname] = ws.Range("K" + str(row)).Value
     wb.Close()
 
-    return emotions_basket, authors_basket
+    return emotions_basket, authors_basket, boundaries_basket
+
+
+def how_many_examples_we_have():
+    """
+     Prints out how many emotion examples we have per one class.
+    """
+    emotions_basket, _, _ = parse_xls(False)
+    for key in emotions_basket:
+        print(key, len(emotions_basket[key]))
 
 
 if __name__ == "__main__":
     # verify_excel_file()
-    emotions_basket, authors_basket = parse_xls(False)
+    emotions_basket, authors_basket, bound = parse_xls(False)
     pprint(emotions_basket)
+    # how_many_examples_we_have()
