@@ -13,7 +13,7 @@ try:
 except ImportError:
     import MOCAP.btk_fake as btk
 
-MOCAP_PATH = "D:\GesturesDataset\MoCap\splitAll\\"
+MOCAP_PATH = r"D:\GesturesDataset\MoCap\splitAll"
 
 
 def gather_points_data(acq):
@@ -162,6 +162,7 @@ class HumanoidUkr(HumanoidBasic):
 
 
 if __name__ == "__main__":
-    gest = HumanoidUkr(MOCAP_PATH + "Training\\C1_mcraw_gest0_sample0.c3d")
+    gest = HumanoidUkr(r"D:\GesturesDataset\MoCap\splitAll\Training\C1_mcraw_gest0\C1_mcraw_gest0_sample0.c3d")
     print(gest)
-    # gest.show_displacements()
+    gest.show_displacements()
+    gest.animate()

@@ -65,7 +65,7 @@
   </tr>
   <tr>
     <td>MOCAP_INFO.json</td>
-    <td>includes the necessary info and chosen params for the MoCap project</td>
+    <td>stores the weights and the last training results</td>
   </tr>
 </table>
 

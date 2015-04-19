@@ -33,7 +33,7 @@
   </tr>
   <tr>
     <td>KINECT_INFO.json</td>
-    <td>includes the necessary info and chosen params for the Kinect project</td>
+    <td>stores the weights and the last training results</td>
   </tr>
 </table>
 

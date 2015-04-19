@@ -55,7 +55,7 @@
       <li>facial joints: 18</li>
       <li>data is measured in pixels</li>
       <li>FPS: 24</li>
-      <li>unique gesture classes: 14</li>
+      <li>unique gesture classes: 9</li>
       <li>samples per gesture: 4 ... 39</li>
     </ul>
 </ul>
@@ -75,12 +75,16 @@
     <td>HumanoidBasic: a BasicMotion wrapper super class for MoCap and Kinect projects</td>
   </tr>
   <tr>
-    <td>gDTW.py</td>
-    <td>gesture weighted DTW algorithm implementation</td>
+    <td>instruments.py</td>
+    <td>provides training and testing instruments</td>
+  </tr>
+  <tr>
+    <td>fastdtw.py</td>
+    <td>fast weighted DTW algorithm</td>
   </tr>
   <tr>
     <td>comparison.py</td>
-    <td>instruments for gestures comparison (uses gDTW)</td>
+    <td>gestures comparison (uses fastdtw)</td>
   </tr>
 </table>
 

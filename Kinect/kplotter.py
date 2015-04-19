@@ -24,9 +24,6 @@ def plot_rrate_vs_fps():
     plt.show()
 
 
-plot_rrate_vs_fps()
-
-
 def plot_ratio_vs_beta():
     zipped = [(1e-06, 14.081139305558757, 7.6406484891271473),
               (0.0001, 14.081137778713124, 7.6406477655985388),

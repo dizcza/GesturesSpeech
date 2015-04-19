@@ -138,11 +138,16 @@ def separate_dataset():
         os.mkdir(folder)
 
     for c3d_file in os.listdir(mixed_folder):
+        gesture_name = c3d_file[:-12]
         src = os.path.join(mixed_folder, c3d_file)
         if c3d_file.endswith("_sample0.c3d"):
-            shutil.copy(src, trn_folder)
+            trn_subfolder = os.path.join(trn_folder, gesture_name)
+            os.mkdir(trn_subfolder)
+            shutil.copy(src, trn_subfolder)
         elif c3d_file.endswith("_sample1.c3d"):
-            shutil.copy(src, tst_folder)
+            tst_subfolder = os.path.join(tst_folder, gesture_name)
+            os.mkdir(tst_subfolder)
+            shutil.copy(src, tst_subfolder)
 
 
 if __name__ == "__main__":

@@ -33,8 +33,8 @@ class BasicMotion(object):
         """
         s = "Motion name: %s\n" % self.name
         s += "\t data.shape:\t%s\n" % str(self.data.shape)
-        s += "\t FPS: \t\t\t\t %d\n" % self.fps
-        s += "\t data std: \t\t\t %.5f m " % self.std
+        s += "\t FPS: \t\t\t %d\n" % self.fps
+        s += "\t data std: \t\t %.5f m " % self.std
         return s
 
     def define_moving_markers(self, mode):
@@ -78,6 +78,8 @@ class BasicMotion(object):
         """
         :return array: (#markers,) ravelled array of weights
         """
+        if not any(self.weights):
+            self.compute_weights(None, 1e-6)
         weights_ordered = []
         for marker in self.labels:
             weights_ordered.append(self.weights[marker])
@@ -92,11 +94,14 @@ class BasicMotion(object):
         for markerID in range(self.norm_data.shape[0]):
             marker = self.labels[markerID]
             if marker in self.moving_markers:
-                # delta_per_frame.shape == (frames-1, 3)
+                # its shape == (frames-1, dim)
                 frames_xyz_delta = np.subtract(self.norm_data[markerID, 1:, :],
-                                              self.norm_data[markerID, :-1, :])
+                                               self.norm_data[markerID, :-1, :])
                 frames_xyz_delta = frames_xyz_delta[~np.isnan(frames_xyz_delta).any(axis=1)]
-                dist_per_frame = norm(frames_xyz_delta, axis=1)
+                if frames_xyz_delta.shape[0] > 0:
+                    dist_per_frame = norm(frames_xyz_delta, axis=1)
+                else:
+                    dist_per_frame = np.nan
 
                 # offset: average --> sum
                 offset = np.sum(dist_per_frame)
@@ -161,18 +166,26 @@ class BasicMotion(object):
         :param beta: param to be chosen during the training
         """
         self.compute_displacement(mode)
-        displacements = np.array(list(self.joint_displace.values()))
-        denom = np.sum(1. - np.exp(-beta * displacements))
-        for marker in self.labels:
-            self.weights[marker] = (1. - np.exp(
-                -beta * self.joint_displace[marker])) / denom
+        if beta is None:
+            denom = np.sum(list(self.joint_displace.values()))
+            for marker in self.labels:
+                self.weights[marker] = self.joint_displace[marker] / denom
+        else:
+            displacements = np.array(list(self.joint_displace.values()))
+            denom = np.sum(1. - np.exp(-beta * displacements))
+            for marker in self.labels:
+                self.weights[marker] = (1. - np.exp(-beta * self.joint_displace[marker])) / denom
 
     def set_weights(self):
         """
-         Sets loaded weights from _INFO.json
+         Loads weights from _INFO.json
         """
         json_file = self.project.upper() + "_INFO.json"
-        dic_info = json.load(open(json_file, 'r'))
+        try:
+            dic_info = json.load(open(json_file, 'r'))
+        except ValueError:
+            dic_info = {"weights": ()}
+
         weights_aver_dic = dic_info["weights"]
         if self.name in weights_aver_dic:
             # if _INFO file provides weights for current gesture
@@ -181,4 +194,4 @@ class BasicMotion(object):
                 self.weights[marker_name] = weights_arr[markerID]
         else:
             # compute weights for unknown gesture
-            self.compute_weights(mode="bothHands", beta=0.)
+            self.compute_weights(None, None)

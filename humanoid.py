@@ -5,13 +5,11 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg import norm
-import json
 from basic import BasicMotion
 
 # TODO set confidence measure
 
 
-# noinspection PyTypeChecker
 class HumanoidBasic(BasicMotion):
     """
      Constructs a humanoid with empty fields and basic methods.
@@ -31,7 +29,7 @@ class HumanoidBasic(BasicMotion):
         :return: string representation of gesture
         """
         s = BasicMotion.__str__(self)
-        s += "\t shoulder length: \t %.3f m\n" % self.shoulder_length
+        s += "\n\t shoulder length: \t %.3f m" % self.shoulder_length
         return s
 
     def preprocessing(self):
@@ -130,41 +128,6 @@ class HumanoidBasic(BasicMotion):
             plt.show(self.fig)
         except AttributeError:
             pass
-
-    def get_weights_discrepancy(self, other, mode):
-        """
-         Tells whether self joint displacement snapshot is
-         alike to the other joint displacement snapshot.
-        :param other: other gesture
-        :param mode: use both hand (by default) or only prime one
-        :return: weights discrepancy between self and other
-        """
-        self.compute_displacement(mode)
-        other.compute_displacement(mode)
-
-        present_markers = [mar for mar in self.labels if mar in other.labels]
-        if not any(present_markers):
-            return np.inf
-
-        active_self_displ = [self.joint_displace[marker] for marker in present_markers]
-        active_other_displ = [other.joint_displace[marker] for marker in present_markers]
-        diff = norm(np.subtract(active_self_displ, active_other_displ))
-        the_lowest_sum = min(sum(active_self_displ), sum(active_other_displ))
-        diff_rate = diff / the_lowest_sum
-        return diff_rate
-
-    def is_comparable_with(self, other, mode="bothHands", thr=0.16):
-        """
-         Tells whether self joint displacement snapshot is
-         alike to the other joint displacement snapshot.
-        :param other: other gesture
-        :param mode: use both hand (by default) or only prime one
-        :param thr: rate of the lowest displacement sum as a similarity measure
-        :return: if self-gest and other-gest can pertain to the same class
-                (DTW should go next to specify the answer)
-        """
-        diff_rate = self.get_weights_discrepancy(other, mode)
-        return diff_rate < thr
 
 
 def align_gestures(self, other):

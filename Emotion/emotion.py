@@ -30,31 +30,34 @@ class Emotion(BasicMotion):
 
         self.set_fps(fps)
         self.preprocessor()
+        self.set_weights()
 
     def __str__(self):
         s = BasicMotion.__str__(self)
-        s += "\temotion:\t%s\n" % self.emotion
-        s += "\tauthor:\t\t%s\n" % self.author
+        s += "\n\t emotion:\t\t %s" % self.emotion
+        s += "\n\t author:\t\t %s" % self.author
         return s
 
     def preprocessor(self):
+        # TODO think about better preprocessor
         # step 0: dealing with first frame bug
         self.data = self.data[:,1:,:]
         self.frames -= 1
         self.norm_data = self.data.copy()
 
         # step 1: subtract nose pos of the first frame
-        nose, jaw, chr, chl = self.get_ids("p0", "jaw", "chr", "chl")
+        nose, jaw, ebr_ir, ebr_il = self.get_ids("p0", "jaw", "ebr_ir", "ebr_il")
         # nose_pos = np.average(self.data[nose_ind,::], axis=0)
         first_frame = 0
         while np.isnan(self.data[nose, first_frame, :]).any():
             first_frame += 1
+        first_frame = min(first_frame, self.data.shape[1] - 1)
         self.norm_data -= self.data[nose, first_frame, :]
 
-        # step 2: divide data by ? dist
-        jaw_to_nose_dist = norm(self.data[nose,0,:] - self.data[jaw,0,:])
-        cheeks_dist = norm(self.data[chr,0,:] - self.data[chl,0,:])
-        self.norm_data /= jaw_to_nose_dist * cheeks_dist
+        # step 2: divide data by base line dist
+        top_point = (self.data[ebr_ir,0,:] + self.data[ebr_il,0,:]) / 2.
+        base_line = norm(top_point - self.data[jaw,0,:])
+        self.norm_data /= base_line
 
     def slope_align(self):
         # step 2: slope aligning
@@ -135,8 +138,8 @@ class Emotion(BasicMotion):
 
 
 if __name__ == "__main__":
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\45-4-1.pkl")
-    # print(em)
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\33-3-1.pkl")
+    # a = pickle.load(open(r"D:\GesturesDataset\Emotion\pickles\33-3-1.pkl", 'rb'))
+    # print(a["data"].shape)
     # em.preprocessor()
     em.animate()
-    em.compute_weights(None, 1e-6)

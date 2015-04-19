@@ -1,11 +1,10 @@
 # coding = utf-8
 
-from humanoid import align_gestures
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 from dtw import dtw
-from wdtw import wdtw, wdtw_windowed, dist_measure
+from fastdtw import fastdtw, _dtw, dist_measure
 from functools import partial
 
 
@@ -63,17 +62,14 @@ def align_data_shape(known_gest, unknown_gest):
     return data1, data2, weights
 
 
-def compare(known_gest, unknown_gest, dtw_chosen=wdtw, compare_weights=False):
+def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
     """
      Input gestures must have get_norm_data() and get_weights() methods!
     :param known_gest: sequence known to be in some gesture class
     :param unknown_gest: unknown test sequence
+    :param dtw_chosen: fastdtw or _dtw (classic)
     :return: (float), similarity (cost) of the given gestures
     """
-    # when joint displacement snapshot isn't the same
-    if compare_weights and not unknown_gest.is_comparable_with(known_gest, thr=0.16):
-        return np.inf
-
     if known_gest.labels == unknown_gest.labels:
         data1 = known_gest.get_norm_data()
         data2 = unknown_gest.get_norm_data()
@@ -95,7 +91,8 @@ def compare(known_gest, unknown_gest, dtw_chosen=wdtw, compare_weights=False):
 def show_comparison(known_gest, unknown_gest):
     """
      Shows the result of gestures comparison.
-    :param known_gest, unknown_gest: some 3d-gestures
+    :param known_gest: a BasicMotion example
+    :param unknown_gest: a BasicMotion example
     """
     data1 = known_gest.get_norm_data()
     data2 = unknown_gest.get_norm_data()
@@ -118,14 +115,12 @@ def show_comparison(known_gest, unknown_gest):
     dist, cost, path = dtw(data1, data2, dist=dist_measure_weighted)
 
     print('Minimum distance found: %.4f' % dist)
-    # print "x-path (first gesture frames):\n", path[0]
-    # print "y-path (second gesture frames):\n", path[1]
     plt.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest')
     plt.plot(path[0], path[1], 'w')
     plt.xlim((-0.5, cost.shape[0]-0.5))
     plt.ylim((-0.5, cost.shape[1]-0.5))
     plt.xlabel("FRAMES #1: %s" % known_gest.name)
-    plt.ylabel("FRAMES #2: (unknown)")
+    plt.ylabel("FRAMES #2: %s" % unknown_gest.name)
     plt.title("Weighted DTW frames path")
     plt.show()
 

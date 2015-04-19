@@ -61,9 +61,10 @@ def show_all_emotions():
      Animates Emotion instances.
     """
     for i, pkl_log in enumerate(os.listdir(EMOTION_PATH_PICKLES)):
-        pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
-        em = Emotion(pkl_path)
-        em.animate()
+        if pkl_log.endswith(".pkl"):
+            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+            em = Emotion(pkl_path)
+            # em.animate()
 
 
 if __name__ == "__main__":

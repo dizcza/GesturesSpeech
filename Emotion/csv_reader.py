@@ -1,18 +1,17 @@
 # coding=utf-8
 
 import os
+import shutil
 import pickle
 import numpy as np
 from numpy import genfromtxt
 from pprint import pprint
 import itertools
-from Emotion.excel_parser import parse_xls, upd_column
+from Emotion.excel_parser import parse_xls, upd_column, parse_whole_xls
 import win32com.client as win32
 
 EMOTION_PATH_CSV = r"D:\GesturesDataset\Emotion\csv"
 EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
-EMOTION_PATH_ACTORS = r"D:\GesturesDataset\Emotion\txt\actors"
-EMOTION_PATH_EMOTIONS = r"D:\GesturesDataset\Emotion\txt\emotions"
 MARKERS = 18
 
 
@@ -98,9 +97,10 @@ def dump_pickles():
     clean_labels()
     verify_labels()
 
-    emotions, writers, boundaries = parse_xls(only_interest=True)
+    emotions, writers, boundaries = parse_xls()
     check_uniqueness(writers)
     check_uniqueness(emotions)
+    print("*** Found %d unique emotions." % len(emotions))
 
     msg = "#################################################################\n" \
           "#                 Dumping the data: csv --> pkl                 #\n" \
@@ -122,6 +122,7 @@ def dump_pickles():
         fpath = os.path.join(EMOTION_PATH_PICKLES, directory + ".pkl")
         pickle.dump(file_info, open(fpath, 'wb'))
     upd_excel()
+    split_data()
 
 
 def to_array(data_dic):
@@ -130,16 +131,10 @@ def to_array(data_dic):
     :param data_dic: dic of 18 listed 2d data frames for each csv marker
     :return array: (#markers, #frames, 2) the same 2D data
     """
-    # handle missed frames
-    frames = np.inf
-    for vals in data_dic.values():
-        if vals.shape[0] < frames:
-            frames = vals.shape[0]
-
+    frames = next(iter(data_dic.values())).shape[0]
     array = np.empty(shape=(MARKERS, frames, 2), dtype=np.float64)
     for jointID, marker in enumerate(data_dic):
-        array[jointID, ::] = data_dic[marker][:frames, :]
-
+        array[jointID, ::] = data_dic[marker]
     return array
 
 
@@ -233,7 +228,7 @@ def upd_excel():
           "#                 Updating missed_data.xlsx                     #\n" \
           "#################################################################"
     print(msg)
-    emotions, writers, _ = parse_xls(only_interest=False)
+    emotions, writers, _ = parse_whole_xls()
     check_uniqueness(writers)
     check_uniqueness(emotions)
     given_csv_files = os.listdir(EMOTION_PATH_CSV)
@@ -251,9 +246,35 @@ def upd_excel():
     wb.Save()
     wb.Close()
 
+
+def split_data(trn_rate=0.5):
+    """
+     Splits pickled data into trn and tst data, w.r.t. training rate.
+    :param trn_rate: how many files go for training
+    """
+    emotion_basket, _, _ = parse_xls()
+    trn_path = os.path.join(EMOTION_PATH_PICKLES, "Training")
+    tst_path = os.path.join(EMOTION_PATH_PICKLES, "Testing")
+    for _path in (trn_path, tst_path):
+        shutil.rmtree(_path, ignore_errors=True)
+        os.mkdir(_path)
+
+    for class_name in emotion_basket.keys():
+        all_files = np.array(emotion_basket[class_name])
+        np.random.shuffle(all_files)
+        trn_size = int(trn_rate * all_files.shape[0])
+        trn_files, tst_files = all_files[:trn_size], all_files[trn_size:]
+        for (_path, _files) in ((trn_path, trn_files), (tst_path, tst_files)):
+            class_dirpath = os.path.join(_path, class_name)
+            os.mkdir(class_dirpath)
+            for fname in _files:
+                src = os.path.join(EMOTION_PATH_PICKLES, fname + ".pkl")
+                shutil.copy(src, class_dirpath)
+
+
 if __name__ == "__main__":
     # clean_labels()
     # verify_labels()
-    upd_excel()
-    # dump_pickles()
+    # upd_excel()
+    dump_pickles()
     # check_data_shapes()

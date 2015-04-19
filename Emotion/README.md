@@ -20,8 +20,12 @@
     <td>reads csv data and dumps it into pickles</td>
   </tr>
   <tr>
-    <td>setting.py</td>
-    <td>instruments for training (setting) best parameters</td>
+    <td>em_setting.py</td>
+    <td>emotion: training (setting) best parameters</td>
+  </tr>
+  <tr>
+    <td>em_testing.py</td>
+    <td>emotion: testing part</td>
   </tr>
   <tr>
     <td>visualizer.py</td>
@@ -37,7 +41,11 @@
   </tr>
   <tr>
     <td>missed_data.xlsx</td>
-    <td>info about missed emotions and others</td>
+    <td>info about missed emotions and incompatible data shapes</td>
+  </tr>
+  <tr>
+    <td>EMOTION_INFO.json</td>
+    <td>stores the weights and the last training results</td>
   </tr>
 
 </table>

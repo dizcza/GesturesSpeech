@@ -126,7 +126,70 @@ def read_my_comments(cell_val):
         print("comment: %s; begin: %s, end: %s" % (str(cell_val), begin, end))
 
 
-def parse_xls(only_interest):
+def parse_whole_xls():
+    """
+    :returns:
+        (1) a collection of file names for each emotion class
+        (2) a collection of authors for each emotion class
+        (3) a collection of (begin, end) for some emotion file names
+    """
+    verify_excel_file()
+
+    excel = win32.gencache.EnsureDispatch('Excel.Application')
+    wb = excel.Workbooks.Open(r"D:\GesturesDataset\Emotion\description.xls")
+    ws = wb.Worksheets(u"границы сегментов")
+    my_labels_col = "H"
+    firsname_col = "I"
+    secondname_col = "J"
+    author_col = "X"
+    row = 3
+    cell_pointer = my_labels_col + str(row)
+
+    emotions_basket = init_container(init_unique_emotion_classes())
+    authors_basket = init_container(get_authors())
+    boundaries_basket = {}
+
+    while ws.Range(cell_pointer).Value is not None:
+        cell_val = str(ws.Range(cell_pointer).Value)
+        valid_label = find_valid_label(cell_val)
+        firsname_val = str(int(ws.Range(firsname_col + str(row)).Value))
+        secondname_val = str(ws.Range(secondname_col + str(row)).Value)
+        secondname_val = secondname_val.replace("s", "-")
+        secondname_val = secondname_val.replace("e", "-")
+        joined_fname = firsname_val + secondname_val
+        author = str(ws.Range(author_col + str(row)))
+        # read_my_comments(ws.Range("K" + str(row)).Value)
+        if valid_label not in emotions_basket:
+            # it is not a valid label anymore, actually
+            emotions_basket[valid_label] = []
+        emotions_basket[valid_label].append(joined_fname)
+        authors_basket[author].append(joined_fname)
+        boundaries_basket[joined_fname] = ws.Range("K" + str(row)).Value
+        row += 1
+        cell_pointer = my_labels_col + str(row)
+    wb.Close()
+
+    return emotions_basket, authors_basket, boundaries_basket
+
+
+def combine_emotions(basket):
+    """
+    :param basket: a dict with file names for each (valid) emotion
+    :return: basket with combined similar emotions
+    """
+    the_same_emotions = u"отвращение", u"пренебрежение", u"так себе"
+    connected_files = []
+    for emotion in the_same_emotions:
+        if emotion in basket:
+            connected_files += basket[emotion]
+            del basket[emotion]
+    basket[the_same_emotions[0]] = connected_files
+    del basket[u"надутые губы"]
+    del basket[u"затаить злобу"]
+    return basket
+
+
+def parse_xls():
     """
     :returns:
         (1) a collection of file names for each emotion class
@@ -159,22 +222,19 @@ def parse_xls(only_interest):
         secondname_val = secondname_val.replace("e", "-")
         joined_fname = firsname_val + secondname_val
         author = str(ws.Range(author_col + str(row)))
-        # read_my_comments(ws.Range("K" + str(row)).Value)
+
+        if valid_label is not None:
+            # we do not account for labels we are not interested in
+            emotions_basket[valid_label].append(joined_fname)
+            authors_basket[author].append(joined_fname)
+            boundaries_basket[joined_fname] = ws.Range("K" + str(row)).Value
 
         row += 1
         cell_pointer = my_labels_col + str(row)
 
-        if only_interest and valid_label is None:
-            # we do not account for labels we are not interested in
-            continue
-        elif valid_label not in emotions_basket:
-            # it is not a valid label anymore, actually
-            emotions_basket[valid_label] = []
-
-        emotions_basket[valid_label].append(joined_fname)
-        authors_basket[author].append(joined_fname)
-        boundaries_basket[joined_fname] = ws.Range("K" + str(row)).Value
     wb.Close()
+
+    emotions_basket = combine_emotions(emotions_basket)
 
     return emotions_basket, authors_basket, boundaries_basket
 
@@ -183,13 +243,13 @@ def how_many_examples_we_have():
     """
      Prints out how many emotion examples we have per one class.
     """
-    emotions_basket, _, _ = parse_xls(False)
+    emotions_basket, _, _ = parse_whole_xls()
     for key in emotions_basket:
         print(key, len(emotions_basket[key]))
 
 
 if __name__ == "__main__":
     # verify_excel_file()
-    emotions_basket, authors_basket, bound = parse_xls(False)
-    pprint(emotions_basket)
+    em_basket, auth_basket, bound = parse_xls()
+    pprint(len(em_basket))
     # how_many_examples_we_have()
