@@ -141,7 +141,7 @@ def parse_whole_xls():
     my_labels_col = "H"
     firsname_col = "I"
     secondname_col = "J"
-    author_col = "X"
+    author_col = "AB"
     row = 3
     cell_pointer = my_labels_col + str(row)
 
@@ -177,15 +177,28 @@ def combine_emotions(basket):
     :param basket: a dict with file names for each (valid) emotion
     :return: basket with combined similar emotions
     """
-    the_same_emotions = u"отвращение", u"пренебрежение", u"так себе"
-    connected_files = []
-    for emotion in the_same_emotions:
-        if emotion in basket:
-            connected_files += basket[emotion]
-            del basket[emotion]
-    basket[the_same_emotions[0]] = connected_files
-    del basket[u"надутые губы"]
-    del basket[u"затаить злобу"]
+    return basket
+    del basket[u"закрыл глаза"]
+    the_same_baskets = (
+        (u"отвращение", u"пренебрежение", u"так себе"),
+        (u"ужас", u"ярость"),
+        (u"боль", u"плакса")
+    )
+
+    for the_same_emotions in the_same_baskets:
+        connected_files = []
+        for emotion in the_same_emotions:
+            if emotion in basket:
+                connected_files += basket[emotion]
+                del basket[emotion]
+        basket[the_same_emotions[0]] = connected_files
+        # for leave_emotion in the_same_emotions[1:]:
+        #     del basket[leave_emotion]
+        #     del basket[leave_emotion]
+    del basket[u"озадаченность"]
+    del basket[u"закрыл глаза"]
+    basket[u"улыбка"].remove("28-4-3")
+    basket[u"улыбка"].remove("37-1-1")
     return basket
 
 
@@ -204,7 +217,7 @@ def parse_xls():
     my_labels_col = "H"
     firsname_col = "I"
     secondname_col = "J"
-    author_col = "X"
+    author_col = "AB"
     row = 3
     cell_pointer = my_labels_col + str(row)
 
@@ -251,5 +264,5 @@ def how_many_examples_we_have():
 if __name__ == "__main__":
     # verify_excel_file()
     em_basket, auth_basket, bound = parse_xls()
-    pprint(len(em_basket))
+    pprint(em_basket)
     # how_many_examples_we_have()

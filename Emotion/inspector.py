@@ -1,0 +1,355 @@
+# coding=utf-8
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.widgets import RadioButtons, CheckButtons, Button
+import matplotlib.animation as animation
+from Emotion.emotion import Emotion
+from Emotion.preparation import EMOTION_PATH_PICKLES, \
+    define_valid_face_actions, get_face_markers, get_face_areas
+import os
+import json
+
+
+def load_emotions(specify):
+    """
+    :return: list of Emotion instances
+    """
+    database = []
+    for pkl_log in os.listdir(EMOTION_PATH_PICKLES):
+        if pkl_log.endswith(".pkl"):
+            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+            em = Emotion(pkl_path)
+            if specify is None:
+                database.append(em)
+            elif em.emotion == specify:
+                database.append(em)
+    return tuple(database)
+
+
+class Inspector(object):
+    def __init__(self, emotion, reset):
+        self.emotion = emotion
+        self.checked_basket = set([])
+        self.face_areas = get_face_areas()
+        self.labels = get_face_markers()
+        cashed_emotion = r"inspector_cache/%s.json" % emotion
+        if not reset and os.path.exists(cashed_emotion):
+            self.__result = json.load(open(cashed_emotion, 'r'))
+        else:
+            self.__result = init_empty_result()
+        self.valid_actions = define_valid_face_actions()
+        self.database = load_emotions(specify=emotion)
+        self.toggles = {}
+        self.iterator = 0
+        self.current_obj = self.database[self.iterator]
+        self.hot_ids = []
+        self.scat = None
+        self.display_unchecked = False
+        self.check_buttons = None
+        self.active_area = self.face_areas[0]
+
+        self.act_axes = None
+        self.fig = plt.figure()
+        self.set_navigate_buttons()
+        self.set_radio_buttons()
+        self.set_switch_button()
+        self.set_action_buttons()
+        self.fig.canvas.mpl_connect('close_event', self.handle_close)
+
+        plt.subplots_adjust(left=0.3, bottom=0.2)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.grid()
+        self.animate()
+
+    def handle_close(self, event):
+        """
+         Saves before shutting down.
+        """
+        self.save_result(None)
+
+    def show(self):
+        try:
+            plt.show()
+        except AttributeError:
+            pass
+
+    def set_navigate_buttons(self):
+        """
+         Sets revert, prev and next buttons to move around emotion files.
+        """
+        ax_prev = plt.axes([0.7, 0.05, 0.1, 0.075])
+        ax_next = plt.axes([0.81, 0.05, 0.1, 0.075])
+        ax_revert = plt.axes([0.3, 0.05, 0.1, 0.075])
+        ax_save = plt.axes([0.5, 0.05, 0.1, 0.075])
+
+        bnext = Button(ax_next, "Next")
+        bprev = Button(ax_prev, "Previous")
+        brevert = Button(ax_revert, "Revert")
+        bsave = Button(ax_save, "Save")
+
+        bnext.on_clicked(self.take_next)
+        bprev.on_clicked(self.take_prev)
+        brevert.on_clicked(self.revert)
+        bsave.on_clicked(self.save_result)
+
+    def set_radio_buttons(self):
+        """
+         Sets radio buttons to track specific face place.
+        """
+        rax = plt.axes([0.05, 0.52, 0.2, 0.22], axisbg="lightgoldenrodyellow")
+        radio = RadioButtons(rax, self.face_areas)
+        radio.on_clicked(self.choose_face_part)
+
+    def set_switch_button(self):
+        """
+         Switches check mode.
+        """
+        rax = plt.axes([0.05, 0.75, 0.2, 0.15], axisbg="lightgoldenrodyellow")
+        check = CheckButtons(rax, ("only \nunchecked",), (self.display_unchecked,))
+        check.on_clicked(self.choose_unchecked)
+
+    def update_action_buttons(self):
+        """
+         Updates valid actions for the tracking face area.
+        """
+        if self.check_buttons is not None:
+            self.check_buttons.disconnect_events()
+        self.act_axes.clear()
+        menu = self.valid_actions[self.active_area]
+        loaded_act = self.__result[self.current_obj.fname][self.active_area]
+        self.toggles = {}
+        bool_vals = []
+        for act in menu:
+            display_it = act in loaded_act
+            self.toggles[act] = display_it
+            bool_vals.append(display_it)
+        self.check_buttons = CheckButtons(self.act_axes, menu, bool_vals)
+        self.check_buttons.on_clicked(self.choose_action)
+
+    def set_action_buttons(self):
+        """
+         Sets valid actions for the tracking face area.
+        """
+        self.act_axes = plt.axes([0.05, 0.2, 0.2, 0.3], axisbg="lightblue")
+        self.update_action_buttons()
+
+    def choose_action(self, label):
+        """
+        :param label: valid face area action
+        """
+        self.toggles[label] = not self.toggles[label]
+
+    def choose_unchecked(self, label):
+        """
+         Choose manually to display only unchecked emotion objects or all of them.
+        :param label == "only unchecked"
+        """
+        self.display_unchecked = not self.display_unchecked
+
+    def choose_face_part(self, face_part):
+        """
+         Chooses what face part to be displayed.
+        :param face_part: is it mouth, eyes, ...
+        """
+        self.active_area = face_part
+        self.update_action_buttons()
+        self.animate()
+
+    def remember_last_choice(self):
+        """
+         Remembers the last choice in the current fname, w.r.t. active area.
+        """
+        outcome = [act for act in self.toggles if self.toggles[act]]
+        if not any(outcome):
+            outcome = ["default"]
+            msg = "%s (%s)" % (self.current_obj.fname, self.active_area)
+            print("WARNING: got empty action in ", msg)
+        self.__result[self.current_obj.fname][self.active_area] = outcome
+        self.checked_basket.add(self.current_obj.fname)
+
+    def save_result(self, event):
+        """
+         Saves the results.
+        """
+        print("Saved in %s.json" % self.emotion)
+        for fname in self.checked_basket:
+            self.__result[fname]["is_checked"] = True
+        json.dump(self.__result, open("%s.json" % self.emotion, 'w'))
+
+    def take_next(self, event):
+        """
+         Takes next emotion object.
+        :param event: mouse click event
+        """
+        self.remember_last_choice()
+        seek_next = True
+        if self.iterator == len(self.database) - 1:
+            print("THE END.")
+            seek_next = False
+
+        while seek_next:
+            self.iterator = min(len(self.database) - 1, self.iterator + 1)
+            self.current_obj = self.database[self.iterator]
+            already_checked = self.__result[self.current_obj.fname]["is_checked"]
+            seek_next = already_checked and self.iterator < len(self.database) - 1
+            seek_next = seek_next and self.display_unchecked
+        self.update_action_buttons()
+        self.animate()
+
+    def take_prev(self, event):
+        """
+         Takes previous emotion object.
+        :param event: mouse click event
+        """
+        self.remember_last_choice()
+        seek_prev = True
+        if self.iterator == 0:
+            seek_prev = False
+            print("BEGINNING.")
+
+        while seek_prev:
+            self.iterator = max(0, self.iterator - 1)
+            self.current_obj = self.database[self.iterator]
+            already_checked = self.__result[self.current_obj.fname]["is_checked"]
+            seek_prev = already_checked and self.iterator > 0
+            seek_prev = seek_prev and self.display_unchecked
+        self.update_action_buttons()
+        self.animate()
+
+    def revert(self, event):
+        """
+         Reverts the iterator at the beginning.
+        :param event: mouse click event
+        """
+        self.iterator = len(self.database) - 1
+        self.current_obj = self.database[self.iterator]
+        print("Returned back.")
+        self.animate()
+
+    def next_frame(self, frame):
+        """
+        :param frame: frame ID to be displayed
+        """
+        frame = frame % self.current_obj.frames
+        self.scat.set_offsets(self.current_obj.data[:, frame, :])
+        return []
+
+    def animate(self):
+        """
+         Animates current emotion file.
+        """
+        if self.scat is not None:
+            self.scat.remove()
+
+        self.hot_ids = self.current_obj.get_ids(*self.labels[self.active_area])
+        markers = self.current_obj.data.shape[0]
+        sizes = np.ones(markers) * 30
+        rgba_colors = np.zeros(shape=(markers, 4))
+        for rgb in range(3):
+            rgba_colors[:, rgb] = 0.5
+        rgba_colors[:, 3] = 0.5
+        for interested_id in self.hot_ids:
+            sizes[interested_id] *= 2
+            rgba_colors[interested_id, 1] = 0
+            rgba_colors[interested_id, 2] = 1
+            rgba_colors[interested_id, 3] = 1
+
+        self.scat = plt.scatter(self.current_obj.data[:, 0, 0],
+                                self.current_obj.data[:, 0, 1], color=rgba_colors, s=sizes)
+        title = "%s: %s" % (self.current_obj.fname, self.current_obj.emotion)
+        self.ax.set_title(title)
+
+        anim = animation.FuncAnimation(self.fig,
+                                       func=self.next_frame,
+                                       frames=self.current_obj.frames,
+                                       interval=1,
+                                       blit=True)
+        try:
+            plt.draw()
+        except AttributeError:
+            pass
+
+
+def init_empty_result():
+    db = load_emotions(None)
+    face_areas = get_face_areas()
+    a_dic = {}
+    labels = get_face_markers()
+    for em in db:
+        em_info = {
+            "is_checked": False,
+            "emotion": em.emotion
+        }
+        for fplace in face_areas:
+            em_info[fplace] = ["default"]
+
+        if em.emotion == u"улыбка":
+            em_info["mouth"] = ["smile"]
+            em_info["cheeks"] = ["default", "up"]
+
+        elif em.emotion == u"закрыл глаза":
+            em_info["eyes"] = ["closed"]
+
+        elif em.emotion in (u"отвращение", u"пренебрежение", u"так себе"):
+            em_info["mouth"] = ["default", "shifted"]
+
+        elif em.emotion == u"боль":
+            em_info["eyes"] = ["closed"]
+            em_info["mouth"] = ["open"]
+            em_info["cheeks"] = ["up"]
+            em_info["nostrils"] = ["up"]
+            em_info["eyebrows"] = ["default", "down"]
+
+        elif em.emotion == u"ярость":
+            em_info["mouth"] = ["open"]
+            em_info["cheeks"] = ["up"]
+            em_info["nostrils"] = ["up"]
+            em_info["eyebrows"] = ["default", "up"]
+
+        elif em.emotion == u"ужас":
+            em_info["mouth"] = ["open"]
+            em_info["nostrils"] = ["up"]
+            em_info["eyebrows"] = ["up"]
+
+        elif em.emotion == u"озадаченность":
+            em_info["mouth"] = ["default", "shifted"]
+            em_info["eyebrows"] = ["default", "down"]
+
+        elif em.emotion == u"удивление":
+            em_info["mouth"] = ["default", "open"]
+            em_info["eyebrows"] = ["up"]
+
+        elif em.emotion == u"плакса":
+            em_info["nostrils"] = ["up"]
+            em_info["eyebrows"] = ["down"]
+            em_info["eyes"] = ["closed"]
+
+        for fplace in face_areas:
+            ids = em.get_ids(*labels[fplace])
+            if np.isnan(em.data[ids, ::]).any():
+                em_info[fplace].append("(undef)")
+
+        a_dic[em.fname] = em_info
+    json.dump(a_dic, open("face_structure_init.json", 'w'))
+    return a_dic
+
+
+def merge_result():
+    """
+     Merges all json dictionaries of emotions into one dic.
+    """
+    merged_dic = {}
+    os.remove(r"face_structure_merged.json")
+    for json_log in os.listdir("."):
+        if json_log.endswith(".json") and json_log != "EMOTION_INFO.json":
+            a_dic = json.load(open(json_log, 'r'))
+            merged_dic.update(a_dic)
+    print("Merged %d files." % len(merged_dic))
+    json.dump(merged_dic, open("face_structure_merged.json", 'w'))
+
+
+if __name__ == "__main__":
+    # Inspector(u"улыбка", reset=False).show()
+    # init_empty_result()
+    merge_result()

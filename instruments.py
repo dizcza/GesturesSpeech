@@ -4,13 +4,12 @@ import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import os
-import sys
 import time
 import json
 from comparison import compare, show_comparison
 from Kinect.kreader import KINECT_PATH
 from MOCAP.mreader import MOCAP_PATH
-from Emotion.csv_reader import EMOTION_PATH_PICKLES
+from Emotion.preparation import EMOTION_PATH_PICKLES
 
 
 ########################################################################################################################
@@ -18,8 +17,9 @@ from Emotion.csv_reader import EMOTION_PATH_PICKLES
 ########################################################################################################################
 
 class Testing(object):
-    def __init__(self, MotionClass):
+    def __init__(self, MotionClass, suffix=""):
         self.MotionClass = MotionClass
+        self.suffix = suffix
         _paths = {
             "HumanoidUkr": MOCAP_PATH,
             "HumanoidKinect": KINECT_PATH,
@@ -32,6 +32,8 @@ class Testing(object):
             "Emotion": "EMOTION_INFO.json"
         }
         self._info_name = names_collection[MotionClass.__name__]
+        self.trn_path = os.path.join(self.proj_path, "Training", self.suffix)
+        self.tst_path = os.path.join(self.proj_path, "Testing", self.suffix)
 
 
     def the_worst_comparison(self, fps):
@@ -41,31 +43,25 @@ class Testing(object):
         """
         print("%s: the_worst_between_comparison is running" % self.MotionClass.__name__)
         start = time.time()
-        trn_path = os.path.join(self.proj_path, "Training")
 
         patterns = {}
         supremum = {}
         infimum = {}
 
-        for directory in os.listdir(trn_path):
+        for directory in os.listdir(self.trn_path):
             patterns[directory] = []
             infimum[directory] = 0.
             supremum[directory] = 0.
-            trn_subdir = os.path.join(trn_path, directory)
+            trn_subdir = os.path.join(self.trn_path, directory)
             for short_name in os.listdir(trn_subdir):
                 fname = os.path.join(trn_subdir, short_name)
                 knownGest = self.MotionClass(fname, fps)
                 patterns[directory].append(knownGest)
         
-        for directory in os.listdir(trn_path):
-            tst_subfolder = os.path.join(self.proj_path, "Testing", directory)
+        for directory in os.listdir(self.trn_path):
+            tst_subfolder = os.path.join(self.tst_path, directory)
             print(" testing %s" % directory)
-            how_many_samples = len(os.listdir(tst_subfolder))
             for _sampleID, test_name in enumerate(os.listdir(tst_subfolder)):
-                # sys.stdout.write("\r testing %s: %.2f" %
-                #                  (directory, (float(_sampleID+1)/how_many_samples)*100))
-                # sys.stdout.flush()
-
                 fpath_test = os.path.join(tst_subfolder, test_name)
                 unknownGest = self.MotionClass(fpath_test, fps)
                 the_same_costs = []
@@ -76,30 +72,40 @@ class Testing(object):
                     dist /= float(len(path))
                     the_same_costs.append(dist)
 
+                other_patterns = []
                 for class_name, gestsLeft in patterns.items():
                     if class_name != directory:
                         for knownGest in gestsLeft:
                             dist, path = compare(knownGest, unknownGest)
                             dist /= float(len(path))
                             other_costs.append(dist)
+                            other_patterns.append(knownGest)
                 min_other_cost = min(other_costs)
 
                 if max(the_same_costs) >= min_other_cost:
                     supremum[directory] += 1.
                 if min(the_same_costs) >= min_other_cost:
+                    ind = np.argmin(other_costs)
+                    got_pattern = other_patterns[ind]
+                    msg = "got %s" % got_pattern.name
+                    if hasattr(got_pattern, "fname"):
+                        msg += " (file: %s)" % got_pattern.fname
+                    msg += ", should be %s" % unknownGest.name
+                    print(msg)
                     infimum[directory] += 1
 
         total_samples = 0
         print("The result is shown in #misclassified: ")
         for dir in supremum.keys():
-            tst_subfolder = os.path.join(self.proj_path, "Testing", dir)
+            tst_subfolder = os.path.join(self.tst_path, dir)
             tst_samples = len(os.listdir(tst_subfolder))
             total_samples += tst_samples
             msg = "%s: \t\t min = %d, max = %d out of %d test samples" % (dir, infimum[dir], supremum[dir], tst_samples)
             print(msg)
         total_supremum = sum(supremum.values())
         total_infimum = sum(infimum.values())
-        print("*** INF: %d; \tSUP: %d; \t TOTAL SAMPLES: %d" % (total_infimum, total_supremum, total_samples))
+        print("*** THE BEST CASE: %d; \tTHE WORST CASE: %d; \t TOTAL SAMPLES: %d" %
+              (total_infimum, total_supremum, total_samples))
         duration = time.time() - start
         print("Duration: %d sec" % duration)
 
@@ -119,8 +125,7 @@ class Testing(object):
          :param fps: fps to be set in each gesture
         """
         pattern_gestures = []
-        trn_path = os.path.join(self.proj_path, "Training")
-        for root, _, logs in os.walk(trn_path):
+        for root, _, logs in os.walk(self.trn_path):
             if any(logs):
                 full_filename = os.path.join(root, logs[0])
                 gest = self.MotionClass(full_filename, fps)
@@ -140,8 +145,7 @@ class Testing(object):
         patterns = self.collect_first_patterns(fps)
         misclassified = 0.
         total_samples = 0
-        tst_path = os.path.join(self.proj_path, "Testing")
-        for root, _, logs in os.walk(tst_path):
+        for root, _, logs in os.walk(self.tst_path):
             for test_log in logs:
                 full_filename = os.path.join(root, test_log)
                 unknown_gest = self.MotionClass(full_filename, fps)
@@ -189,12 +193,9 @@ class Testing(object):
         """
          Shows a comparison for two randomly picked samples.
         """
-        trn_path = os.path.join(self.proj_path, "Training")
-        tst_path = os.path.join(self.proj_path, "Testing")
-
-        directory = np.random.choice(os.listdir(trn_path))
-        trn_subdir = os.path.join(trn_path, directory)
-        tst_subdir = os.path.join(tst_path, directory)
+        directory = np.random.choice(os.listdir(self.trn_path))
+        trn_subdir = os.path.join(self.trn_path, directory)
+        tst_subdir = os.path.join(self.tst_path, directory)
 
         trn_random_file = np.random.choice(os.listdir(trn_subdir))
         tst_random_file = np.random.choice(os.listdir(tst_subdir))
@@ -211,8 +212,9 @@ class Testing(object):
 ########################################################################################################################
 
 class Training(object):
-    def __init__(self, MotionClass):
+    def __init__(self, MotionClass, suffix=""):
         self.MotionClass = MotionClass
+        self.suffix = suffix
         _paths = {
             "HumanoidUkr": MOCAP_PATH,
             "HumanoidKinect": KINECT_PATH,
@@ -225,6 +227,8 @@ class Training(object):
         }
         self._info_name = names_collection[MotionClass.__name__]
         self.proj_path = _paths[MotionClass.__name__]
+        self.trn_path = os.path.join(self.proj_path, "Training", self.suffix)
+        self.tst_path = os.path.join(self.proj_path, "Testing", self.suffix)
         self.proj_info = {}
 
 
@@ -257,13 +261,13 @@ class Training(object):
         """
         self.load_info()
         self.proj_info["beta"] = beta
-        trn_path = os.path.join(self.proj_path, "Training")
+        
         global_weights = {}
 
-        for directory in os.listdir(trn_path):
+        for directory in os.listdir(self.trn_path):
             global_weights[directory] = []
             current_dir_weights = []
-            trn_subfolder = os.path.join(trn_path, directory)
+            trn_subfolder = os.path.join(self.trn_path, directory)
             for trn_name in os.listdir(trn_subfolder):
                 fpath_trn = os.path.join(trn_subfolder, trn_name)
                 gest = self.MotionClass(fpath_trn, fps)
@@ -283,11 +287,10 @@ class Training(object):
         """
         self.load_info()
         print("%s: COMPUTING WITHIN VARIANCE" % self.MotionClass.__name__)
-        trn_path = os.path.join(self.proj_path, "Training")
 
         one_vs_the_same_var = []
-        for directory in os.listdir(trn_path):
-            trn_subfolder = os.path.join(trn_path, directory)
+        for directory in os.listdir(self.trn_path):
+            trn_subfolder = os.path.join(self.trn_path, directory)
             log_examples = os.listdir(trn_subfolder)
             current_dir_var = []
             while len(log_examples) > 1:
@@ -326,9 +329,8 @@ class Training(object):
         """
         print("%s: COMPUTING BETWEEN VARIANCE" % self.MotionClass.__name__)
         self.load_info()
-        trn_path = os.path.join(self.proj_path, "Training")
-        dirs = os.listdir(trn_path)
-        roots = [os.path.join(self.proj_path, "Training", one) for one in dirs]
+        trndirs = os.listdir(self.trn_path)
+        roots = [os.path.join(self.trn_path, one) for one in trndirs]
 
         one_vs_others_var = []
         while len(roots) > 1:
@@ -405,10 +407,10 @@ class Training(object):
             gained_ratios.append(self.proj_info["d-ratio"])
             gained_rstds.append(self.proj_info["d-ratio-std"])
 
-        choosing_beta = zip(beta_range, gained_ratios, gained_rstds)
+        choosing_beta = tuple(zip(beta_range, gained_ratios, gained_rstds))
+        print(choosing_beta)
         self.proj_info["choosing beta"] = choosing_beta
         json.dump(self.proj_info, open(self._info_name, 'w'))
-        print(zip(beta_range, gained_ratios, gained_rstds))
 
         best_ratio = max(gained_ratios)
         ind = np.argmax(gained_ratios)
@@ -433,7 +435,6 @@ class Training(object):
         :param beta: to be choosing to yield the biggest ratio
         :param start: lower fps
         :param end: upper fps
-        :return:
         """
         fps_range = np.arange(start, end, 1)
         ratios = []

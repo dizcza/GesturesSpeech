@@ -64,7 +64,12 @@ def show_all_emotions():
         if pkl_log.endswith(".pkl"):
             pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
             em = Emotion(pkl_path)
+            # print(em.fname, em.emotion)
             # em.animate()
+            if em.emotion != "undefined":
+                # em.show_displacements(None)
+                if em.emotion == u"улыбка":
+                    em.animate()
 
 
 if __name__ == "__main__":

@@ -26,6 +26,8 @@ class BasicMotion(object):
         self.joint_displace = {}
         self.joint_std = {}
         self.moving_markers = []
+        self.fig = None
+        self.ax = None
 
     def __str__(self):
         """
@@ -124,7 +126,7 @@ class BasicMotion(object):
     def plot_displacement(self, mode):
         """
          Plots a chart bar of joints displacements.
-        :param mode: use both hand (by default) or only prime one
+        :param mode: defines moving markers
         """
         self.define_plot_style()
         self.compute_displacement(mode)
@@ -153,7 +155,7 @@ class BasicMotion(object):
         xtickNames = ax.set_xticklabels(self.moving_markers)
         plt.setp(xtickNames, rotation=self.rotation, fontsize=self.fontsize)
 
-    def show_displacements(self, mode="bothHands"):
+    def show_displacements(self, mode):
         """
         :param mode: use both hand (by default) or only prime one
         """

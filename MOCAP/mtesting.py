@@ -5,5 +5,5 @@ from instruments import Testing
 
 
 if __name__ == "__main__":
-    tstInstr = Testing(HumanoidUkr)
-    tstInstr.the_worst_comparison(fps=5)
+    testInstruments = Testing(HumanoidUkr)
+    testInstruments.the_worst_comparison(fps=10)

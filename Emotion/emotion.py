@@ -7,6 +7,10 @@ import matplotlib.animation as animation
 import pickle
 import os
 from basic import BasicMotion
+from MOCAP.math_kernel import moving_average_simple
+
+
+# TODO deal with camera jerking (58-1-1) --> blur
 
 
 class Emotion(BasicMotion):
@@ -17,7 +21,7 @@ class Emotion(BasicMotion):
         """
         BasicMotion.__init__(self, fps=24)
         self.project = "Emotion"
-        self.name = os.path.basename(obj_path).strip(".pkl")
+        self.fname = os.path.basename(obj_path).strip(".pkl")
 
         # loading data from a pickle
         info = pickle.load(open(obj_path, 'rb'))
@@ -25,8 +29,9 @@ class Emotion(BasicMotion):
         self.norm_data = None
         self.author = info["author"]
         self.emotion = info["emotion"]
-        self.labels = info["labels"]
+        self.labels = tuple(info["labels"])
         self.frames = self.data.shape[1]
+        self.name = self.emotion
 
         self.set_fps(fps)
         self.preprocessor()
@@ -34,30 +39,121 @@ class Emotion(BasicMotion):
 
     def __str__(self):
         s = BasicMotion.__str__(self)
-        s += "\n\t emotion:\t\t %s" % self.emotion
+        s += "\n\t file name:\t\t %s" % self.fname
         s += "\n\t author:\t\t %s" % self.author
         return s
 
     def preprocessor(self):
-        # TODO think about better preprocessor
         # step 0: dealing with first frame bug
-        self.data = self.data[:,1:,:]
+        self.data = self.data[:, 1:, :]
         self.frames -= 1
         self.norm_data = self.data.copy()
 
         # step 1: subtract nose pos of the first frame
         nose, jaw, ebr_ir, ebr_il = self.get_ids("p0", "jaw", "ebr_ir", "ebr_il")
-        # nose_pos = np.average(self.data[nose_ind,::], axis=0)
         first_frame = 0
         while np.isnan(self.data[nose, first_frame, :]).any():
             first_frame += 1
         first_frame = min(first_frame, self.data.shape[1] - 1)
         self.norm_data -= self.data[nose, first_frame, :]
 
-        # step 2: divide data by base line dist
+        # step 2: divide data by base line length
         top_point = (self.data[ebr_ir,0,:] + self.data[ebr_il,0,:]) / 2.
         base_line = norm(top_point - self.data[jaw,0,:])
         self.norm_data /= base_line
+
+        # step 3: gaussian blurring filter
+        self.gaussian_filter()
+
+        # step 4: deal eye winking
+        self.deal_with_winking()
+
+
+    def define_moving_markers(self, mode):
+        """
+        :param mode: defines moving markers
+        """
+        if mode == "no_eyes":
+            self.moving_markers = list(self.labels)
+            for eye_marker in ("eup_r", "edn_r", "eup_l", "edn_l"):
+                self.moving_markers.remove(eye_marker)
+        else:
+            BasicMotion.define_moving_markers(self, mode)
+
+
+    def deal_with_winking(self):
+        """
+         A wizard to deal with eye winking.
+         It's known, that a human wink duration lies within the range of [300, 500] ms.
+         Taking that into account, we can find out winking frames,
+         skip them and approximate the gap instead.
+        """
+        wink_window = int(0.5 * self.fps)
+        to_be_wink_threshold = 0.05
+        eup_r, edn_r, eup_l, edn_l = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
+        both_eyes = (eup_r, edn_r), (eup_l, edn_l)
+        up_down_dist = []
+        for eye in both_eyes:
+            dX = self.norm_data[eye[0],::] - self.norm_data[eye[1],::]
+            up_down_dist.append(norm(dX, axis=1))
+        eyes_wink = np.sum(up_down_dist, axis=0)
+
+        # plt.plot(eyes_wink, 'b')
+        for frame in range(1, len(eyes_wink)-1):
+            start = max(0, frame-wink_window//2)
+            end = min(len(eyes_wink), frame+wink_window//2)
+            left_bound = max(eyes_wink[start:frame])
+            right_bound = max(eyes_wink[frame:end])
+            if eyes_wink[frame] < eyes_wink[frame-1] and eyes_wink[frame] < eyes_wink[frame+1]:
+                deep_left = (left_bound - eyes_wink[frame]) / max(eyes_wink)
+                deep_right = (right_bound - eyes_wink[frame]) / max(eyes_wink)
+                if deep_left > to_be_wink_threshold and deep_right > to_be_wink_threshold:
+                    start = start + np.argmax(eyes_wink[start:frame])
+                    end = frame + np.argmax(eyes_wink[frame:end])
+                    # print(start, frame, end, deep_left, deep_right)
+                    # y = np.linspace(left_bound, right_bound, end - start)
+                    # plt.plot(np.arange(start, end, 1), y, 'go')
+                    for eye in both_eyes:
+                        for eye_marker in eye:
+                            for dim in range(self.norm_data.shape[2]):
+                                x_begin = self.norm_data[eye_marker, start, dim]
+                                x_end = self.norm_data[eye_marker, end, dim]
+                                line = np.linspace(x_begin, x_end, end - start)
+                                self.norm_data[eye_marker, start:end, dim] = line
+
+
+    def gaussian_filter(self):
+        """
+         Applies gaussian smoothing filter (also called low-pass filter)
+         to the sequence of XY for each marker independently.
+        """
+        track_next = 7
+        frames_total = self.norm_data.shape[1]
+
+        # accumulates total sigma_x and sigma_y
+        sigmas = np.zeros(2)
+        for markerID in range(self.norm_data.shape[0]):
+            # its shape == (frames-1, dim)
+            frames_xyz_delta = np.subtract(self.norm_data[markerID, 1:, :],
+                                           self.norm_data[markerID, :-1, :])
+            # dealing with nan
+            frames_xyz_delta = frames_xyz_delta[~np.isnan(frames_xyz_delta).any(axis=1)]
+            if frames_xyz_delta.shape[0] > 0:
+                sigmas += np.std(frames_xyz_delta, axis=0)
+
+        for markerID in range(self.norm_data.shape[0]):
+            for frame in range(1, frames_total):
+                end = min(frame + track_next, frames_total)
+                dX_next = np.subtract(self.norm_data[markerID, frame:end, :],
+                                      self.norm_data[markerID, frame-1, :])
+                weights = np.linspace(0, 1, end - frame)
+                accumulated_offset = np.sum(norm(dX_next, axis=1) * weights)
+                _dx = np.subtract(self.norm_data[markerID, frame, :],
+                                  self.norm_data[markerID, frame-1, :])
+                blur_factor = 1. - np.exp(- accumulated_offset / (2 * sigmas))
+                _dx *= blur_factor
+                self.norm_data[markerID,frame,:] = self.norm_data[markerID,frame-1,:] + _dx
+        # self.data = self.norm_data
 
     def slope_align(self):
         # step 2: slope aligning
@@ -73,25 +169,6 @@ class Emotion(BasicMotion):
             print(xy_aver)
         median_points = np.resize(median_points, new_shape=(5, 2))
         self.coef = np.polyfit(median_points[:, 0], median_points[:, 1], deg=1)
-
-    def accumulate_noise(self):
-        """
-         Data processing: accumulates noisy displacement unless action potential burst.
-        """
-        markers = len(self.labels)
-        accumulated = np.zeros(markers)
-        prev_frame = np.zeros(markers, dtype="int")
-
-        act_pot = 1.
-        for frame in range(1, self.data.shape[1]):
-            accumulated += norm(self.data[:, frame, :] - self.data[:, frame-1, :], axis=1)
-            for jointID in range(accumulated.shape[0]):
-                if accumulated[jointID] > act_pot:
-                    self.norm_data[:, frame, :] = self.data[:, frame, :]
-                    accumulated[jointID] = 0.
-                    prev_frame[jointID] = frame
-                else:
-                    self.norm_data[:, frame, :] = self.data[:, prev_frame[jointID], :]
 
     def next_frame(self, frame):
         """
@@ -116,15 +193,23 @@ class Emotion(BasicMotion):
         print(list(zip(range(len(self.labels)), self.labels)))
         print("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
 
+    def define_plot_style(self):
+        """
+         Setting bar char plot style.
+        """
+        self.rotation = 50
+        self.fontsize = 11
+        self.add_error = False
+
     def animate(self):
         """
-         Animates 3d data.
+         Animates 2d data.
         """
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111)
         self.scat = plt.scatter(self.data[:, 0, 0], self.data[:, 0, 1])
         self.ax.grid()
-        self.ax.set_title(self.emotion)
+        self.ax.set_title("%s: %s" % (self.emotion, self.fname))
 
         anim = animation.FuncAnimation(self.fig,
                                        func=self.next_frame,
@@ -133,13 +218,14 @@ class Emotion(BasicMotion):
                                        blit=True)
         try:
             plt.show(self.fig)
+            # plt.draw()
         except AttributeError:
             pass
 
 
 if __name__ == "__main__":
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\33-3-1.pkl")
-    # a = pickle.load(open(r"D:\GesturesDataset\Emotion\pickles\33-3-1.pkl", 'rb'))
-    # print(a["data"].shape)
-    # em.preprocessor()
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\38-2-1.pkl")
+    # em.show_displacements(None)
+    # em.deal_with_winking()
+    # plt.show()
     em.animate()

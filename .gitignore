@@ -2,5 +2,5 @@
 temp.py
 *.npy
 .idea
-MOCAP/animation
+MOCAP/animation/
 __pycache__/

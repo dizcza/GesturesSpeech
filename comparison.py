@@ -74,6 +74,8 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
         data1 = known_gest.get_norm_data()
         data2 = unknown_gest.get_norm_data()
         weights = known_gest.get_weights()
+        unknown_gest.compute_weights(None, None)
+        weights *= unknown_gest.get_weights()
     else:
         data1, data2, weights = align_data_shape(known_gest, unknown_gest)
 

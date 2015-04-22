@@ -1,17 +1,14 @@
 # coding=utf-8
 
 import os
-import shutil
 import pickle
 import numpy as np
-from numpy import genfromtxt
-from pprint import pprint
 import itertools
 from Emotion.excel_parser import parse_xls, upd_column, parse_whole_xls
+from Emotion.preparation import split_data, EMOTION_PATH_PICKLES
 import win32com.client as win32
 
 EMOTION_PATH_CSV = r"D:\GesturesDataset\Emotion\csv"
-EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
 MARKERS = 18
 
 
@@ -100,7 +97,10 @@ def dump_pickles():
     emotions, writers, boundaries = parse_xls()
     check_uniqueness(writers)
     check_uniqueness(emotions)
-    print("*** Found %d unique emotions." % len(emotions))
+    lowest_num_of_samples = min(map(len, emotions.values()))
+    msg = "*** Found %d unique emotions; " % len(emotions)
+    msg += "the lowest number of samples is %d" % lowest_num_of_samples
+    print(msg)
 
     msg = "#################################################################\n" \
           "#                 Dumping the data: csv --> pkl                 #\n" \
@@ -240,36 +240,11 @@ def upd_excel():
     path = os.path.join(os.getcwd(), r"missed_data.xlsx")
     wb = excel.Workbooks.Open(path)
     ws = wb.Worksheets("missed")
-    ws.Range("A1").Value = "incompatible data shape (different number of frames)"
+    ws.Range("A1").Value = "NaNs in:"
     ws.Range("B1").Value = "unknown emotion in:"
     ws.Range("C1").Value = "unknown author in:"
     wb.Save()
     wb.Close()
-
-
-def split_data(trn_rate=0.5):
-    """
-     Splits pickled data into trn and tst data, w.r.t. training rate.
-    :param trn_rate: how many files go for training
-    """
-    emotion_basket, _, _ = parse_xls()
-    trn_path = os.path.join(EMOTION_PATH_PICKLES, "Training")
-    tst_path = os.path.join(EMOTION_PATH_PICKLES, "Testing")
-    for _path in (trn_path, tst_path):
-        shutil.rmtree(_path, ignore_errors=True)
-        os.mkdir(_path)
-
-    for class_name in emotion_basket.keys():
-        all_files = np.array(emotion_basket[class_name])
-        np.random.shuffle(all_files)
-        trn_size = int(trn_rate * all_files.shape[0])
-        trn_files, tst_files = all_files[:trn_size], all_files[trn_size:]
-        for (_path, _files) in ((trn_path, trn_files), (tst_path, tst_files)):
-            class_dirpath = os.path.join(_path, class_name)
-            os.mkdir(class_dirpath)
-            for fname in _files:
-                src = os.path.join(EMOTION_PATH_PICKLES, fname + ".pkl")
-                shutil.copy(src, class_dirpath)
 
 
 if __name__ == "__main__":
