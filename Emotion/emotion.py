@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pickle
 import os
+import json
 from basic import BasicMotion
-from MOCAP.math_kernel import moving_average_simple
 
 
 # TODO deal with camera jerking (58-1-1) --> blur
@@ -175,11 +175,6 @@ class Emotion(BasicMotion):
         :param frame: frame id
         """
         self.scat.set_offsets(self.data[:, frame, :])
-        # a, b = self.coef
-        # xs = np.arange(-50, 0)
-        # ys = a * xs + b
-        # plt.plot(xs, ys)
-        # plt.plot(self.data[:, frame, 0], self.data[:, frame, 1], 'bo')
         return []
 
     def visual_help(self):
@@ -224,8 +219,10 @@ class Emotion(BasicMotion):
 
 
 if __name__ == "__main__":
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\38-2-1.pkl")
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\46-4-1.pkl")
+    em.data = em.norm_data
     # em.show_displacements(None)
     # em.deal_with_winking()
     # plt.show()
+    print(em)
     em.animate()

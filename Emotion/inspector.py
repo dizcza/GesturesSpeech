@@ -7,6 +7,7 @@ import matplotlib.animation as animation
 from Emotion.emotion import Emotion
 from Emotion.preparation import EMOTION_PATH_PICKLES, \
     define_valid_face_actions, get_face_markers, get_face_areas
+from Emotion.excel_parser import parse_xls
 import os
 import json
 
@@ -16,14 +17,21 @@ def load_emotions(specify):
     :return: list of Emotion instances
     """
     database = []
-    for pkl_log in os.listdir(EMOTION_PATH_PICKLES):
-        if pkl_log.endswith(".pkl"):
-            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+    if specify is None:
+        print("Loading all emotion database")
+        for pkl_log in os.listdir(EMOTION_PATH_PICKLES):
+            if pkl_log.endswith(".pkl"):
+                pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+                em = Emotion(pkl_path)
+                database.append(em)
+    else:
+        emotions_basket, _, _ = parse_xls()
+        assert specify in emotions_basket, "invalid emotion is specified"
+        print("Loading %s" % specify)
+        for pkl_log in emotions_basket[specify]:
+            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log + ".pkl")
             em = Emotion(pkl_path)
-            if specify is None:
-                database.append(em)
-            elif em.emotion == specify:
-                database.append(em)
+            database.append(em)
     return tuple(database)
 
 
@@ -35,9 +43,9 @@ class Inspector(object):
         self.labels = get_face_markers()
         cashed_emotion = r"inspector_cache/%s.json" % emotion
         if not reset and os.path.exists(cashed_emotion):
-            self.__result = json.load(open(cashed_emotion, 'r'))
+            self._result = json.load(open(cashed_emotion, 'r'))
         else:
-            self.__result = init_empty_result()
+            self._result = init_empty_result()
         self.valid_actions = define_valid_face_actions()
         self.database = load_emotions(specify=emotion)
         self.toggles = {}
@@ -45,7 +53,7 @@ class Inspector(object):
         self.current_obj = self.database[self.iterator]
         self.hot_ids = []
         self.scat = None
-        self.display_unchecked = False
+        self.display_only_unchecked = False
         self.check_buttons = None
         self.active_area = self.face_areas[0]
 
@@ -59,8 +67,6 @@ class Inspector(object):
 
         plt.subplots_adjust(left=0.3, bottom=0.2)
         self.ax = self.fig.add_subplot(111)
-        self.ax.grid()
-        self.animate()
 
     def handle_close(self, event):
         """
@@ -69,6 +75,7 @@ class Inspector(object):
         self.save_result(None)
 
     def show(self):
+        self.animate()
         try:
             plt.show()
         except AttributeError:
@@ -106,7 +113,7 @@ class Inspector(object):
          Switches check mode.
         """
         rax = plt.axes([0.05, 0.75, 0.2, 0.15], axisbg="lightgoldenrodyellow")
-        check = CheckButtons(rax, ("only \nunchecked",), (self.display_unchecked,))
+        check = CheckButtons(rax, ("only \nunchecked",), (self.display_only_unchecked,))
         check.on_clicked(self.choose_unchecked)
 
     def update_action_buttons(self):
@@ -117,7 +124,7 @@ class Inspector(object):
             self.check_buttons.disconnect_events()
         self.act_axes.clear()
         menu = self.valid_actions[self.active_area]
-        loaded_act = self.__result[self.current_obj.fname][self.active_area]
+        loaded_act = self._result[self.current_obj.fname][self.active_area]
         self.toggles = {}
         bool_vals = []
         for act in menu:
@@ -145,7 +152,7 @@ class Inspector(object):
          Choose manually to display only unchecked emotion objects or all of them.
         :param label == "only unchecked"
         """
-        self.display_unchecked = not self.display_unchecked
+        self.display_only_unchecked = not self.display_only_unchecked
 
     def choose_face_part(self, face_part):
         """
@@ -165,7 +172,7 @@ class Inspector(object):
             outcome = ["default"]
             msg = "%s (%s)" % (self.current_obj.fname, self.active_area)
             print("WARNING: got empty action in ", msg)
-        self.__result[self.current_obj.fname][self.active_area] = outcome
+        self._result[self.current_obj.fname][self.active_area] = outcome
         self.checked_basket.add(self.current_obj.fname)
 
     def save_result(self, event):
@@ -174,8 +181,8 @@ class Inspector(object):
         """
         print("Saved in %s.json" % self.emotion)
         for fname in self.checked_basket:
-            self.__result[fname]["is_checked"] = True
-        json.dump(self.__result, open("%s.json" % self.emotion, 'w'))
+            self._result[fname]["is_checked"] = True
+        json.dump(self._result, open(r"inspector_cache/%s.json" % self.emotion, 'w'))
 
     def take_next(self, event):
         """
@@ -191,9 +198,9 @@ class Inspector(object):
         while seek_next:
             self.iterator = min(len(self.database) - 1, self.iterator + 1)
             self.current_obj = self.database[self.iterator]
-            already_checked = self.__result[self.current_obj.fname]["is_checked"]
+            already_checked = self._result[self.current_obj.fname]["is_checked"]
             seek_next = already_checked and self.iterator < len(self.database) - 1
-            seek_next = seek_next and self.display_unchecked
+            seek_next = seek_next and self.display_only_unchecked
         self.update_action_buttons()
         self.animate()
 
@@ -211,9 +218,9 @@ class Inspector(object):
         while seek_prev:
             self.iterator = max(0, self.iterator - 1)
             self.current_obj = self.database[self.iterator]
-            already_checked = self.__result[self.current_obj.fname]["is_checked"]
+            already_checked = self._result[self.current_obj.fname]["is_checked"]
             seek_prev = already_checked and self.iterator > 0
-            seek_prev = seek_prev and self.display_unchecked
+            seek_prev = seek_prev and self.display_only_unchecked
         self.update_action_buttons()
         self.animate()
 
@@ -222,7 +229,7 @@ class Inspector(object):
          Reverts the iterator at the beginning.
         :param event: mouse click event
         """
-        self.iterator = len(self.database) - 1
+        self.iterator = 0
         self.current_obj = self.database[self.iterator]
         print("Returned back.")
         self.animate()
@@ -241,6 +248,8 @@ class Inspector(object):
         """
         if self.scat is not None:
             self.scat.remove()
+        self.ax.clear()
+        self.ax.grid()
 
         self.hot_ids = self.current_obj.get_ids(*self.labels[self.active_area])
         markers = self.current_obj.data.shape[0]
@@ -269,6 +278,151 @@ class Inspector(object):
             plt.draw()
         except AttributeError:
             pass
+
+
+class CheckInspector(Inspector):
+    def __init__(self, emotion):
+        Inspector.__init__(self, emotion, reset=False)
+        self.display_only_unchecked = False
+        self.both = self._result[self.current_obj.fname][self.active_area]
+
+    def set_radio_buttons(self):
+        ax_mouth = plt.axes([0.05, 0.8, 0.15, 0.075], axisbg="lightgoldenrodyellow")
+        ax_eyes = plt.axes([0.05, 0.7, 0.15, 0.075], axisbg="lightgoldenrodyellow")
+        ax_eyebrows = plt.axes([0.05, 0.6, 0.15, 0.075], axisbg="lightgoldenrodyellow")
+        ax_cheeks = plt.axes([0.05, 0.5, 0.15, 0.075], axisbg="lightgoldenrodyellow")
+        ax_nostrils = plt.axes([0.05, 0.4, 0.15, 0.075], axisbg="lightgoldenrodyellow")
+
+        b_mouth = Button(ax_mouth, "track \nmouth")
+        b_eyes = Button(ax_eyes, "track \neyes")
+        b_eyebrows = Button(ax_eyebrows, "track \neyebrows")
+        b_cheeks = Button(ax_cheeks, "track \ncheeks")
+        b_nostrils = Button(ax_nostrils, "track \nnostrils")
+
+        b_mouth.on_clicked(self.track_mouth)
+        b_eyes.on_clicked(self.track_eyes)
+        b_eyebrows.on_clicked(self.track_eyebrows)
+        b_cheeks.on_clicked(self.track_cheeks)
+        b_nostrils.on_clicked(self.track_nostrils)
+
+    def track_mouth(self, event):
+        self.active_area = "mouth"
+        self.save_and_move_to_next()
+
+    def track_eyes(self, event):
+        self.active_area = "eyes"
+        self.save_and_move_to_next()
+
+    def track_eyebrows(self, event):
+        self.active_area = "eyebrows"
+        self.save_and_move_to_next()
+
+    def track_cheeks(self, event):
+        self.active_area = "cheeks"
+        self.save_and_move_to_next()
+
+    def track_nostrils(self, event):
+        self.active_area = "nostrils"
+        self.save_and_move_to_next()
+
+    def save_and_move_to_next(self):
+        self.save_result(None)
+        self.iterator = -1
+        self.take_next(None)
+
+    def set_action_buttons(self):
+        ax_second = plt.axes([0.15, 0.2, 0.1, 0.05], axisbg="blue")
+        ax_first = plt.axes([0.02, 0.2, 0.1, 0.05], axisbg="blue")
+        ax_reject = plt.axes([0.02, 0.05, 0.23, 0.14], axisbg="blue")
+        ax_raw_input = plt.axes([0.02, 0.26, 0.23, 0.05], axisbg="blue")
+
+        bsecond = Button(ax_second, "Second")
+        bfirst = Button(ax_first, "First")
+        breject = Button(ax_reject, "Reject")
+        braw_input = Button(ax_raw_input, "Enter (raw input)")
+
+        bsecond.on_clicked(self.choose_second)
+        bfirst.on_clicked(self.choose_first)
+        breject.on_clicked(self.reject_action)
+        braw_input.on_clicked(self.enter_an_action)
+
+    def choose_second(self, event):
+        if len(self.both) == 2:
+            second = [self.both[1]]
+            self._result[self.current_obj.fname][self.active_area] = second
+            print("\t --> chose second: %s" % second)
+
+    def choose_first(self, event):
+        if len(self.both) == 2:
+            first = [self.both[0]]
+            self._result[self.current_obj.fname][self.active_area] = first
+            print("\t --> chose first: %s" % first)
+
+    def reject_action(self, event):
+        self._result[self.current_obj.fname][self.active_area] = ["(undef)"]
+        print("\t --> chose rejected: (undef)")
+
+    def enter_an_action(self, event):
+        act = input("\t -- > Enter an action: ")
+        self._result[self.current_obj.fname][self.active_area] = [act]
+        print("\t --> chose first: %s" % act)
+
+    def __len__(self):
+        return len(self._result[self.current_obj.fname][self.active_area])
+
+    def show(self):
+        if len(self) < 2:
+            self.take_next(None)
+            plt.show()
+        else:
+            Inspector.show(self)
+
+    def take_next(self, event):
+        """
+         Takes next already inspected emotion object,
+         which has both possible actions, w.r.t. active face area.
+        :param event: mouse click event
+        """
+        seek_next = True
+        if self.iterator == len(self.database) - 1:
+            print("THE END.")
+            seek_next = False
+
+        while seek_next:
+            self.iterator = min(len(self.database) - 1, self.iterator + 1)
+            self.current_obj = self.database[self.iterator]
+            seek_next = self.iterator < len(self.database) - 1 and len(self) < 2
+        self.both = self._result[self.current_obj.fname][self.active_area]
+        self.animate()
+
+    def take_prev(self, event):
+        """
+         Takes prev already inspected emotion object,
+         which has both possible actions, w.r.t. active face area.
+        :param event: mouse click event
+        """
+        seek_prev = True
+        if self.iterator == 0:
+            seek_prev = False
+            print("BEGINNING.")
+
+        while seek_prev:
+            self.iterator = max(0, self.iterator - 1)
+            self.current_obj = self.database[self.iterator]
+            seek_prev = self.iterator > 0 and len(self) < 2
+        self.both = self._result[self.current_obj.fname][self.active_area]
+        self.animate()
+
+    def animate(self):
+        self.current_obj.data = self.current_obj.norm_data
+        Inspector.animate(self)
+        print("%s: %s" % (self.active_area, self.both))
+
+    def set_switch_button(self):
+        pass
+    
+    def update_action_buttons(self):
+        pass
 
 
 def init_empty_result():
@@ -331,7 +485,6 @@ def init_empty_result():
                 em_info[fplace].append("(undef)")
 
         a_dic[em.fname] = em_info
-    json.dump(a_dic, open("face_structure_init.json", 'w'))
     return a_dic
 
 
@@ -340,10 +493,9 @@ def merge_result():
      Merges all json dictionaries of emotions into one dic.
     """
     merged_dic = {}
-    os.remove(r"face_structure_merged.json")
-    for json_log in os.listdir("."):
-        if json_log.endswith(".json") and json_log != "EMOTION_INFO.json":
-            a_dic = json.load(open(json_log, 'r'))
+    for json_log in os.listdir("inspector_cache"):
+        if json_log.endswith(".json"):
+            a_dic = json.load(open(r"inspector_cache/%s" % json_log, 'r'))
             merged_dic.update(a_dic)
     print("Merged %d files." % len(merged_dic))
     json.dump(merged_dic, open("face_structure_merged.json", 'w'))
@@ -351,5 +503,6 @@ def merge_result():
 
 if __name__ == "__main__":
     # Inspector(u"улыбка", reset=False).show()
+    # CheckInspector(u"так себе").show()
     # init_empty_result()
     merge_result()

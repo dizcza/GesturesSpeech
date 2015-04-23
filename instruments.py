@@ -17,23 +17,29 @@ from Emotion.preparation import EMOTION_PATH_PICKLES
 ########################################################################################################################
 
 class Testing(object):
-    def __init__(self, MotionClass, suffix=""):
+    def __init__(self, MotionClass, prefix="", suffix=""):
         self.MotionClass = MotionClass
         self.suffix = suffix
         _paths = {
             "HumanoidUkr": MOCAP_PATH,
             "HumanoidKinect": KINECT_PATH,
-            "Emotion": EMOTION_PATH_PICKLES
+            "Emotion": EMOTION_PATH_PICKLES,
+            "EmotionArea": None
         }
-        self.proj_path = _paths[MotionClass.__name__]
+        proj_path = _paths[MotionClass.__name__]
         names_collection = {
             "HumanoidUkr": "MOCAP_INFO.json",
             "HumanoidKinect": "KINECT_INFO.json",
-            "Emotion": "EMOTION_INFO.json"
+            "Emotion": "EMOTION_INFO.json",
+            "EmotionArea": "EMOTION_AREAS_INFO.json"
         }
         self._info_name = names_collection[MotionClass.__name__]
-        self.trn_path = os.path.join(self.proj_path, "Training", self.suffix)
-        self.tst_path = os.path.join(self.proj_path, "Testing", self.suffix)
+        if prefix != "":
+            self.trn_path = os.path.join(prefix, "Training", self.suffix)
+            self.tst_path = os.path.join(prefix, "Testing", self.suffix)
+        else:
+            self.trn_path = os.path.join(proj_path, "Training", self.suffix)
+            self.tst_path = os.path.join(proj_path, "Testing", self.suffix)
 
 
     def the_worst_comparison(self, fps):
