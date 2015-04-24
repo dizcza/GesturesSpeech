@@ -218,8 +218,10 @@ class Emotion(BasicMotion):
             pass
 
 
+
+
 if __name__ == "__main__":
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\46-4-1.pkl")
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\33-4-1.pkl")
     em.data = em.norm_data
     # em.show_displacements(None)
     # em.deal_with_winking()

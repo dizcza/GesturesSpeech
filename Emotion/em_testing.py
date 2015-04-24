@@ -6,13 +6,14 @@ from Emotion.preparation import get_face_areas, EMOTION_PATH_PICKLES
 from instruments import Testing, Training
 from Emotion.em_setting import compute_areas_weights
 import os
-import numpy as np
 
 
 def face_areas_test(fps):
-    # compute_areas_weights(None, None, None)
+    print("WITHOUT POST PROCESSOR")
+    compute_areas_weights(None, None, None)
     face_areas = get_face_areas()
     for area in face_areas:
+        print("TOOK FACE AREA: %s" % area)
         area_folder = os.path.join(EMOTION_PATH_PICKLES, "FaceAreas", area)
         Testing(EmotionArea, prefix=area_folder).the_worst_comparison(fps)
 

@@ -45,6 +45,9 @@ class Testing(object):
     def the_worst_comparison(self, fps):
         """
          Computes the worst and the best out-of-sample error.
+         NOTE: comparison is made by choosing the ABSOLUTE lowest DTW cost
+               among examples -- without its normalizing by the path length,
+               since the last one rises in-sample and out-of-sample errors.
         :param fps: fps to be set in each gesture
         """
         print("%s: the_worst_between_comparison is running" % self.MotionClass.__name__)
@@ -83,22 +86,32 @@ class Testing(object):
                     if class_name != directory:
                         for knownGest in gestsLeft:
                             dist, path = compare(knownGest, unknownGest)
-                            dist /= float(len(path))
+                            # To make sure that dividing dtw cost by its path length
+                            # yields bigger error, you can switch on this normalization
+                            # dist /= float(len(path))
                             other_costs.append(dist)
                             other_patterns.append(knownGest)
                 min_other_cost = min(other_costs)
 
                 if max(the_same_costs) >= min_other_cost:
-                    supremum[directory] += 1.
+                    ind = np.argmin(other_costs)
+                    got_pattern = other_patterns[ind]
+                    if got_pattern.name != unknownGest.name:
+                        supremum[directory] += 1.
+
+                        msg = "got %s" % got_pattern.name
+                        if hasattr(got_pattern, "fname"):
+                            msg += " (file: %s)" % got_pattern.fname
+                        msg += ", should be %s" % unknownGest.name
+                        if hasattr(unknownGest, "fname"):
+                            msg += " (file: %s)" % unknownGest.fname
+                        print(msg)
+
                 if min(the_same_costs) >= min_other_cost:
                     ind = np.argmin(other_costs)
                     got_pattern = other_patterns[ind]
-                    msg = "got %s" % got_pattern.name
-                    if hasattr(got_pattern, "fname"):
-                        msg += " (file: %s)" % got_pattern.fname
-                    msg += ", should be %s" % unknownGest.name
-                    print(msg)
-                    infimum[directory] += 1
+                    if got_pattern.name != unknownGest.name:
+                        infimum[directory] += 1
 
         total_samples = 0
         print("The result is shown in #misclassified: ")
@@ -122,7 +135,7 @@ class Testing(object):
         }
         json.dump(proj_info, open(self._info_name, 'w'))
 
-        return total_infimum, total_supremum
+        return total_infimum, total_supremum, total_samples
 
 
     def collect_first_patterns(self, fps):

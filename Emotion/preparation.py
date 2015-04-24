@@ -232,6 +232,8 @@ def split_face_areas_tricky(trn_rate=0.5):
                     obj_path = os.path.join(_area_act_path, "%s.pkl" % a_file)
                     pickle.dump(obj, open(obj_path, 'wb'))
 
+
 if __name__ == "__main__":
+    split_face_areas()
     split_face_areas_tricky()
     # split_data()

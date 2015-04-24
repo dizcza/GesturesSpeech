@@ -281,9 +281,10 @@ class Inspector(object):
 
 
 class CheckInspector(Inspector):
-    def __init__(self, emotion):
+    def __init__(self, emotion, active_area="mouth"):
         Inspector.__init__(self, emotion, reset=False)
         self.display_only_unchecked = False
+        self.active_area = active_area
         self.both = self._result[self.current_obj.fname][self.active_area]
 
     def set_radio_buttons(self):
@@ -492,8 +493,9 @@ def merge_result():
     """
      Merges all json dictionaries of emotions into one dic.
     """
+    remove_undefined_and_unplaced_emotion_file_names()
     merged_dic = {}
-    for json_log in os.listdir("inspector_cache"):
+    for json_log in os.listdir(r"inspector_cache"):
         if json_log.endswith(".json"):
             a_dic = json.load(open(r"inspector_cache/%s" % json_log, 'r'))
             merged_dic.update(a_dic)
@@ -501,8 +503,41 @@ def merge_result():
     json.dump(merged_dic, open("face_structure_merged.json", 'w'))
 
 
+def remove_undefined_and_unplaced_emotion_file_names():
+    """
+     For each json dict, stored in 'inspector_cache' folder,
+     removes the file name if it either
+        - corresponds to undefined emotion (those who not in emotion_basket)
+        - corresponds to other emotion, that differs from json dict name
+    """
+    emotion_basket, _, _ = parse_xls()
+    for json_log in os.listdir("inspector_cache"):
+        if json_log.endswith(".json"):
+            em_dic = json.load(open(r"inspector_cache/%s" % json_log, 'r'))
+            undef_fnames = []
+            other_emotion_fnames = []
+            for fname in em_dic:
+                if em_dic[fname]["emotion"] not in emotion_basket:
+                    undef_fnames.append(fname)
+                elif em_dic[fname]["emotion"] != json_log[:-5]:
+                    other_emotion_fnames.append(fname)
+            for bad_name in undef_fnames + other_emotion_fnames:
+                del em_dic[bad_name]
+            json.dump(em_dic, open(r"inspector_cache/%s" % json_log, 'w'))
+
+
+def eyes_test():
+    emotions_basket, _, _ = parse_xls()
+    for emotion in emotions_basket:
+        try:
+            CheckInspector(emotion, "eyes").show()
+        except AttributeError:
+            pass
+
+
 if __name__ == "__main__":
-    # Inspector(u"улыбка", reset=False).show()
-    # CheckInspector(u"так себе").show()
-    # init_empty_result()
+    # Inspector(u"ужас", reset=False).show()
+    # CheckInspector(u"плакса", "eyes").show()
     merge_result()
+    # remove_undefined()
+    # eyes_test()
