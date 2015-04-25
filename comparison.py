@@ -1,4 +1,4 @@
-# coding = utf-8
+# coding=utf-8
 
 import numpy as np
 import matplotlib.cm as cm
@@ -85,9 +85,12 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
         print("Incompatible data dimensions. Returned np.inf")
         return np.inf
 
-    dist = dtw_chosen(data1, data2, weights)
+    dist, path = dtw_chosen(data1, data2, weights)
     if dist == np.inf:
         print("WARNING: dtw comparison gave np.inf")
+
+    # you can play around with cost normalization
+    dist /= float(len(path))
 
     return dist
 

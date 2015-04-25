@@ -1,11 +1,11 @@
 # coding=utf-8
 
-from Emotion.emotion import Emotion
 import pickle
 import json
 import os
 import numpy as np
-from Emotion.preparation import get_face_areas
+from Emotion.emotion import Emotion
+from Emotion.FaceLocations.preparation import get_face_areas
 
 
 isString = lambda item: type(item).__name__ in ("str", "unicode")
@@ -117,65 +117,14 @@ def test_face_area():
     emArea.animate()
 
 
-def resave_face_structure_json():
-    # TODO if eyes both open and closed -- > new class
-    face_structure = json.load(open(r"face_structure_merged.json", 'r'))
-    modif = {
-        "49-1-2": [("cheeks", ["up"]), ("mouth", ["smile"])],
-        "37-1-1": [("cheeks", ["default"]), ("mouth", ["smile"])],
-        "56-2-2": [("cheeks", ["up"])],
-        "46-4-1": [("eyebrows", ["down"]), ("mouth", ["smile", "open"])],
-        "48-3-2": [("mouth", ["open"])],
-        "57-2-1": [("mouth", ["smile"])],
-        "30-3-2": [("mouth", ["open"])],
-        "52-3-1": [("mouth", ["(undef)"])],
-        "49-2-2": [("eyes", ["(undef)"])],
-        "46-3-1": [("eyes", ["(undef)"])],
-        "31-1-2": [("mouth", ["smile"])],
-        "33-4-1": [("mouth", ["smile", "default"])],
-        "33-4-2": [("mouth", ["smile"])],
-        "46-3-2": [("mouth", ["smile"])],
-        "58-1-1": [("mouth", ["smile", "open"])],
-        "31-2-2": [("eyes", ["(undef)"])],
-        "54-5-1": [("eyes", ["closed"])],
-        "61-4-1": [("eyes", ["default", "closed"])],
-        "50-3-1": [("eyes", ["default", "closed"])]
-    }
-    for fname in modif:
-        for pairID in range(len(modif[fname])):
-            face_area, ok_act = modif[fname][pairID]
-            emotion = face_structure[fname]["emotion"]
-            em_json_dic = json.load(open(r"inspector_cache/%s.json" % emotion, 'r'))
-            if fname in em_json_dic:
-                em_json_dic[fname][face_area] = ok_act
-                json.dump(em_json_dic, open(r"inspector_cache/%s.json" % emotion, 'w'))
-            face_structure[fname][face_area] = ok_act
-    json.dump(face_structure, open(r"face_structure_merged.json", 'w'))
-
-
 def test_multiple_names():
     face_structure = json.load(open(r"face_structure_merged.json", 'r'))
     for fname in face_structure:
         for face_area in get_face_areas():
             actions_num = len(face_structure[fname][face_area])
-            if actions_num > 2:
-                print("%s --> %s --> %s" % (fname, face_area, face_structure[fname][face_area]))
-            # assert 0 < actions_num <= 2, "invalid number of actions"
-
-
-def my_test():
-    pkl_folder = r"D:\GesturesDataset\Emotion\pickles"
-    for pkl_log in os.listdir(pkl_folder):
-        pkl_path = os.path.join(pkl_folder, pkl_log)
-        em = Emotion(pkl_path)
+            assert 0 < actions_num <= 2, "invalid number of actions"
 
 
 if __name__ == "__main__":
-    resave_face_structure_json()
     test_multiple_names()
     # test_face_area()
-    face_structure = json.load(open(r"face_structure_merged.json", 'r'))
-    for fname in face_structure:
-        eyes = face_structure[fname]["eyes"]
-        if "(undef)" in eyes and len(eyes) > 1:
-            print(fname, face_structure[fname]["emotion"], eyes)

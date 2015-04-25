@@ -1,15 +1,17 @@
 # coding=utf-8
 
-import numpy as np
-from numpy.linalg import norm
-import matplotlib.pyplot as plt
 import os
 import time
 import json
+
+import numpy as np
+from numpy.linalg import norm
+import matplotlib.pyplot as plt
+
 from comparison import compare, show_comparison
 from Kinect.kreader import KINECT_PATH
 from MOCAP.mreader import MOCAP_PATH
-from Emotion.preparation import EMOTION_PATH_PICKLES
+from Emotion.emotion import EMOTION_PATH_PICKLES
 
 
 class InstrumentCollector(object):
@@ -63,6 +65,7 @@ class InstrumentCollector(object):
         :param mode: defines moving markers
         :param beta: to be choosing to yield the biggest ratio
         :param fps: frames per second to be set
+                    pass as None not to change default fps
         """
         self.load_info()
         self.proj_info["beta"] = beta
@@ -107,6 +110,7 @@ class Testing(InstrumentCollector):
                among examples -- without its normalizing by the path length,
                since the last one rises in-sample and out-of-sample errors.
         :param fps: fps to be set in each gesture
+                    pass as None not to change default fps
         """
         print("%s: the_worst_between_comparison is running" % self.MotionClass.__name__)
         start = time.time()
@@ -135,18 +139,14 @@ class Testing(InstrumentCollector):
                 other_costs = []
 
                 for theSamePattern in patterns[directory]:
-                    dist, path = compare(theSamePattern, unknownGest)
-                    dist /= float(len(path))
+                    dist = compare(theSamePattern, unknownGest)
                     the_same_costs.append(dist)
 
                 other_patterns = []
                 for class_name, gestsLeft in patterns.items():
                     if class_name != directory:
                         for knownGest in gestsLeft:
-                            dist, path = compare(knownGest, unknownGest)
-                            # To make sure that dividing dtw cost by its path length
-                            # yields bigger error, you can switch on cost normalization
-                            # dist /= float(len(path))
+                            dist = compare(knownGest, unknownGest)
                             other_costs.append(dist)
                             other_patterns.append(knownGest)
                 min_other_cost = min(other_costs)
@@ -200,6 +200,7 @@ class Testing(InstrumentCollector):
         """
          Collects first patterns from each subfolder of Training set.
          :param fps: fps to be set in each gesture
+                     pass as None not to change default fps
         """
         pattern_gestures = []
         for root, _, logs in os.walk(self.trn_path):
@@ -216,6 +217,7 @@ class Testing(InstrumentCollector):
         """
          Compares each test sample with the first one in Training folder.
          :param fps: fps to be set in each gesture
+                     pass as None not to change default fps
         """
         print("%s: comparing them all with fps = %s" % (self.MotionClass.__name__, fps))
         start = time.time()
@@ -228,9 +230,7 @@ class Testing(InstrumentCollector):
                 unknown_gest = self.MotionClass(unknown_log_path, fps)
                 costs = []
                 for known_gest in patterns:
-                    dist, path = compare(known_gest, unknown_gest)
-                    # again, you can play around with cost normalization
-                    # dist /= float(len(path))
+                    dist = compare(known_gest, unknown_gest)
                     costs.append(dist)
                 ind = np.argmin(costs)
                 possible_gest = patterns[ind]
@@ -290,13 +290,19 @@ class Testing(InstrumentCollector):
 ########################################################################################################################
 
 class Training(InstrumentCollector):
-    def __init__(self, MotionClass, suffix=""):
-        InstrumentCollector.__init__(self, MotionClass, "", suffix)
+
+    # TODO how to compute a variance
+
+    def __init__(self, MotionClass, prefix="", suffix=""):
+        InstrumentCollector.__init__(self, MotionClass, prefix, suffix)
 
     def compute_within_variance(self, fps):
         """
          Computes aver within variance from the Training dataset.
+         Makes it None in case when
          :param fps: frames per second to be set
+                     pass as None not to change default fps
+         :return (float), within_var
         """
         self.load_info()
         print("%s: COMPUTING WITHIN VARIANCE" % self.MotionClass.__name__)
@@ -312,8 +318,7 @@ class Training(InstrumentCollector):
                 for another_log in log_examples[1:]:
                     full_filename = os.path.join(trn_subfolder, another_log)
                     goingGest = self.MotionClass(full_filename, fps)
-                    dist, path = compare(firstGest, goingGest)
-                    dist /= float(len(path))
+                    dist = compare(firstGest, goingGest)
                     current_dir_var.append(dist)
                 log_examples.pop(0)
             if any(current_dir_var):
@@ -334,11 +339,15 @@ class Training(InstrumentCollector):
         info += "within-std: %s\n" % within_std
         print(info)
 
+        return within_var
+
 
     def compute_between_variance(self, fps):
         """
          Computes aver between variance from the Training dataset.
          :param fps: frames per second to be set
+                     pass as None not to change default fps
+         :return: (float), between_var
         """
         print("%s: COMPUTING BETWEEN VARIANCE" % self.MotionClass.__name__)
         self.load_info()
@@ -356,8 +365,7 @@ class Training(InstrumentCollector):
                     for other_log in os.listdir(other_dir):
                         full_filename = os.path.join(other_dir, other_log)
                         goingGest = self.MotionClass(full_filename, fps)
-                        dist, path = compare(firstGest, goingGest)
-                        dist /= float(len(path))
+                        dist = compare(firstGest, goingGest)
                         one_vs_others_var.append(dist)
             roots.pop(0)
 
@@ -372,6 +380,8 @@ class Training(InstrumentCollector):
         info += "between-std: %g\n" % between_std
         print(info)
 
+        return between_var
+
 
     def update_ratio(self, mode, beta, fps):
         """
@@ -379,6 +389,7 @@ class Training(InstrumentCollector):
         :param mode: defines moving markers
         :param beta: to be choosing to yield the biggest ratio
         :param fps: frames per second to be set
+                    pass as None not to change default fps
         """
         self.compute_weights(mode, beta, fps)
         self.compute_within_variance(fps)
@@ -408,6 +419,7 @@ class Training(InstrumentCollector):
          Chooses the best beta to get the biggest discriminant ratio.
          :param mode: defines moving markers
          :param fps: frames per second to be set
+                     pass as None not to change default fps
         """
         print("%s: choosing the beta with fps = %s" % (self.MotionClass.__name__, fps))
         begin = time.time()

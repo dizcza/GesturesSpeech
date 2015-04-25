@@ -220,7 +220,6 @@ class Emotion(BasicMotion):
 
 
 def test_nan_weights():
-    # TODO deal with nan weights !!!
     """
      Tests each sample for having nan weights.
     """
@@ -230,6 +229,22 @@ def test_nan_weights():
             gest = Emotion(log_path)
             w = gest.get_weights()
             assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
+
+
+def show_all_emotions():
+    """
+     Animates Emotion instances.
+    """
+    for i, pkl_log in enumerate(os.listdir(EMOTION_PATH_PICKLES)):
+        if pkl_log.endswith(".pkl"):
+            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+            em = Emotion(pkl_path)
+            # print(em.fname, em.emotion)
+            # em.animate()
+            if em.emotion != "undefined":
+                # em.show_displacements(None)
+                if em.emotion == u"улыбка":
+                    em.animate()
 
 
 if __name__ == "__main__":

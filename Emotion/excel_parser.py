@@ -170,36 +170,6 @@ def parse_whole_xls():
     return emotions_basket, authors_basket, boundaries_basket
 
 
-def combine_emotions(basket):
-    """
-    :param basket: a dict with file names for each (valid) emotion
-    :return: basket with combined similar emotions
-    """
-    return basket
-    del basket[u"закрыл глаза"]
-    the_same_baskets = (
-        (u"отвращение", u"пренебрежение", u"так себе"),
-        (u"ужас", u"ярость"),
-        (u"боль", u"плакса")
-    )
-
-    for the_same_emotions in the_same_baskets:
-        connected_files = []
-        for emotion in the_same_emotions:
-            if emotion in basket:
-                connected_files += basket[emotion]
-                del basket[emotion]
-        basket[the_same_emotions[0]] = connected_files
-        # for leave_emotion in the_same_emotions[1:]:
-        #     del basket[leave_emotion]
-        #     del basket[leave_emotion]
-    del basket[u"озадаченность"]
-    del basket[u"закрыл глаза"]
-    basket[u"улыбка"].remove("28-4-3")
-    basket[u"улыбка"].remove("37-1-1")
-    return basket
-
-
 def parse_xls():
     """
     :returns:
@@ -244,8 +214,6 @@ def parse_xls():
         cell_pointer = my_labels_col + str(row)
 
     wb.Close()
-
-    emotions_basket = combine_emotions(emotions_basket)
 
     return emotions_basket, authors_basket, boundaries_basket
 
