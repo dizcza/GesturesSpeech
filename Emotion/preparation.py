@@ -6,10 +6,7 @@ import shutil
 import json
 import pickle
 from Emotion.excel_parser import parse_xls
-from Emotion.emotion import Emotion
-
-
-EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
+from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
 
 
 def get_face_markers():
@@ -234,6 +231,6 @@ def split_face_areas_tricky(trn_rate=0.5):
 
 
 if __name__ == "__main__":
-    split_face_areas()
-    split_face_areas_tricky()
-    # split_data()
+    # split_face_areas()
+    # split_face_areas_tricky()
+    split_data()

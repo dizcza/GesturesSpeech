@@ -9,6 +9,7 @@ import os
 import json
 from basic import BasicMotion
 
+EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
 
 # TODO deal with camera jerking (58-1-1) --> blur
 
@@ -218,13 +219,26 @@ class Emotion(BasicMotion):
             pass
 
 
+def test_nan_weights():
+    # TODO deal with nan weights !!!
+    """
+     Tests each sample for having nan weights.
+    """
+    for log_c3d in os.listdir(EMOTION_PATH_PICKLES):
+        if log_c3d.endswith(".pkl"):
+            log_path = os.path.join(EMOTION_PATH_PICKLES, log_c3d)
+            gest = Emotion(log_path)
+            w = gest.get_weights()
+            assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
 
 
 if __name__ == "__main__":
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\33-4-1.pkl")
+    test_nan_weights()
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\46-3-2.pkl")
     em.data = em.norm_data
     # em.show_displacements(None)
     # em.deal_with_winking()
     # plt.show()
-    print(em)
+    # print(em)
+    em.compute_weights(None, None)
     em.animate()

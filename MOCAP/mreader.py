@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+import os
 
 from humanoid import HumanoidBasic
 import MOCAP.labelling as labelling
@@ -70,7 +71,7 @@ class HumanoidUkr(HumanoidBasic):
         reader.Update()
         acq = reader.GetOutput()
 
-        # initial fps (should be 120)
+        # default fps (should be 120)
         self.fps = acq.GetPointFrequency()
 
         # dealing with markers
@@ -161,8 +162,21 @@ class HumanoidUkr(HumanoidBasic):
         print("Animation is saved in %s" % mp4_file)
 
 
+def test_nan_weights():
+    """
+     Tests each sample for having nan weights.
+    """
+    for log_c3d in os.listdir(MOCAP_PATH):
+        if log_c3d.endswith(".c3d"):
+            log_path = os.path.join(MOCAP_PATH, log_c3d)
+            gest = HumanoidUkr(log_path)
+            w = gest.get_weights()
+            assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
+
+
 if __name__ == "__main__":
+    test_nan_weights()
     gest = HumanoidUkr(r"D:\GesturesDataset\MoCap\splitAll\Training\C1_mcraw_gest0\C1_mcraw_gest0_sample0.c3d")
     print(gest)
-    gest.show_displacements()
-    gest.animate()
+    # gest.show_displacements("bothHands")
+    # gest.animate()

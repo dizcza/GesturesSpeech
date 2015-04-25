@@ -28,7 +28,7 @@ class HumanoidBasic(BasicMotion):
         """
         :return: string representation of gesture
         """
-        s = BasicMotion.__str__
+        s = BasicMotion.__str__(self)
         s += "\n\t shoulder length: \t %.3f m" % self.shoulder_length
         return s
 

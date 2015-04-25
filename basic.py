@@ -39,6 +39,12 @@ class BasicMotion(object):
         s += "\t data std: \t\t %.5f m " % self.std
         return s
 
+    def is_good(self):
+        """
+        :return: tells whether it contains nan weights (bad guy) or not (good guy)
+        """
+        return True
+
     def define_moving_markers(self, mode):
         msg = "moving markers should be defined properly or set by default"
         assert mode is None, msg
@@ -103,7 +109,8 @@ class BasicMotion(object):
                 if frames_xyz_delta.shape[0] > 0:
                     dist_per_frame = norm(frames_xyz_delta, axis=1)
                 else:
-                    dist_per_frame = np.nan
+                    # that marker isn't involved in DTW comparison anymore
+                    dist_per_frame = 0
 
                 # offset: average --> sum
                 offset = np.sum(dist_per_frame)

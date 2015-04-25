@@ -64,7 +64,11 @@ def align_data_shape(known_gest, unknown_gest):
 
 def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
     """
-     Input gestures must have get_norm_data() and get_weights() methods!
+     Main comparison function for two gesture examples.
+     NOTE:
+        - input gestures must have get_norm_data() and get_weights() methods.
+        - unknown gesture weights are NOT involved into comparison
+          (only known gesture weights are used)
     :param known_gest: sequence known to be in some gesture class
     :param unknown_gest: unknown test sequence
     :param dtw_chosen: fastdtw or _dtw (classic)
@@ -74,8 +78,6 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
         data1 = known_gest.get_norm_data()
         data2 = unknown_gest.get_norm_data()
         weights = known_gest.get_weights()
-        unknown_gest.compute_weights(None, None)
-        weights *= unknown_gest.get_weights()
     else:
         data1, data2, weights = align_data_shape(known_gest, unknown_gest)
 
@@ -116,7 +118,7 @@ def show_comparison(known_gest, unknown_gest):
     dist_measure_weighted = partial(dist_measure, weights=weights)
     dist, cost, path = dtw(data1, data2, dist=dist_measure_weighted)
 
-    print('Minimum distance found: %.4f' % dist)
+    print('Minimum distance found: %f' % (dist * (known_gest.frames + unknown_gest.frames)))
     plt.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest')
     plt.plot(path[0], path[1], 'w')
     plt.xlim((-0.5, cost.shape[0]-0.5))

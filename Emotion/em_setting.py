@@ -99,7 +99,7 @@ def compute_within_variance(fps):
 
 
 if __name__ == "__main__":
-    trainInstruments = Training(Emotion)
+    trainInstruments = Training(Emotion, "EntireFace")
     trainInstruments.compute_weights(None, None, None)
     # trainInstruments.compute_within_variance(None)
     # trainInstruments.compute_between_variance(None)

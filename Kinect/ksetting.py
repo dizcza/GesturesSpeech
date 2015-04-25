@@ -6,5 +6,6 @@ from instruments import Training
 
 if __name__ == "__main__":
     trainInstruments = Training(HumanoidKinect)
-    trainInstruments.compute_within_variance(None)
-    trainInstruments.compute_between_variance(None)
+    trainInstruments.compute_weights("bothHands", None, None)
+    # trainInstruments.compute_within_variance(None)
+    # trainInstruments.compute_between_variance(None)

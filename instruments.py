@@ -12,35 +12,93 @@ from MOCAP.mreader import MOCAP_PATH
 from Emotion.preparation import EMOTION_PATH_PICKLES
 
 
-########################################################################################################################
-#                                              T E S T I N G                                                           #
-########################################################################################################################
-
-class Testing(object):
-    def __init__(self, MotionClass, prefix="", suffix=""):
+class InstrumentCollector(object):
+    def __init__(self, MotionClass, prefix, suffix):
         self.MotionClass = MotionClass
-        self.suffix = suffix
+        self.prefix = prefix
         _paths = {
             "HumanoidUkr": MOCAP_PATH,
             "HumanoidKinect": KINECT_PATH,
             "Emotion": EMOTION_PATH_PICKLES,
             "EmotionArea": None
         }
-        proj_path = _paths[MotionClass.__name__]
+        self.proj_path = _paths[MotionClass.__name__]
         names_collection = {
             "HumanoidUkr": "MOCAP_INFO.json",
             "HumanoidKinect": "KINECT_INFO.json",
             "Emotion": "EMOTION_INFO.json",
             "EmotionArea": "EMOTION_AREAS_INFO.json"
         }
+        self.proj_info = {}
         self._info_name = names_collection[MotionClass.__name__]
-        if prefix != "":
-            self.trn_path = os.path.join(prefix, "Training", self.suffix)
-            self.tst_path = os.path.join(prefix, "Testing", self.suffix)
+        if prefix == "":
+            self.trn_path = os.path.join(self.proj_path, "Training", suffix)
+            self.tst_path = os.path.join(self.proj_path, "Testing", suffix)
         else:
-            self.trn_path = os.path.join(proj_path, "Training", self.suffix)
-            self.tst_path = os.path.join(proj_path, "Testing", self.suffix)
+            self.trn_path = os.path.join(prefix, "Training", suffix)
+            self.tst_path = os.path.join(prefix, "Testing", suffix)
 
+    def load_info(self):
+        """
+         Initializes empty PROJECT_INFO.
+        """
+        try:
+            self.proj_info = json.load(open(self._info_name, 'r'))
+        except FileNotFoundError:
+            self.proj_info = {
+                "weights": {},
+                "beta": None,
+                "within_variance": None,
+                "between_variance": None,
+                "within_std": None,
+                "between_std": None,
+                "d-ratio": None,
+                "d-ratio-std": None,
+                "error": {"inf": None, "sup": None}
+            }
+
+    def compute_weights(self, mode, beta, fps):
+        """
+         Computes aver weights from the Training dataset.
+        :param mode: defines moving markers
+        :param beta: to be choosing to yield the biggest ratio
+        :param fps: frames per second to be set
+        """
+        self.load_info()
+        self.proj_info["beta"] = beta
+
+        global_weights = {}
+
+        for directory in os.listdir(self.trn_path):
+            global_weights[directory] = []
+            current_dir_weights = []
+            trn_subfolder = os.path.join(self.trn_path, directory)
+            for trn_name in os.listdir(trn_subfolder):
+                fpath_trn = os.path.join(trn_subfolder, trn_name)
+                gest = self.MotionClass(fpath_trn, fps)
+                gest.compute_weights(mode, beta)
+                current_dir_weights.append(gest.get_weights())
+                if np.isnan(gest.get_weights()).any():
+                    print(gest.fname, gest.emotion, gest.weights)
+            global_weights[directory] = np.average(current_dir_weights, axis=0).tolist()
+
+        if self.prefix == "":
+            self.proj_info["weights"] = global_weights
+        else:
+            sub_project = os.path.basename(self.prefix)
+            self.proj_info["weights"][sub_project] = global_weights
+
+        json.dump(self.proj_info,  open(self._info_name,  'w'))
+        print("New weights are saved in %s" % self._info_name)
+
+
+########################################################################################################################
+#                                              T E S T I N G                                                           #
+########################################################################################################################
+
+class Testing(InstrumentCollector):
+    def __init__(self, MotionClass, prefix="", suffix=""):
+        InstrumentCollector.__init__(self, MotionClass, prefix, suffix)
 
     def the_worst_comparison(self, fps):
         """
@@ -87,7 +145,7 @@ class Testing(object):
                         for knownGest in gestsLeft:
                             dist, path = compare(knownGest, unknownGest)
                             # To make sure that dividing dtw cost by its path length
-                            # yields bigger error, you can switch on this normalization
+                            # yields bigger error, you can switch on cost normalization
                             # dist /= float(len(path))
                             other_costs.append(dist)
                             other_patterns.append(knownGest)
@@ -146,8 +204,8 @@ class Testing(object):
         pattern_gestures = []
         for root, _, logs in os.walk(self.trn_path):
             if any(logs):
-                full_filename = os.path.join(root, logs[0])
-                gest = self.MotionClass(full_filename, fps)
+                log_path = os.path.join(root, logs[0])
+                gest = self.MotionClass(log_path, fps)
                 pattern_gestures.append(gest)
         print("Took %d patterns as the first log in each training dir." % \
               len(pattern_gestures))
@@ -166,14 +224,15 @@ class Testing(object):
         total_samples = 0
         for root, _, logs in os.walk(self.tst_path):
             for test_log in logs:
-                full_filename = os.path.join(root, test_log)
-                unknown_gest = self.MotionClass(full_filename, fps)
-                offset = []
+                unknown_log_path = os.path.join(root, test_log)
+                unknown_gest = self.MotionClass(unknown_log_path, fps)
+                costs = []
                 for known_gest in patterns:
                     dist, path = compare(known_gest, unknown_gest)
-                    dist /= float(len(path))
-                    offset.append(dist)
-                ind = np.argmin(offset)
+                    # again, you can play around with cost normalization
+                    # dist /= float(len(path))
+                    costs.append(dist)
+                ind = np.argmin(costs)
                 possible_gest = patterns[ind]
 
                 if possible_gest.name != unknown_gest.name:
@@ -230,74 +289,9 @@ class Testing(object):
 #                                              T R A I N I N G                                                         #
 ########################################################################################################################
 
-class Training(object):
+class Training(InstrumentCollector):
     def __init__(self, MotionClass, suffix=""):
-        self.MotionClass = MotionClass
-        self.suffix = suffix
-        _paths = {
-            "HumanoidUkr": MOCAP_PATH,
-            "HumanoidKinect": KINECT_PATH,
-            "Emotion": EMOTION_PATH_PICKLES
-        }
-        names_collection = {
-            "HumanoidUkr": "MOCAP_INFO.json",
-            "HumanoidKinect": "KINECT_INFO.json",
-            "Emotion": "EMOTION_INFO.json"
-        }
-        self._info_name = names_collection[MotionClass.__name__]
-        self.proj_path = _paths[MotionClass.__name__]
-        self.trn_path = os.path.join(self.proj_path, "Training", self.suffix)
-        self.tst_path = os.path.join(self.proj_path, "Testing", self.suffix)
-        self.proj_info = {}
-
-
-    def load_info(self):
-        """
-         Initializes empty PROJECT_INFO.
-        """
-        try:
-            self.proj_info = json.load(open(self._info_name, 'r'))
-        except:
-            self.proj_info = {
-                "weights": {},
-                "beta": None,
-                "within_variance": None,
-                "between_variance": None,
-                "within_std": None,
-                "between_std": None,
-                "d-ratio": None,
-                "d-ratio-std": None,
-                "error": {"inf": None, "sup": None}
-            }
-
-
-    def compute_weights(self, mode, beta, fps):
-        """
-         Computes aver weights from the Training dataset.
-        :param mode: defines moving markers
-        :param beta: to be choosing to yield the biggest ratio
-        :param fps: frames per second to be set
-        """
-        self.load_info()
-        self.proj_info["beta"] = beta
-        
-        global_weights = {}
-
-        for directory in os.listdir(self.trn_path):
-            global_weights[directory] = []
-            current_dir_weights = []
-            trn_subfolder = os.path.join(self.trn_path, directory)
-            for trn_name in os.listdir(trn_subfolder):
-                fpath_trn = os.path.join(trn_subfolder, trn_name)
-                gest = self.MotionClass(fpath_trn, fps)
-                gest.compute_weights(mode, beta)
-                current_dir_weights.append(gest.get_weights())
-            global_weights[directory] = np.average(current_dir_weights, axis=0).tolist()
-
-        self.proj_info["weights"] = global_weights
-        json.dump(self.proj_info,  open(self._info_name,  'w'))
-        print("New weights are saved in %s" % self._info_name)
-
+        InstrumentCollector.__init__(self, MotionClass, "", suffix)
 
     def compute_within_variance(self, fps):
         """

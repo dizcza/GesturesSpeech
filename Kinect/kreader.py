@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 
-KINECT_PATH = "D:\GesturesDataset\KINECT\\"
+KINECT_PATH = r"D:\GesturesDataset\KINECT"
 MARKERS = 20
 
 
