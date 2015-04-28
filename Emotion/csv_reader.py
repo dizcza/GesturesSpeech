@@ -174,7 +174,7 @@ def check_uniqueness(casket):
     assert len(set(junk)) == len(junk), "the dict values aren't unique"
 
 
-def check_missed(casket, casket_name, written_files):
+def check_missed(casket, casket_name, written_files, silent=True):
     """
     :param casket: some dict
     :param casket_name: dict name
@@ -182,9 +182,12 @@ def check_missed(casket, casket_name, written_files):
     """
     print("Checking missed logs in %s" % casket_name)
     files_in_casket = list(itertools.chain(*casket.values()))
-    for fname in files_in_casket:
-        if fname not in written_files:
-            print("\t got %s in %s not in given files" % (fname, casket_name))
+
+    if not silent:
+        for fname in files_in_casket:
+            if fname not in written_files:
+                print("\t got %s in %s not in given files" % (fname, casket_name))
+
     missed = []
     for fname in written_files:
         if fname not in files_in_casket:

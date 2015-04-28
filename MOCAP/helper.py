@@ -128,18 +128,17 @@ def separate_dataset():
      0's samples will be for training
      1's samples will be for testing
     """
-    splitAll = r"D:\GesturesDataset\MoCap\splitAll"
-    mixed_folder = os.path.join(splitAll, "_Mixed")
-    trn_folder = os.path.join(splitAll, "Training")
-    tst_folder = os.path.join(splitAll, "Testing")
+    mocap_path = r"D:\GesturesDataset\MoCap\splitAll"
+    trn_folder = os.path.join(mocap_path, "Training")
+    tst_folder = os.path.join(mocap_path, "Testing")
 
     for folder in (trn_folder, tst_folder):
         shutil.rmtree(folder, ignore_errors=True)
         os.mkdir(folder)
 
-    for c3d_file in os.listdir(mixed_folder):
+    for c3d_file in os.listdir(mocap_path):
         gesture_name = c3d_file[:-12]
-        src = os.path.join(mixed_folder, c3d_file)
+        src = os.path.join(mocap_path, c3d_file)
         if c3d_file.endswith("_sample0.c3d"):
             trn_subfolder = os.path.join(trn_folder, gesture_name)
             os.mkdir(trn_subfolder)

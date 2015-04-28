@@ -6,6 +6,9 @@ from pprint import pprint
 import time
 
 
+DESCRIPTION_XLS_PATH = r"D:\Данилыч\КПИ\Магистр.Диплом\GesturesSpeech\Emotion\description.xls"
+
+
 def init_unique_emotion_classes():
     """
     :return: labels of unique emotion classes
@@ -14,14 +17,12 @@ def init_unique_emotion_classes():
         u"улыбка",
         u"закрыл глаза",
         u"пренебрежение",
-        u"отвращение",
         u"ярость",
         u"боль",
         u"ужас",
         u"озадаченность",
         u"удивление",
         u"плакса",
-        u"так себе"
     }
     return classes
 
@@ -84,7 +85,7 @@ def verify_excel_file():
     """
     # excel = win32.GetActiveObject('Excel.Application')
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(r"D:\GesturesDataset\Emotion\description.xls")
+    wb = excel.Workbooks.Open(DESCRIPTION_XLS_PATH)
     ws = wb.Worksheets(u"границы сегментов")
     col = "H"
     row = 3
@@ -134,7 +135,7 @@ def parse_whole_xls():
     verify_excel_file()
 
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(r"D:\GesturesDataset\Emotion\description.xls")
+    wb = excel.Workbooks.Open(DESCRIPTION_XLS_PATH)
     ws = wb.Worksheets(u"границы сегментов")
     my_labels_col = "H"
     firsname_col = "I"
@@ -180,7 +181,7 @@ def parse_xls():
     verify_excel_file()
 
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(r"D:\GesturesDataset\Emotion\description.xls")
+    wb = excel.Workbooks.Open(DESCRIPTION_XLS_PATH)
     ws = wb.Worksheets(u"границы сегментов")
     my_labels_col = "H"
     firsname_col = "I"

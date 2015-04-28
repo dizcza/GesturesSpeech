@@ -70,9 +70,7 @@ class EmotionArea(Emotion):
         pass
 
     def postprocessor(self):
-        self.norm_data = np.subtract(
-            self.norm_data[:, 1:, :], self.norm_data[:, :-1, :]
-        )
+        self.norm_data = np.diff(self.norm_data, axis=1)
         self.frames -= 1
 
     def set_weights(self):

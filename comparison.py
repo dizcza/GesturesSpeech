@@ -90,7 +90,7 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
         print("WARNING: dtw comparison gave np.inf")
 
     # you can play around with cost normalization
-    dist /= float(len(path))
+    # dist /= float(len(path))
 
     return dist
 

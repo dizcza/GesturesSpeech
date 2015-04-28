@@ -12,6 +12,7 @@ from basic import BasicMotion
 EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
 
 # TODO deal with camera jerking (58-1-1) --> blur
+# TODO filter kalmana
 
 
 class Emotion(BasicMotion):
@@ -231,6 +232,26 @@ def test_nan_weights():
             assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
 
 
+def define_crucial_markers(emotion):
+    crucial_marks = {
+        u"улыбка": ["lir", "lil",
+                    "chr", "chl",
+                    "wr", "wl"],
+        u"закрыл глаза": ["eup_r", "eup_l", "edn_l", "end_r",
+                          "ebr_or", "ebr_ir", "ebr_il", "ebr_ol"],
+        u"пренебрежение": [],
+        u"отвращение": [],
+        u"ярость": [],
+        u"боль": [],
+        u"ужас": [],
+        u"озадаченность": [],
+        u"удивление": [],
+        u"плакса": [],
+        u"так себе": []
+    }
+    return crucial_marks[emotion]
+
+
 def show_all_emotions():
     """
      Animates Emotion instances.
@@ -248,12 +269,14 @@ def show_all_emotions():
 
 
 if __name__ == "__main__":
+    # 37-1-1 delete
+    # 48-1-1 != 45-2-1
     test_nan_weights()
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\46-3-2.pkl")
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\52-3-1.pkl")
     em.data = em.norm_data
     # em.show_displacements(None)
     # em.deal_with_winking()
     # plt.show()
     # print(em)
-    em.compute_weights(None, None)
+    # em.compute_weights(None, None)
     em.animate()

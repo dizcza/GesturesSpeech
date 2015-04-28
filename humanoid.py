@@ -61,6 +61,8 @@ class HumanoidBasic(BasicMotion):
             for marker in self.labels:
                 if marker in self.hand_markers:
                     self.moving_markers.append(marker)
+        else:
+            BasicMotion.define_moving_markers(self, None)
 
     def get_internal_energy(self, mode):
         """

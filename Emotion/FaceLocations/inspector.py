@@ -382,8 +382,8 @@ def remove_undefined_and_unplaced_emotion_file_names():
 
 
 if __name__ == "__main__":
-    # Inspector(u"ужас", reset=False).show()
+    Inspector(u"ужас", reset=False).show()
     # CheckInspector(u"плакса", "eyes").show()
-    merge_result()
+    # merge_result()
     # remove_undefined()
     # eyes_test()

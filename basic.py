@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from numpy.linalg import norm
 import json
 from matplotlib import rc
+import os
 
 
 font = {'family': 'Verdana',
@@ -48,7 +49,7 @@ class BasicMotion(object):
     def define_moving_markers(self, mode):
         msg = "moving markers should be defined properly or set by default"
         assert mode is None, msg
-        self.moving_markers = self.labels
+        self.moving_markers = tuple(self.labels)
 
     def get_norm_data(self):
         """
@@ -103,8 +104,7 @@ class BasicMotion(object):
             marker = self.labels[markerID]
             if marker in self.moving_markers:
                 # its shape == (frames-1, dim)
-                frames_xyz_delta = np.subtract(self.norm_data[markerID, 1:, :],
-                                               self.norm_data[markerID, :-1, :])
+                frames_xyz_delta = np.diff(self.norm_data[markerID, ::], axis=0)
                 frames_xyz_delta = frames_xyz_delta[~np.isnan(frames_xyz_delta).any(axis=1)]
                 if frames_xyz_delta.shape[0] > 0:
                     dist_per_frame = norm(frames_xyz_delta, axis=1)
@@ -190,9 +190,11 @@ class BasicMotion(object):
          Loads weights from _INFO.json
         """
         json_file = self.project.upper() + "_INFO.json"
+        if not os.path.exists(json_file):
+            json_file = "../" + json_file
         try:
             dic_info = json.load(open(json_file, 'r'))
-        except ValueError:
+        except FileNotFoundError:
             dic_info = {"weights": ()}
 
         weights_aver_dic = dic_info["weights"]
@@ -204,3 +206,14 @@ class BasicMotion(object):
         else:
             # compute weights for unknown gesture
             self.compute_weights(None, None)
+
+    def set_gesture_length(self, length):
+        """
+         Makes gesture length to be fixed.
+        :param length: (int), new number of frames to be set
+        """
+        step = self.frames / float(length)
+        keep_frames = np.array(np.arange(length) * step, dtype=int)
+        self.data = self.data[:, keep_frames, :]
+        self.norm_data = self.norm_data[:, keep_frames, :]
+        self.frames = length

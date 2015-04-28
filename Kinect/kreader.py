@@ -12,7 +12,7 @@ Reference:
 """
 
 from humanoid import HumanoidBasic
-import matplotlib.pyplot as plt
+from basic import BasicMotion
 import numpy as np
 import warnings
 
@@ -126,13 +126,15 @@ class HumanoidKinect(HumanoidBasic):
             for marker in self.labels:
                 if self.prime_hand in marker.lower() and marker in self.hand_markers:
                     self.moving_markers = np.append(self.moving_markers, marker)
+        elif mode == "bothHands":
+            HumanoidBasic.define_moving_markers(self, mode)
         else:
-            HumanoidBasic.define_moving_markers(self, mode="bothHands")
+            BasicMotion.define_moving_markers(self, None)
 
 
 if __name__ == "__main__":
     gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\LeftHandWave\LeftHandWave_000.txt")
     gest.animate()
     print(gest)
-    gest.show_displacements()
+    gest.show_displacements("bothHands")
     gest.compute_weights(mode="oneHand", beta=1e-4)
