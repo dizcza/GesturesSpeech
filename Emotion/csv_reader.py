@@ -266,7 +266,7 @@ def split_data(trn_rate=0.5):
     for class_name in emotion_basket.keys():
         all_files = np.array(emotion_basket[class_name])
         np.random.shuffle(all_files)
-        trn_size = int(trn_rate * all_files.shape[0])
+        trn_size = np.ceil(trn_rate * all_files.shape[0]).astype("int")
         trn_files, tst_files = all_files[:trn_size], all_files[trn_size:]
         for (_path, _files) in ((trn_path, trn_files), (tst_path, tst_files)):
             class_dirpath = os.path.join(_path, class_name)

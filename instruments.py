@@ -15,7 +15,7 @@ from Emotion.emotion import EMOTION_PATH_PICKLES
 
 
 class InstrumentCollector(object):
-    def __init__(self, MotionClass, prefix, suffix):
+    def __init__(self, MotionClass, prefix):
         self.MotionClass = MotionClass
         self.prefix = prefix
         _paths = {
@@ -34,11 +34,13 @@ class InstrumentCollector(object):
         self.proj_info = {}
         self._info_name = names_collection[MotionClass.__name__]
         if prefix == "":
-            self.trn_path = os.path.join(self.proj_path, "Training", suffix)
-            self.tst_path = os.path.join(self.proj_path, "Testing", suffix)
+            self.trn_path = os.path.join(self.proj_path, "Training")
+            self.tst_path = os.path.join(self.proj_path, "Testing")
         else:
-            self.trn_path = os.path.join(prefix, "Training", suffix)
-            self.tst_path = os.path.join(prefix, "Testing", suffix)
+            self.trn_path = os.path.join(prefix, "Training")
+            self.tst_path = os.path.join(prefix, "Testing")
+        self.train_gestures = []
+        self.test_gestures = []
 
     def load_info(self):
         """
@@ -58,6 +60,34 @@ class InstrumentCollector(object):
                 "d-ratio-std": None,
                 "error": {"inf": None, "sup": None}
             }
+
+    def load_train_samples(self, fps):
+        """
+        :param fps: frames per second to be set
+                    pass as None not to change default fps
+        :return: training gestures
+        """
+        for directory in os.listdir(self.trn_path):
+            trn_subfolder = os.path.join(self.trn_path, directory)
+            for trn_name in os.listdir(trn_subfolder):
+                fpath_trn = os.path.join(trn_subfolder, trn_name)
+                gest = self.MotionClass(fpath_trn, fps)
+                self.train_gestures.append(gest)
+        return self.train_gestures
+
+    def load_test_samples(self, fps):
+        """
+        :param fps: frames per second to be set
+                    pass as None not to change default fps
+        :return: testing gestures
+        """
+        for directory in os.listdir(self.tst_path):
+            tst_subfolder = os.path.join(self.tst_path, directory)
+            for tst_name in os.listdir(tst_subfolder):
+                fpath_tst = os.path.join(tst_subfolder, tst_name)
+                gest = self.MotionClass(fpath_tst, fps)
+                self.test_gestures.append(gest)
+        return self.test_gestures
 
     def compute_weights(self, mode, beta, fps):
         """
@@ -81,8 +111,8 @@ class InstrumentCollector(object):
                 gest = self.MotionClass(fpath_trn, fps)
                 gest.compute_weights(mode, beta)
                 current_dir_weights.append(gest.get_weights())
-                if np.isnan(gest.get_weights()).any():
-                    print(gest.fname, gest.emotion, gest.weights)
+                assert not np.isnan(gest.get_weights()).any(), \
+                    "got np.nan weights in %s" % gest.fname
             global_weights[directory] = np.average(current_dir_weights, axis=0).tolist()
 
         if self.prefix == "":
@@ -100,8 +130,8 @@ class InstrumentCollector(object):
 ########################################################################################################################
 
 class Testing(InstrumentCollector):
-    def __init__(self, MotionClass, prefix="", suffix=""):
-        InstrumentCollector.__init__(self, MotionClass, prefix, suffix)
+    def __init__(self, MotionClass, prefix=""):
+        InstrumentCollector.__init__(self, MotionClass, prefix)
 
     def the_worst_comparison(self, fps):
         """
@@ -293,8 +323,8 @@ class Training(InstrumentCollector):
 
     # TODO how to compute a variance
 
-    def __init__(self, MotionClass, prefix="", suffix=""):
-        InstrumentCollector.__init__(self, MotionClass, prefix, suffix)
+    def __init__(self, MotionClass, prefix=""):
+        InstrumentCollector.__init__(self, MotionClass, prefix)
 
     def compute_within_variance(self, fps):
         """

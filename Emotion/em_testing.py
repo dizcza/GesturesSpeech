@@ -6,8 +6,8 @@ from instruments import Testing, Training
 
 def entire_face_test():
     # set mode to "no_eyes" not to track eyes movements
-    Training(Emotion, suffix="EntireFace").compute_weights(None, None, None)
-    Testing(Emotion, suffix="EntireFace").the_worst_comparison(None)
+    Training(Emotion).compute_weights(None, None, None)
+    Testing(Emotion).the_worst_comparison(None)
 
 
 if __name__ == "__main__":
