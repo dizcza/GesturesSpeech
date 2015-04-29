@@ -1,17 +1,11 @@
 # coding=utf-8
 
-import os
-import json
-
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RadioButtons, CheckButtons, Button
+from matplotlib.widgets import Button
 import matplotlib.animation as animation
-
-from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
-from Emotion.FaceLocations.preparation import define_valid_face_actions, get_face_markers, get_face_areas
-from Emotion.excel_parser import parse_xls
 from Emotion.FaceLocations.inspector import Inspector
+
 
 class MultipleAnimation(Inspector):
     def __init__(self, emotion):

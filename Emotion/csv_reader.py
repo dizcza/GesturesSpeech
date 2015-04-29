@@ -257,8 +257,8 @@ def split_data(trn_rate=0.5):
     :param trn_rate: how many files go for training
     """
     emotion_basket, _, _ = parse_xls()
-    trn_path = os.path.join(EMOTION_PATH_PICKLES, "Training", "EntireFace")
-    tst_path = os.path.join(EMOTION_PATH_PICKLES, "Testing", "EntireFace")
+    trn_path = os.path.join(EMOTION_PATH_PICKLES, "Training")
+    tst_path = os.path.join(EMOTION_PATH_PICKLES, "Testing")
     for _path in (trn_path, tst_path):
         shutil.rmtree(_path, ignore_errors=True)
         os.mkdir(_path)
@@ -277,8 +277,5 @@ def split_data(trn_rate=0.5):
 
 
 if __name__ == "__main__":
-    # clean_labels()
-    # verify_labels()
-    # upd_excel()
     dump_pickles()
-    # check_data_shapes()
+    # split_data()

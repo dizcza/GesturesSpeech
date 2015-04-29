@@ -66,8 +66,8 @@ def get_input_layer_dim(gest, moving_marks, use_frames):
     return input_layer_dim
 
 
-def run_network(trn_samples, tst_samples, names_convention,
-                mov_mark_mode=None, use_frames=50, hidden_neurons=30):
+def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
+                use_frames=50, hidden_neurons=30, num_epochs=500):
     """
         1) creates a simple perceptron,
         2) feeds it with all_samples,
@@ -120,11 +120,10 @@ def run_network(trn_samples, tst_samples, names_convention,
 
     results_perc = []
     Eout_min = 1.0
-    N_epochs = 500
     iters_per_epoch = 1
     weights_path = r"weights/%s.xml" % trn_samples[0].project
-    epochs = np.linspace(iters_per_epoch, iters_per_epoch*N_epochs, N_epochs)
-    for i in range(N_epochs):
+    epochs = np.linspace(iters_per_epoch, iters_per_epoch*num_epochs, num_epochs)
+    for i in range(num_epochs):
         trainer.trainEpochs(iters_per_epoch)
         trn_error = percentError(trainer.testOnClassData(), trndata['class'])
         tst_error = percentError(trainer.testOnClassData(
@@ -186,7 +185,7 @@ def get_common_moving_markers(gestures, mode):
 def train_emotion():
     instr = InstrumentCollector(Emotion, "")
     trn_samples, tst_samples, names_convention = collect_gestures(instr)
-    run_network(trn_samples, tst_samples, names_convention, None)
+    run_network(trn_samples, tst_samples, names_convention, None, num_epochs=1000)
 
 
 def train_kinect():

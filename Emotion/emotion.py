@@ -6,13 +6,12 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pickle
 import os
-import json
 from basic import BasicMotion
+from Emotion.kalman import kalman_filter
 
 EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
 
 # TODO deal with camera jerking (58-1-1) --> blur
-# TODO filter kalmana
 
 
 class Emotion(BasicMotion):
@@ -65,11 +64,11 @@ class Emotion(BasicMotion):
         self.norm_data /= base_line
 
         # step 3: gaussian blurring filter
-        self.gaussian_filter()
+        # self.gaussian_filter()
+        self.norm_data = kalman_filter(self.norm_data)
 
         # step 4: deal eye winking
         self.deal_with_winking()
-
 
     def define_moving_markers(self, mode):
         """
@@ -86,11 +85,11 @@ class Emotion(BasicMotion):
     def deal_with_winking(self):
         """
          A wizard to deal with eye winking.
-         It's known, that a human wink duration lies within the range of [300, 500] ms.
+         It's known, that a human wink duration lies within the range of [300, 600] ms.
          Taking that into account, we can find out winking frames,
          skip them and approximate the gap instead.
         """
-        wink_window = int(0.5 * self.fps)
+        wink_window = int(0.6 * self.fps)
         to_be_wink_threshold = 0.05
         eup_r, edn_r, eup_l, edn_l = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
         both_eyes = (eup_r, edn_r), (eup_l, edn_l)
@@ -122,7 +121,6 @@ class Emotion(BasicMotion):
                                 x_end = self.norm_data[eye_marker, end, dim]
                                 line = np.linspace(x_begin, x_end, end - start)
                                 self.norm_data[eye_marker, start:end, dim] = line
-
 
     def gaussian_filter(self):
         """
@@ -232,26 +230,6 @@ def test_nan_weights():
             assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
 
 
-def define_crucial_markers(emotion):
-    crucial_marks = {
-        u"улыбка": ["lir", "lil",
-                    "chr", "chl",
-                    "wr", "wl"],
-        u"закрыл глаза": ["eup_r", "eup_l", "edn_l", "end_r",
-                          "ebr_or", "ebr_ir", "ebr_il", "ebr_ol"],
-        u"пренебрежение": [],
-        u"отвращение": [],
-        u"ярость": [],
-        u"боль": [],
-        u"ужас": [],
-        u"озадаченность": [],
-        u"удивление": [],
-        u"плакса": [],
-        u"так себе": []
-    }
-    return crucial_marks[emotion]
-
-
 def show_all_emotions():
     """
      Animates Emotion instances.
@@ -260,23 +238,17 @@ def show_all_emotions():
         if pkl_log.endswith(".pkl"):
             pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
             em = Emotion(pkl_path)
-            # print(em.fname, em.emotion)
-            # em.animate()
             if em.emotion != "undefined":
-                # em.show_displacements(None)
-                if em.emotion == u"улыбка":
-                    em.animate()
+                em.animate()
+                em.data = kalman_filter(em.data)
+                em.animate()
 
 
 if __name__ == "__main__":
-    # 37-1-1 delete
-    # 48-1-1 != 45-2-1
-    test_nan_weights()
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\52-3-1.pkl")
-    em.data = em.norm_data
-    # em.show_displacements(None)
-    # em.deal_with_winking()
-    # plt.show()
-    # print(em)
-    # em.compute_weights(None, None)
+    # plot_x_frame()
+    # test_nan_weights()
+    # show_all_emotions()
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\58-1-1.pkl")
+    # em.data = em.norm_data
+    em.data = kalman_filter(em.data)
     em.animate()
