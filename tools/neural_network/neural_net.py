@@ -1,22 +1,21 @@
 # coding=utf-8
 
-from pybrain.structure import SigmoidLayer, TanhLayer
+import os
+from copy import deepcopy
+
+from pybrain.structure import TanhLayer
 from pybrain.datasets import ClassificationDataSet
 from pybrain.utilities import percentError
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.supervised.trainers import BackpropTrainer
 from pybrain.structure.modules import SoftmaxLayer
 from pybrain.tools.customxml.networkwriter import NetworkWriter
-from pybrain.tools.customxml.networkreader import NetworkReader
-
 import numpy as np
-import os
-from copy import deepcopy
 
 from Emotion.emotion import Emotion
 from Kinect.kreader import HumanoidKinect
 from MOCAP.mreader import HumanoidUkr
-from instruments import InstrumentCollector
+from tools.instruments import InstrumentCollector
 
 
 def net_preproc(_gest, moving_marks, use_frames):

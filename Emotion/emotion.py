@@ -1,13 +1,16 @@
 # coding=utf-8
 
+import pickle
+import os
+
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import pickle
-import os
-from basic import BasicMotion
-from Emotion.kalman import kalman_filter
+
+from tools.basic import BasicMotion
+from tools.kalman import kalman_filter
+
 
 EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
 
@@ -250,5 +253,6 @@ if __name__ == "__main__":
     # show_all_emotions()
     em = Emotion(r"D:\GesturesDataset\Emotion\pickles\58-1-1.pkl")
     # em.data = em.norm_data
+    em.show_displacements(None)
     em.data = kalman_filter(em.data)
     em.animate()

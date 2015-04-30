@@ -51,44 +51,18 @@
   <li>Emotion:
     <ul>
       <li>covers basic human facial emotions</li>
-      <li>file type: csv and blend</li>
+      <li>file type: blend --> csv --> pkl</li>
       <li>facial joints: 18</li>
       <li>data is measured in pixels</li>
       <li>FPS: 24</li>
       <li>unique gesture classes: 9</li>
-      <li>samples per gesture: 4 ... 39</li>
+      <li>samples per gesture: 3 ... 27</li>
     </ul>
 </ul>
 
-<p>Projects kernel summary:</p>
-<table style="width:100%">
-  <tr>
-    <th>script</th>
-    <th>file info</th>
-  </tr>
-  <tr>
-    <td>basic.py</td>
-    <td>BasicMotion: a super class for all projects</td>
-  </tr>
-  <tr>
-    <td>humanoid.py</td>
-    <td>HumanoidBasic: a BasicMotion wrapper super class for MoCap and Kinect projects</td>
-  </tr>
-  <tr>
-    <td>instruments.py</td>
-    <td>provides training and testing instruments</td>
-  </tr>
-  <tr>
-    <td>fastdtw.py</td>
-    <td>fast weighted DTW algorithm</td>
-  </tr>
-  <tr>
-    <td>comparison.py</td>
-    <td>gestures comparison (uses fastdtw)</td>
-  </tr>
-</table>
 
-<p><b>Note</b>: the Kinect project is based on <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">this</a> paper and their <a href="http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar">data</a> to compare its results with our MoCap project.</p>
+<p><b>Notes</b>. The Kinect project is based on <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">this</a> paper and their <a href="http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar">data</a> to compare its results with our MoCap project. Below is shown a skeleton of using Weighted DTW algorithm for MoCap and Kinect projects.</p>
+<p>If you want to see the results of facial emotion recognition, go to <i>Emotion</i> folder.</p>
 
 
 
@@ -212,7 +186,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 <h2 id="rrate">FPS dependency</h2>
 <p>Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 10 is enough for both projects data.</p>
 <div align="center">
-	<img src="rrate_fps.png"/>
+	<img src="png/rrate_fps.png"/>
 </div>
 
 

@@ -1,11 +1,13 @@
 # coding=utf-8
 
 import os
+
 import numpy as np
+
 from Emotion.FaceLocations.emotion_area import EmotionArea
 from Emotion.FaceLocations.preparation import get_face_areas
 from Emotion.emotion import EMOTION_PATH_PICKLES
-from instruments import Training
+from tools.instruments import Training
 
 
 def face_area_compute_variance(fps):

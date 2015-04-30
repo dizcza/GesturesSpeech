@@ -6,7 +6,16 @@ from pprint import pprint
 import time
 
 
-DESCRIPTION_XLS_PATH = r"D:\Данилыч\КПИ\Магистр.Диплом\GesturesSpeech\Emotion\description.xls"
+def get_description_path():
+    """
+    :return: path to description.xls
+    """
+    xls_fname = "description.xls"
+    if os.path.exists(xls_fname):
+        return os.path.join(os.getcwd(), xls_fname)
+    else:
+        pardir = os.path.dirname(os.getcwd())
+        return os.path.join(pardir, xls_fname)
 
 
 def init_unique_emotion_classes():
@@ -85,7 +94,7 @@ def verify_excel_file():
     """
     # excel = win32.GetActiveObject('Excel.Application')
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(DESCRIPTION_XLS_PATH)
+    wb = excel.Workbooks.Open(get_description_path())
     ws = wb.Worksheets(u"границы сегментов")
     col = "H"
     row = 3
@@ -135,7 +144,7 @@ def parse_whole_xls():
     verify_excel_file()
 
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(DESCRIPTION_XLS_PATH)
+    wb = excel.Workbooks.Open(get_description_path())
     ws = wb.Worksheets(u"границы сегментов")
     my_labels_col = "H"
     firsname_col = "I"
@@ -181,7 +190,7 @@ def parse_xls():
     verify_excel_file()
 
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(DESCRIPTION_XLS_PATH)
+    wb = excel.Workbooks.Open(get_description_path())
     ws = wb.Worksheets(u"границы сегментов")
     my_labels_col = "H"
     firsname_col = "I"

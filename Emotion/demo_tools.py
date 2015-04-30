@@ -1,11 +1,13 @@
 # coding=utf-8
 
-from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
 import os
+
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
-from Emotion.kalman import kalman_1d
+
+from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
+from tools.kalman import kalman_1d
 
 
 def estimate_sensory_noise():

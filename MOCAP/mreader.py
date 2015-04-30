@@ -1,13 +1,15 @@
 # coding=utf-8
 
+import os
+
 import numpy as np
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
-import os
 
-from humanoid import HumanoidBasic
+from tools.humanoid import HumanoidBasic
 import MOCAP.labelling as labelling
 import MOCAP.helper as helper
+
 
 try:
     import btk

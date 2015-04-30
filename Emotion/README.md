@@ -28,16 +28,21 @@
     <td>emotion: testing part</td>
   </tr>
   <tr>
-    <td>visualizer.py</td>
-    <td>animates 2d data</td>
-  </tr>
-  <tr>
     <td>excel_parser.py</td>
     <td>reads and modifies excel data</td>
   </tr>
   <tr>
     <td>valid_labels.txt</td>
     <td>list of 18 valid face marker names</td>
+  </tr>
+  <tr>
+    <td>demo_tools.py</td>
+    <td>demo of kalman filter tools</td>
+  </tr>
+
+  <tr>
+    <td>description.xls</td>
+    <td>tells about emotion class for each file name</td>
   </tr>
   <tr>
     <td>missed_data.xlsx</td>
@@ -51,9 +56,34 @@
 </table>
 
 
-<p></p>
 <img src="happy.png" height="400"/>
 
+<p>Data preprocessing steps:</p>
+<ol>
+	<li> Subtracting nose position of the first frame from all markers.
+	<li> Diving data by the base line (jaw -- eyebrows center).
+	<li> Kalman filter data restoration.
+	<li> Dealing with eyes winking.
+</ol>
+
+<p>The data were divided into training (42 samples) and testing (36 samples) sets with unproprotional number of samples for each emotion. Since the raw data is noisy and uncorrelated within the same class, weighted DTW algorithm performs poorly even with data smoothing. Thus, we need more friendly classifier to deal with slight data differentiation.</p>
+<p>For this reason, simple neural network (NN) with one hidden layer and hyperbolic tanh activation function is used and yields the next results:</p>
+
+<table style="width:60%; margin:0 auto">
+	<tr>
+		<th>Algorithm</th>
+		<th># correctly recognized samples</th>
+	</tr>
+	<tr>
+		<td>WDTW</td>
+		<td>1 / 36</td>
+	</tr>
+	<tr>
+    	<td>NN</td>
+		<td>31 / 36</td>
+	</tr>
+
+</table>
 
 </body>
 </html>

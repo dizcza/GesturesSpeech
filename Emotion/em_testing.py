@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from Emotion.emotion import Emotion
-from instruments import Testing, Training
+from tools.instruments import Testing, Training
 
 
 def entire_face_test():

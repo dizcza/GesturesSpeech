@@ -8,7 +8,7 @@ import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
-from comparison import compare, show_comparison
+from tools.comparison import compare, show_comparison
 from Kinect.kreader import KINECT_PATH
 from MOCAP.mreader import MOCAP_PATH
 from Emotion.emotion import EMOTION_PATH_PICKLES

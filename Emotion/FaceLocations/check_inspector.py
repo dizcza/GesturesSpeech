@@ -147,3 +147,7 @@ class CheckInspector(Inspector):
 
     def update_action_buttons(self):
         pass
+
+
+if __name__ == "__main__":
+    CheckInspector("улыбка").show()

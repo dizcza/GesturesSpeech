@@ -1,7 +1,7 @@
 # coding = utf-8
 
-from Kinect.kreader import HumanoidKinect, KINECT_PATH
-from instruments import Training
+from Kinect.kreader import HumanoidKinect
+from tools.instruments import Training
 
 
 if __name__ == "__main__":

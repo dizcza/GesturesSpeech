@@ -106,12 +106,13 @@ class EmotionArea(Emotion):
 
 
 def test_face_area():
-    smiles = r"D:\GesturesDataset\Emotion\pickles\Training\FaceAreas\mouth\smile"
+    smiles = r"D:\GesturesDataset\Emotion\pickles\FaceAreas\mouth\Training\smile"
     first_smile = os.listdir(smiles)[0]
     first_smile = os.path.join(smiles, first_smile)
     emArea = EmotionArea(first_smile)
     emArea.data = emArea.norm_data
     print(emArea)
+    emArea.show_displacements(None)
     emArea.animate()
 
 
@@ -124,5 +125,5 @@ def test_multiple_names():
 
 
 if __name__ == "__main__":
-    test_multiple_names()
-    # test_face_area()
+    # test_multiple_names()
+    test_face_area()

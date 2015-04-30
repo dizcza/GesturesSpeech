@@ -40,10 +40,6 @@
     <td>contains all 83 markers (labels) names with init (relaxed) frame for each C3D file</td>
   </tr>
   <tr>
-    <td>math_kernel.py</td>
-    <td>provides necessary math function</td>
-  </tr>
-  <tr>
     <td>splitter.py</td>
     <td>HumanoidUkrSplitter class implementation</td>
   </tr>

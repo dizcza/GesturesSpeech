@@ -11,10 +11,10 @@ Reference:
 }
 """
 
-from humanoid import HumanoidBasic
-from basic import BasicMotion
-import numpy as np
 import warnings
+import numpy as np
+from tools.humanoid import HumanoidBasic
+
 
 KINECT_PATH = r"D:\GesturesDataset\KINECT"
 MARKERS = 20
@@ -126,10 +126,8 @@ class HumanoidKinect(HumanoidBasic):
             for marker in self.labels:
                 if self.prime_hand in marker.lower() and marker in self.hand_markers:
                     self.moving_markers = np.append(self.moving_markers, marker)
-        elif mode == "bothHands":
-            HumanoidBasic.define_moving_markers(self, mode)
         else:
-            BasicMotion.define_moving_markers(self, None)
+            HumanoidBasic.define_moving_markers(self, mode)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,13 @@
 # coding=utf-8
 
+from functools import partial
+
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 from dtw import dtw
-from fastdtw import fastdtw, _dtw, dist_measure
-from functools import partial
+
+from tools.fastdtw import dist_measure, fastdtw
 
 
 def swap_first_two_cols(data):

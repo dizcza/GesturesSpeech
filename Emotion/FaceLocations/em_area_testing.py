@@ -7,7 +7,7 @@ import numpy as np
 from Emotion.emotion import EMOTION_PATH_PICKLES
 from Emotion.FaceLocations.emotion_area import EmotionArea
 from Emotion.FaceLocations.preparation import get_face_areas
-from instruments import Testing
+from tools.instruments import Testing
 
 
 def face_areas_test(fps):

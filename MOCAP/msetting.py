@@ -1,7 +1,7 @@
 # coding = utf-8
 
 from MOCAP.mreader import HumanoidUkr
-from instruments import Training
+from tools.instruments import Training
 
 
 if __name__ == "__main__":

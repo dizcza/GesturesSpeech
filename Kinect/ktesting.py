@@ -1,7 +1,7 @@
 # coding = utf-8
 
 from Kinect.kreader import HumanoidKinect
-from instruments import Testing
+from tools.instruments import Testing
 
 
 if __name__ == "__main__":
