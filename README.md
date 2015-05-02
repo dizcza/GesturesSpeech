@@ -15,7 +15,7 @@
 	<li><a href="#displacements">Body joint displacements</a></li>
 	<li><a href="#weights">Body joint weights. Discriminant ratio</a></li>
 	<li><a href="#wdtw">Weighted DTW comparison</a></li>
-	<li><a href="#tools">Tools</a></li>
+	<li><a href="#tools">Packages</a></li>
   </ol>
 </nav>
 
@@ -191,11 +191,11 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 
 
 
-<h2 id="tools">Tools</h2>
+<h2 id="tools">Packages</h2>
 <p>Free 3D Graphics Lab Motion Capture visualizers:</p>
 <ul>
   <li><a href="http://b-tk.googlecode.com/svn/web/mokka/index.html">Mokka</a></li>
-  <li>A powerful <a href="http://www.blender.org/">Blender</a> suite (look at <a href="http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender">here</a> to be able to import C3D files)</li>
+  <li><a href="http://www.blender.org/">Blender</a> (look at <a href="http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender">here</a> to be able to import C3D files)</li>
   <li><a href="http://www.c-motion.com/free-downloads/">Free CMO Reader</a></li>
 </ul>
 
@@ -203,14 +203,15 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 
 <p>Obligatory Python </a> packages (can be found at <a href="http://www.lfd.uci.edu/~gohlke/pythonlibs">http://www.lfd.uci.edu/~gohlke/pythonlibs)</a>:</p>
 <ul>
-  <li> reading and modifying data from C3D files:
-    <ul>
-      <li> <a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">The Biomechanical ToolKit</a>, if you use Python 2.7; </li>
-      <li> <a href="https://github.com/EmbodiedCognition/py-c3d">c3d</a>, if you use Python 3.x</li>
-    </ul>
+  <li><a href="https://github.com/EmbodiedCognition/py-c3d">c3d</a> to read and display c3d contents (<b>Note</b>: if you use Python 2.7.x, install also native <a href="http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe">Biomechanical ToolKit</a>)</li>
+  <li>for pretty animation like in OpenGL:
+	<ul>
+		<li><a href="http://github.com/lmjohns3/py-cli">climate</a></li>
+		<li><a href="http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses">curses</a></li>
+		<li><a href="http://pyglet.readthedocs.org/en/pyglet-1.2-maintenance">pyglet</a></li>
+	</ul>
   </li>
-
-  <li><a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <b>pyparsing</b>, <b>dateutil</b>, <b>setuptools</b> and <b>six</b>)</li>
+  <li><a href="http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download">matplotlib</a> (with <i>pyparsing</i>, <i>dateutil</i>, <i>setuptools</i> and <i>six</i>)</li>
   <li><a href="http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download">numpy</a></li>
   <li><a href="https://pypi.python.org/pypi/dtw/1.0">dtw</a> (dynamic time warping)</li>
   <li>(optional) <a href="http://sourceforge.net/projects/pywin32">win32com</a> module to work with Microsoft Excel files</li>

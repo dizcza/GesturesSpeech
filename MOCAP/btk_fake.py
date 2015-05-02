@@ -37,7 +37,7 @@ def gather_labels(reader):
 def gather_data(reader):
     """
     :param reader: c3d Reader object
-    :return array: (#markers, #frames, 3) data
+    :return np.array: (#markers, #frames, 3) data
     """
     frames = reader.last_frame() - reader.first_frame() + 1
     markers = reader.header.point_count

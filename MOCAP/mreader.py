@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import os
-
 import numpy as np
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
@@ -9,7 +8,8 @@ import matplotlib.pyplot as plt
 from tools.humanoid import HumanoidBasic
 import MOCAP.labelling as labelling
 import MOCAP.helper as helper
-
+from MOCAP.c3d_viewer import Viewer
+import c3d
 
 try:
     import btk
@@ -66,6 +66,7 @@ class HumanoidUkr(HumanoidBasic):
 
         # setting unique gesture name
         self.name = parse_fname(c3d_file)
+        self.fname = c3d_file
 
         # setting up BTK reader to gather acquisition
         reader = btk.btkAcquisitionFileReader()
@@ -146,6 +147,15 @@ class HumanoidUkr(HumanoidBasic):
         """
         HumanoidBasic.animate(self, faster)
 
+    def animate_pretty(self):
+        """
+         Pretty 3d animation like in OpenGL.
+        """
+        try:
+            Viewer(c3d.Reader(open(self.fname, 'rb'))).mainloop()
+        except StopIteration:
+            pass
+
     def save_anim(self, faster=7):
         """
          Saves animation in mp4 video file.
@@ -177,8 +187,9 @@ def test_nan_weights():
 
 
 if __name__ == "__main__":
-    test_nan_weights()
+    # test_nan_weights()
     gest = HumanoidUkr(r"D:\GesturesDataset\MoCap\splitAll\Training\C1_mcraw_gest0\C1_mcraw_gest0_sample0.c3d")
     print(gest)
+    gest.animate_pretty()
     # gest.show_displacements("bothHands")
     # gest.animate()

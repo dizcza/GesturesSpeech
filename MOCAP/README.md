@@ -20,6 +20,10 @@
     <td>provides all necessary functions to use c3d package as native btk</td>
   </tr>
   <tr>
+    <td>c3d-viewer.py</td>
+    <td>OpenGL c3d animation</td>
+  </tr>
+  <tr>
     <td>msetting.py</td>
     <td>MoCap training part</td>
   </tr>
