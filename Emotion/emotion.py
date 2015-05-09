@@ -91,6 +91,7 @@ class Emotion(BasicMotion):
          It's known, that a human wink duration lies within the range of [300, 600] ms.
          Taking that into account, we can find out winking frames,
          skip them and approximate the gap instead.
+         Uncomment plotting stuff to see the approximation result.
         """
         wink_window = int(0.6 * self.fps)
         to_be_wink_threshold = 0.05
@@ -114,7 +115,6 @@ class Emotion(BasicMotion):
                 if deep_left > to_be_wink_threshold and deep_right > to_be_wink_threshold:
                     start = start + np.argmax(eyes_wink[start:frame])
                     end = frame + np.argmax(eyes_wink[frame:end])
-                    # print(start, frame, end, deep_left, deep_right)
                     # y = np.linspace(left_bound, right_bound, end - start)
                     # plt.plot(np.arange(start, end, 1), y, 'go')
                     for eye in both_eyes:
@@ -124,6 +124,11 @@ class Emotion(BasicMotion):
                                 x_end = self.norm_data[eye_marker, end, dim]
                                 line = np.linspace(x_begin, x_end, end - start)
                                 self.norm_data[eye_marker, start:end, dim] = line
+        # plt.legend(["real eyes movements", "approximation"], numpoints=1, loc=3)
+        # plt.xlabel("frame")
+        # plt.ylabel("eyeUp to eyeDown dist, norm units")
+        # plt.title("Dealing with eyes winking")
+        # plt.show()
 
     def gaussian_filter(self):
         """
@@ -156,10 +161,9 @@ class Emotion(BasicMotion):
                 blur_factor = 1. - np.exp(- accumulated_offset / (2 * sigmas))
                 _dx *= blur_factor
                 self.norm_data[markerID,frame,:] = self.norm_data[markerID,frame-1,:] + _dx
-        # self.data = self.norm_data
 
     def slope_align(self):
-        # step 2: slope aligning
+        # step 2: slope aligning (not used anymore)
         eyebrow_ids = self.get_ids("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
         eye_ids = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
         cheek_ids = self.get_ids("chr", "wr", "wl", "chl")
@@ -179,17 +183,6 @@ class Emotion(BasicMotion):
         """
         self.scat.set_offsets(self.data[:, frame, :])
         return []
-
-    def visual_help(self):
-        eyebrow_ids = self.get_ids("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
-        eye_ids = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
-        cheek_ids = self.get_ids("chr", "wr", "wl", "chl")
-        lip_ids = self.get_ids("lir", "liup", "lidn", "lil")
-        jaw_id = self.get_ids("jaw")
-        self.data = self.data[eyebrow_ids, ::]
-        print(eyebrow_ids)
-        print(list(zip(range(len(self.labels)), self.labels)))
-        print("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
 
     def define_plot_style(self):
         """
@@ -251,7 +244,7 @@ if __name__ == "__main__":
     # plot_x_frame()
     # test_nan_weights()
     # show_all_emotions()
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\58-1-1.pkl")
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\26-1-3.pkl")
     # em.data = em.norm_data
     em.show_displacements(None)
     em.data = kalman_filter(em.data)

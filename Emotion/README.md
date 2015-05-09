@@ -56,17 +56,24 @@
 </table>
 
 
-<img src="happy.png" height="400"/>
+<img src="png/happy.png" height="400"/>
 
 <p>Data preprocessing steps:</p>
 <ol>
 	<li> Subtracting nose position of the first frame from all markers.
-	<li> Diving data by the base line (jaw -- eyebrows center).
-	<li> Kalman filter data restoration.
-	<li> Dealing with eyes winking.
+	<li> Diving data by the base line -- from jaw to eyebrows center.
+	<li> Kalman filter data restoration (see left picture below).
+	<li> Dealing with eyes winking (see right picture below).
 </ol>
 
-<p>The data were divided into training (42 samples) and testing (36 samples) sets with unproprotional number of samples for each emotion. Since the raw data is noisy and uncorrelated within the same class, weighted DTW algorithm performs poorly even with data smoothing. Thus, we need more friendly classifier to deal with slight data differentiation.</p>
+<table>
+	<tr>
+		<td><img src="png/kalman.png"/></td>
+		<td><img src="png/winking.png"/></td>
+	</tr>
+</table>
+
+<p style="clear: both;">The data were divided into training (42 samples) and testing (36 samples) sets with unproprotional number of samples for each emotion. Since the raw data is noisy and uncorrelated within the same class, weighted DTW algorithm performs poorly even with data smoothing. Thus, we need more friendly classifier to deal with slight data differentiation.</p>
 <p>For this reason, simple neural network (NN) with one hidden layer and hyperbolic tanh activation function is used and yields the next results:</p>
 
 <table style="width:60%; margin:0 auto">
@@ -76,7 +83,7 @@
 	</tr>
 	<tr>
 		<td>WDTW</td>
-		<td>1 / 36</td>
+		<td>0 / 36</td>
 	</tr>
 	<tr>
     	<td>NN</td>

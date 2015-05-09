@@ -137,6 +137,8 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 
 <h2 id="wdtw">Weighted DTW comparison</h2>
 <p>When all hidden parameters are calculated and all weights are set for each gesture class, it's time to use WDTW to compare some unknown sequence (from a testing set) with a known one (from a training set).</p>
+<p>Classical DTW algorithm takes <img src="http://latex.codecogs.com/gif.latex?O(n^2)"/> complexity both in time and space. Thus we speed up it to linear time and space complexity, using <a href="http://cs.fit.edu/~pkc/papers/tdm04.pdf">FastDTW</a> <a href="https://github.com/slaypni/fastdtw">implementation</a>. Although FastDTW carries disadvantage in worse accuracy, comparing to DTW, via changing controlling parameter, called radius <i>r</i>, it turns out, that in our case FastDTW yields the same performance as DTW does.</p>
+
 <table style="width:100%">
 	<tr>
 		<th>Kinect</th>
@@ -152,7 +154,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
     </tr>
 </table>
 
-<p>Using weighted DTW algorithm with only 3 crucial (hand) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) DTW algorithm with the same 3 body joints yields 22.5% out-of-sample error.</p>
+<p>Using Weighted FastDTW algorithm with only 3 crucial (hand) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) FastDTW algorithm with the same 3 body joints yields 22.5% out-of-sample error.</p>
 
 
 <table style="width:60%; margin:0 auto">
@@ -172,7 +174,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 		<td>100 %</td>
 	</tr>
 	<tr>
-    	<td>DTW</td>
+    	<td>DTW and FastDTW</td>
 		<td>100 %</td>
 		<td>77.5 %</td>
 	</tr>

@@ -33,12 +33,12 @@ def demo_kalman():
         plt.subplot(211)
         x_real = em.data[markerID, :, 0]
         x_real = x_real[~np.isnan(x_real)]
-        x_real_opt = kalman_1d(x_real, 0.1)
+        x_real_opt = kalman_1d(x_real, 0.2)
         # x_real_opt = kalman_1d(x_real_opt)
         plt.plot(x_real)
         plt.plot(x_real_opt)
         plt.ylabel("Xs")
-        plt.legend(["noisy", "kalman", "mov aver"])
+        # plt.legend(["noisy (real)", "kalman", "mov aver"])
 
         plt.subplot(212)
         x_real = em.data[markerID, :, 1]
@@ -48,7 +48,7 @@ def demo_kalman():
         plt.plot(x_real_opt)
         plt.ylabel("Ys")
         plt.xlabel("frame")
-        plt.legend(["noisy", "kalman", "mov aver"])
+        plt.legend(["noisy (real)", "kalman", "mov aver"], loc=2)
 
         plt.suptitle("marker: %s" % marker)
         plt.show()
