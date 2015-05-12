@@ -66,7 +66,7 @@ def get_input_layer_dim(gest, moving_marks, use_frames):
 
 
 def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
-                use_frames=50, hidden_neurons=30, num_epochs=500):
+                use_frames=20, hidden_neurons=20, num_epochs=500, lrn_rate=1e-2):
     """
         1) creates a simple perceptron,
         2) feeds it with all_samples,
@@ -115,7 +115,7 @@ def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
                        bias=True)
     trainer = BackpropTrainer(fnn, dataset=trndata, momentum=0.0,
                               verbose=False, weightdecay=1e-3,
-                              learningrate=1e-2)
+                              learningrate=lrn_rate)
 
     results_perc = []
     Eout_min = 1.0
@@ -140,7 +140,8 @@ def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
             )
             print(epoch_status)
         results_perc.append((trn_error, tst_error))
-    print("Eout_min: %f" % Eout_min)
+    misclassified = Eout_min * tst_size
+    print("Eout_min: %f (%g / %d)" % (Eout_min, misclassified, tst_size))
 
     return Eout_min, results_perc, epochs, tstdata
 
@@ -190,14 +191,16 @@ def train_emotion():
 def train_kinect():
     instr = InstrumentCollector(HumanoidKinect, "")
     trn_samples, tst_samples, names_convention = collect_gestures(instr)
-    run_network(trn_samples, tst_samples, names_convention, "bothHands")
+    run_network(trn_samples, tst_samples, names_convention, "bothHands", hidden_neurons=20)
 
 
 def train_mocap():
     instr = InstrumentCollector(HumanoidUkr, "")
     trn_samples, tst_samples, names_convention = collect_gestures(instr)
-    run_network(trn_samples, tst_samples, names_convention, "bothHands")
+    run_network(trn_samples, tst_samples, names_convention, "bothHands", num_epochs=2000, lrn_rate=0.005, use_frames=30)
 
 
 if __name__ == "__main__":
-    train_emotion()
+    # train_emotion()
+    # train_kinect()
+    train_mocap()

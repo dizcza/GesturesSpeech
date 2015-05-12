@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 from tools.humanoid import HumanoidBasic
 import MOCAP.labelling as labelling
-import MOCAP.helper as helper
 from MOCAP.c3d_viewer import Viewer
 import c3d
 
@@ -55,22 +54,23 @@ class HumanoidUkr(HumanoidBasic):
     """
      Creates an instance of Ukrainian Motion Capture gesture, saved in .c3d-format.
     """
-    def __init__(self, c3d_file, fps=None):
+    def __init__(self, c3d_path, fps=None):
         """
          Reads Motion Capture C3D file.
-        :param c3d_file: path to file.c3d
+        :param c3d_path: path to file.c3d
         :param fps: new fps to be set
         """
         HumanoidBasic.__init__(self, fps)
         self.project = "MoCap"
 
         # setting unique gesture name
-        self.name = parse_fname(c3d_file)
-        self.fname = c3d_file
+        self.name = parse_fname(c3d_path)
+        self.fpath = c3d_path
+        self.fname = os.path.basename(c3d_path)
 
         # setting up BTK reader to gather acquisition
         reader = btk.btkAcquisitionFileReader()
-        reader.SetFilename(c3d_file)
+        reader.SetFilename(c3d_path)
         reader.Update()
         acq = reader.GetOutput()
 
@@ -85,9 +85,6 @@ class HumanoidUkr(HumanoidBasic):
         # dealing with data
         self.data = gather_points_data(acq)
         self.frames = self.data.shape[1]
-        relaxed_frame = helper.init_frame(c3d_file)
-        self.init_pos = self.data[:, relaxed_frame, :]
-
         self.set_fps(fps)
         self.preprocessing()
         self.set_weights()
@@ -152,7 +149,7 @@ class HumanoidUkr(HumanoidBasic):
          Pretty 3d animation like in OpenGL.
         """
         try:
-            Viewer(c3d.Reader(open(self.fname, 'rb'))).mainloop()
+            Viewer(c3d.Reader(open(self.fpath, 'rb'))).mainloop()
         except StopIteration:
             pass
 
@@ -186,10 +183,18 @@ def test_nan_weights():
             assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
 
 
-if __name__ == "__main__":
-    # test_nan_weights()
-    gest = HumanoidUkr(r"D:\GesturesDataset\MoCap\splitAll\Training\C1_mcraw_gest0\C1_mcraw_gest0_sample0.c3d")
+def demo_run():
+    """
+     MoCap project demo.
+    """
+    gest = HumanoidUkr(r"D:\GesturesDataset\MoCap\splitAll\M1_02_v2_gest1_sample0.c3d")
     print(gest)
+    rhand_labels = [label for label in gest.moving_markers if label[0] == 'R']
+    gest.plot_displacement("bothHands", rhand_labels)
+    plt.title("'Добрий ранок' joint displacement")
+    plt.show()
     gest.animate_pretty()
-    # gest.show_displacements("bothHands")
-    # gest.animate()
+
+
+if __name__ == "__main__":
+    demo_run()

@@ -1,4 +1,4 @@
-# coding = utf-8
+# coding=utf-8
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -65,19 +65,6 @@ class HumanoidBasic(BasicMotion):
                     self.moving_markers.append(marker)
         else:
             BasicMotion.define_moving_markers(self, None)
-
-    def get_internal_energy(self, mode):
-        """
-         Internal energy is computed as overall joint displacements
-         along the frames.
-        :param mode: bothHands or oneHand
-        :return: internal energy in normal units
-        """
-        self.compute_displacement(mode)
-        d = np.array(list(self.joint_displace.values()))
-        w = np.array(list(self.weights.values()))
-        U = np.sum(d * w)
-        return U
 
     def init_3dbox(self):
         self.xmin = 0.

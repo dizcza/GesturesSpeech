@@ -105,11 +105,11 @@ class Viewer(pyglet.window.Window):
         self.trace = trace
         self.paused = paused
 
-        self.zoom = 5
+        self.zoom = 2
         self.ty = 0
         self.tz = -1
-        self.ry = 30
-        self.rz = 30
+        self.ry = 10
+        self.rz = -60
 
         # self.fps = pyglet.clock.ClockDisplay()
 

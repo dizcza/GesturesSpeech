@@ -1,10 +1,19 @@
-# coding = utf-8
+# coding=utf-8
 
 from Kinect.kreader import HumanoidKinect
 from tools.instruments import Testing
 
 
+def plot_error_vs_fps():
+    """
+     Plots the out-of-sample error VS fps.
+    """
+    Testing(HumanoidKinect).error_vs_fps()
+
+
+def run_the_worst_comparison(fps=None):
+    Testing(HumanoidKinect).the_worst_comparison(fps)
+
+
 if __name__ == "__main__":
-    testInstrument = Testing(HumanoidKinect)
-    testInstrument.the_worst_comparison(None)
-    # testInstrument.compare_with_first(None)
+    plot_error_vs_fps()

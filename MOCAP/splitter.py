@@ -1,6 +1,7 @@
 # coding=utf-8
 
-from MOCAP.mreader import HumanoidUkr, MOCAP_PATH
+import MOCAP.helper as helper
+from MOCAP.mreader import HumanoidUkr
 from MOCAP.helper import get_corrupted_frames
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,25 +9,27 @@ import os
 
 
 class HumanoidUkrSplitter(HumanoidUkr):
-    def __init__(self, filename):
-        HumanoidUkr.__init__(self, filename, fps=None)
+    def __init__(self, filepath):
+        HumanoidUkr.__init__(self, filepath, fps=None)
         self.markers_total = len(self.labels)
         self.corrupted = get_corrupted_frames(self.data)
+        self.offset = []
 
 
-    def compute_offset(self, mode="hands", step=1):
+    def compute_offset(self, mode="bothHands", step=1):
         """
          Computes and stores offset (deviation) from current to init pos for each frame.
         :param mode: whether use only hands marker or full set of markers
         :param step: number of frames per step
         """
-        if mode == "hands":
+        relaxed_frame = helper.init_frame(self.fpath)
+        init_pos = self.data[:, relaxed_frame, :]
+        if mode == "bothHands":
             hand_ids = self.get_ids(self.hand_markers)
             data = self.data[hand_ids, ::]
-            init_pos = self.init_pos[hand_ids, :]
+            init_pos = init_pos[hand_ids, :]
         else:
             data = self.data
-            init_pos = self.init_pos
         offset = []
         for frame in range(step, self.frames, step):
             coord_aver = np.average(data[:, frame-step:frame, :], axis=1)

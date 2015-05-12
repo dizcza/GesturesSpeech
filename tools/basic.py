@@ -130,10 +130,11 @@ class BasicMotion(object):
         self.fontsize = 12
         self.add_error = False
 
-    def plot_displacement(self, mode):
+    def plot_displacement(self, mode, highlight):
         """
          Plots a chart bar of joints displacements.
         :param mode: defines moving markers
+        :param highlight: which markers to highlight
         """
         self.define_plot_style()
         self.compute_displacement(mode)
@@ -150,10 +151,10 @@ class BasicMotion(object):
         ind = np.arange(len(offset_list))
         width = 0.5
         if self.add_error:
-            ax.bar(ind, offset_list, width, yerr=joint_std_list,
-                   error_kw=dict(elinewidth=2, ecolor='red'))
+            barlist = ax.bar(ind, offset_list, width, yerr=joint_std_list,
+                             error_kw=dict(elinewidth=2, ecolor='red'))
         else:
-            ax.bar(ind, offset_list, width)
+            barlist = ax.bar(ind, offset_list, width)
         ax.set_xlim(xmin=0)
         ax.set_ylim(ymin=0)
         ax.set_xticks(ind+width/2)
@@ -161,12 +162,15 @@ class BasicMotion(object):
         ax.set_ylabel("marker motion measure,  norm units")
         xtickNames = ax.set_xticklabels(self.moving_markers)
         plt.setp(xtickNames, rotation=self.rotation, fontsize=self.fontsize)
+        for lighted_marker in highlight:
+            lighted_id = self.moving_markers.index(lighted_marker)
+            barlist[lighted_id].set_color("#99CCFF")
 
-    def show_displacements(self, mode):
+    def show_displacements(self, mode, highlight=()):
         """
         :param mode: use both hand (by default) or only prime one
         """
-        self.plot_displacement(mode)
+        self.plot_displacement(mode, highlight)
         plt.show()
 
     def compute_weights(self, mode, beta):

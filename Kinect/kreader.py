@@ -13,6 +13,7 @@ Reference:
 
 import warnings
 import numpy as np
+import os
 from tools.humanoid import HumanoidBasic
 
 
@@ -85,14 +86,15 @@ class HumanoidKinect(HumanoidBasic):
             http://datascience.sehir.edu.tr/visapp2013/
     """
 
-    def __init__(self, filename, fps=None):
+    def __init__(self, txt_path, fps=None):
         """
          Creates a gesture from a Kinect folder.
-        :param filename: txt-file path
+        :param txt_path: txt-file path
         :param fps: new fps to be set
         """
         HumanoidBasic.__init__(self, fps)
         self.project = "Kinect"
+        self.fname = os.path.basename(txt_path)
 
         # dealing with hand markers
         self.hand_markers = ["HandLeft",  "WristLeft",  "ElbowLeft",
@@ -101,11 +103,11 @@ class HumanoidKinect(HumanoidBasic):
         # Note: 'prime' and 'free' hands are the attributes only for training.
         # Although they are determined each time the gesture is created,
         # they aren't used (and not relevant at all) during the testing.
-        self.prime_hand = filename.split('\\')[-1].split("Hand")[0].lower()
+        self.prime_hand = txt_path.split('\\')[-1].split("Hand")[0].lower()
         self.free_hand = swap[self.prime_hand]
         self.shoulder_markers = ["ShoulderLeft", "ShoulderCenter", "ShoulderRight"]
 
-        with open(filename, 'r') as rfile:
+        with open(txt_path, 'r') as rfile:
             rlines = rfile.readlines()
             self.name = rlines[3][1:-1]
             self.labels = gather_labels(rlines)
@@ -130,9 +132,16 @@ class HumanoidKinect(HumanoidBasic):
             HumanoidBasic.define_moving_markers(self, mode)
 
 
-if __name__ == "__main__":
-    gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\LeftHandWave\LeftHandWave_000.txt")
-    gest.animate()
+def demo_run():
+    """
+     Kinect project demo.
+    """
+    gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\RightHandPushUp\RightHandPushUp_000.txt")
     print(gest)
-    gest.show_displacements("bothHands")
-    gest.compute_weights(mode="oneHand", beta=1e-4)
+    print(gest.labels)
+    gest.show_displacements("bothHands", ("ElbowRight", "WristRight", "HandRight"))
+    gest.animate()
+
+
+if __name__ == "__main__":
+    demo_run()

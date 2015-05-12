@@ -27,8 +27,9 @@ def kalman_filter(data):
     :param data: (#markers, #frames, #dim) gesture data
     :return: filtered (smooth) gesture data
     """
-    for markerID in range(data.shape[0]):
-        for dim in range(data.shape[2]):
-            x_opt = kalman_1d(data[markerID, :, dim])
-            data[markerID, :, dim] = x_opt
+    if data.shape[1] > 1:
+        for markerID in range(data.shape[0]):
+            for dim in range(data.shape[2]):
+                x_opt = kalman_1d(data[markerID, :, dim])
+                data[markerID, :, dim] = x_opt
     return data

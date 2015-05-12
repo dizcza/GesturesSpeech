@@ -35,17 +35,17 @@ def demo_kalman():
         x_real = x_real[~np.isnan(x_real)]
         x_real_opt = kalman_1d(x_real, 0.2)
         # x_real_opt = kalman_1d(x_real_opt)
-        plt.plot(x_real)
-        plt.plot(x_real_opt)
+        plt.plot(x_real, linewidth=2)
+        plt.plot(x_real_opt, linewidth=2)
         plt.ylabel("Xs")
         # plt.legend(["noisy (real)", "kalman", "mov aver"])
 
         plt.subplot(212)
         x_real = em.data[markerID, :, 1]
         x_real = x_real[~np.isnan(x_real)]
-        x_real_opt = kalman_1d(x_real)
-        plt.plot(x_real)
-        plt.plot(x_real_opt)
+        x_real_opt = kalman_1d(x_real, 0.3)
+        plt.plot(x_real, linewidth=2)
+        plt.plot(x_real_opt, linewidth=2)
         plt.ylabel("Ys")
         plt.xlabel("frame")
         plt.legend(["noisy (real)", "kalman", "mov aver"], loc=2)
@@ -55,4 +55,6 @@ def demo_kalman():
 
 
 if __name__ == "__main__":
-    demo_kalman()
+    sigma_sensor = estimate_sensory_noise()
+    print(sigma_sensor)
+    # demo_kalman()

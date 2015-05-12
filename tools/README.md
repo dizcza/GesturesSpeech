@@ -35,6 +35,10 @@
     <td>comparison.py</td>
     <td>gestures comparison (uses fastdtw)</td>
   </tr>
+  <tr>
+    <td>other_tools.py</td>
+    <td>multiple projects testing</td>
+  </tr>
 </table>
 
 <p>A simple <b>neural network</b> (one layer perceptron from a PyBrain module) and <b>weighted DTW</b> models have been used in comparison to classify projects data.</p>

@@ -15,20 +15,21 @@ from tools.kalman import kalman_filter
 EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
 
 # TODO deal with camera jerking (58-1-1) --> blur
+# TODO decide what to do with gaussian filter and slope aligning
 
 
 class Emotion(BasicMotion):
-    def __init__(self, obj_path, fps=None):
+    def __init__(self, pkl_path, fps=None):
         """
-        :param obj_path: path to pickled data
+        :param pkl_path: path to pickled data
         :param fps: new fps to be set
         """
         BasicMotion.__init__(self, fps=24)
         self.project = "Emotion"
-        self.fname = os.path.basename(obj_path).strip(".pkl")
+        self.fname = os.path.basename(pkl_path).strip(".pkl")
 
         # loading data from a pickle
-        info = pickle.load(open(obj_path, 'rb'))
+        info = pickle.load(open(pkl_path, 'rb'))
         self.data = info["data"]
         self.norm_data = None
         self.author = info["author"]
@@ -94,6 +95,10 @@ class Emotion(BasicMotion):
          Uncomment plotting stuff to see the approximation result.
         """
         wink_window = int(0.6 * self.fps)
+
+        # make sure wink window is big enough
+        if wink_window < 2: return
+
         to_be_wink_threshold = 0.05
         eup_r, edn_r, eup_l, edn_l = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
         both_eyes = (eup_r, edn_r), (eup_l, edn_l)
@@ -218,12 +223,12 @@ def test_nan_weights():
     """
      Tests each sample for having nan weights.
     """
-    for log_c3d in os.listdir(EMOTION_PATH_PICKLES):
-        if log_c3d.endswith(".pkl"):
-            log_path = os.path.join(EMOTION_PATH_PICKLES, log_c3d)
+    for log_pkl in os.listdir(EMOTION_PATH_PICKLES):
+        if log_pkl.endswith(".pkl"):
+            log_path = os.path.join(EMOTION_PATH_PICKLES, log_pkl)
             gest = Emotion(log_path)
             w = gest.get_weights()
-            assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
+            assert not np.isnan(w).any(), "nan weights in %s" % log_pkl
 
 
 def show_all_emotions():
@@ -240,12 +245,15 @@ def show_all_emotions():
                 em.animate()
 
 
-if __name__ == "__main__":
-    # plot_x_frame()
-    # test_nan_weights()
-    # show_all_emotions()
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\26-1-3.pkl")
-    # em.data = em.norm_data
-    em.show_displacements(None)
-    em.data = kalman_filter(em.data)
+def demo_run():
+    """
+     Emotion project demo.
+    """
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\47-3-1.pkl")
+    print(em)
+    em.show_displacements(None, ("liup", "lidn", "jaw", "lir", "lil"))
     em.animate()
+
+
+if __name__ == "__main__":
+    demo_run()

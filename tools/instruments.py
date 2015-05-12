@@ -111,8 +111,8 @@ class InstrumentCollector(object):
                 gest = self.MotionClass(fpath_trn, fps)
                 gest.compute_weights(mode, beta)
                 current_dir_weights.append(gest.get_weights())
-                assert not np.isnan(gest.get_weights()).any(), \
-                    "got np.nan weights in %s" % gest.fname
+                error_msg = "got NaN weights in %s" % gest.fname
+                assert not np.isnan(gest.get_weights()).any(), error_msg
             global_weights[directory] = np.average(current_dir_weights, axis=0).tolist()
 
         if self.prefix == "":
@@ -133,7 +133,7 @@ class Testing(InstrumentCollector):
     def __init__(self, MotionClass, prefix=""):
         InstrumentCollector.__init__(self, MotionClass, prefix)
 
-    def the_worst_comparison(self, fps):
+    def the_worst_comparison(self, fps, verbose=True):
         """
          Computes the worst and the best out-of-sample error.
          NOTE: comparison is made by choosing the ABSOLUTE lowest DTW cost
@@ -141,8 +141,9 @@ class Testing(InstrumentCollector):
                since the last one rises in-sample and out-of-sample errors.
         :param fps: fps to be set in each gesture
                     pass as None not to change default fps
+        :param verbose: verbose display (True) or silent (False)
         """
-        print("%s: the_worst_between_comparison is running" % self.MotionClass.__name__)
+        print("%s: the_worst_between_comparison is running (FPS = %s)" % (self.MotionClass.__name__, fps))
         start = time.time()
 
         patterns = {}
@@ -161,7 +162,7 @@ class Testing(InstrumentCollector):
         
         for directory in os.listdir(self.trn_path):
             tst_subfolder = os.path.join(self.tst_path, directory)
-            print(" testing %s" % directory)
+            if verbose: print(" testing %s" % directory)
             for _sampleID, test_name in enumerate(os.listdir(tst_subfolder)):
                 fpath_test = os.path.join(tst_subfolder, test_name)
                 unknownGest = self.MotionClass(fpath_test, fps)
@@ -186,14 +187,14 @@ class Testing(InstrumentCollector):
                     got_pattern = other_patterns[ind]
                     if got_pattern.name != unknownGest.name:
                         supremum[directory] += 1.
-
-                        msg = "got %s" % got_pattern.name
-                        if hasattr(got_pattern, "fname"):
-                            msg += " (file: %s)" % got_pattern.fname
-                        msg += ", should be %s" % unknownGest.name
-                        if hasattr(unknownGest, "fname"):
-                            msg += " (file: %s)" % unknownGest.fname
-                        print(msg)
+                        if verbose:
+                            msg = "got %s" % got_pattern.name
+                            if hasattr(got_pattern, "fname"):
+                                msg += " (file: %s)" % got_pattern.name
+                            msg += ", should be %s" % unknownGest.name
+                            if hasattr(unknownGest, "fname"):
+                                msg += " (file: %s)" % unknownGest.name
+                            print(msg)
 
                 if min(the_same_costs) >= min_other_cost:
                     ind = np.argmin(other_costs)
@@ -202,13 +203,14 @@ class Testing(InstrumentCollector):
                         infimum[directory] += 1
 
         total_samples = 0
-        print("The result is shown in #misclassified: ")
+        print("The result is shown in number of misclassified samples: ")
         for dir in supremum.keys():
             tst_subfolder = os.path.join(self.tst_path, dir)
             tst_samples = len(os.listdir(tst_subfolder))
             total_samples += tst_samples
-            msg = "%s: \t\t min = %d, max = %d out of %d test samples" % (dir, infimum[dir], supremum[dir], tst_samples)
-            print(msg)
+            if verbose:
+                msg = "  %s: \t\t min = %d, max = %d out of %d test samples" % (dir, infimum[dir], supremum[dir], tst_samples)
+                print(msg)
         total_supremum = sum(supremum.values())
         total_infimum = sum(infimum.values())
         print("*** THE BEST CASE: %d; \tTHE WORST CASE: %d; \t TOTAL SAMPLES: %d" %
@@ -216,84 +218,26 @@ class Testing(InstrumentCollector):
         duration = time.time() - start
         print("Duration: %d sec" % duration)
 
-        proj_info = json.load(open(self._info_name, 'r'))
-        proj_info["error"] = {
-            "inf": float(total_infimum) / total_samples,
-            "sup": float(total_supremum) / total_samples
-        }
-        json.dump(proj_info, open(self._info_name, 'w'))
-
         return total_infimum, total_supremum, total_samples
-
-
-    def collect_first_patterns(self, fps):
-        """
-         Collects first patterns from each subfolder of Training set.
-         :param fps: fps to be set in each gesture
-                     pass as None not to change default fps
-        """
-        pattern_gestures = []
-        for root, _, logs in os.walk(self.trn_path):
-            if any(logs):
-                log_path = os.path.join(root, logs[0])
-                gest = self.MotionClass(log_path, fps)
-                pattern_gestures.append(gest)
-        print("Took %d patterns as the first log in each training dir." % \
-              len(pattern_gestures))
-        return pattern_gestures
-
-
-    def compare_with_first(self, fps):
-        """
-         Compares each test sample with the first one in Training folder.
-         :param fps: fps to be set in each gesture
-                     pass as None not to change default fps
-        """
-        print("%s: comparing them all with fps = %s" % (self.MotionClass.__name__, fps))
-        start = time.time()
-        patterns = self.collect_first_patterns(fps)
-        misclassified = 0.
-        total_samples = 0
-        for root, _, logs in os.walk(self.tst_path):
-            for test_log in logs:
-                unknown_log_path = os.path.join(root, test_log)
-                unknown_gest = self.MotionClass(unknown_log_path, fps)
-                costs = []
-                for known_gest in patterns:
-                    dist = compare(known_gest, unknown_gest)
-                    costs.append(dist)
-                ind = np.argmin(costs)
-                possible_gest = patterns[ind]
-
-                if possible_gest.name != unknown_gest.name:
-                    print("got %s, should be %s" % (possible_gest.name, unknown_gest.name))
-                    misclassified += 1.
-
-                total_samples += 1
-
-        Etest = misclassified / float(total_samples)
-        print("Etest: %g <----> (%d / %d)" % (Etest, misclassified, total_samples))
-        duration = time.time() - start
-        print("Duration: %d sec" % duration)
-
-        return Etest
 
 
     def error_vs_fps(self):
         """
-         Plots the E-test VS fps dependency.
+         Plots the out-of-sample error VS fps.
         """
-        fps_range = range(5, 13, 1)
+        fps_range = range(2, 14, 1)
         test_errors = []
         for fps in fps_range:
-            Etest, conf = self.compare_with_first(fps)
+            inf, sup, tot = self.the_worst_comparison(fps, verbose=False)
+            Etest = float(sup) / tot
             test_errors.append(Etest)
-
-        plt.plot(fps_range, test_errors, marker='o', ms=8)
-        plt.xlabel("data freq (fps), 1/s")
+        plt.plot(fps_range, test_errors, 'o--', ms=8)
+        plt.ylim(ymin=-0.01)
         plt.ylabel("Etest")
+        plt.xlabel("FPS")
         plt.title("out-of-sample error VS fps")
-        plt.savefig("png/error_vs_fps_%s.png" % self.MotionClass.__name__)
+        plt.grid()
+        plt.savefig("png/error_vs_fps.png")
         plt.show()
 
 
@@ -321,21 +265,21 @@ class Testing(InstrumentCollector):
 
 class Training(InstrumentCollector):
 
-    # TODO how to compute a variance
-
     def __init__(self, MotionClass, prefix=""):
         InstrumentCollector.__init__(self, MotionClass, prefix)
 
-    def compute_within_variance(self, fps):
+    def compute_within_variance(self, fps, verbose=True):
         """
          Computes aver within variance from the Training dataset.
          Makes it None in case when
          :param fps: frames per second to be set
                      pass as None not to change default fps
+         :param verbose: verbose display (True) or silent (False)
          :return (float), within_var
         """
         self.load_info()
         print("%s: COMPUTING WITHIN VARIANCE" % self.MotionClass.__name__)
+        start_timer = time.time()
 
         one_vs_the_same_var = []
         for directory in os.listdir(self.trn_path):
@@ -365,21 +309,26 @@ class Training(InstrumentCollector):
         self.proj_info["within_std"] = within_std
         json.dump(self.proj_info, open(self._info_name, 'w'))
 
-        info = "Done with: \n\t within-var: %s \n\t " % within_var
-        info += "within-std: %s\n" % within_std
-        print(info)
+        if verbose:
+            duration = time.time() - start_timer
+            info = "Done with: \n\t within-var: %s \n\t " % within_var
+            info += "within-std: %s\n\t" % within_std
+            info += "duration: %d\n" % duration
+            print(info)
 
         return within_var
 
 
-    def compute_between_variance(self, fps):
+    def compute_between_variance(self, fps, verbose=True):
         """
          Computes aver between variance from the Training dataset.
          :param fps: frames per second to be set
                      pass as None not to change default fps
+         :param verbose: verbose display (True) or silent (False)
          :return: (float), between_var
         """
         print("%s: COMPUTING BETWEEN VARIANCE" % self.MotionClass.__name__)
+        start_timer = time.time()
         self.load_info()
         trndirs = os.listdir(self.trn_path)
         roots = [os.path.join(self.trn_path, one) for one in trndirs]
@@ -406,24 +355,28 @@ class Training(InstrumentCollector):
         self.proj_info["between_std"] = between_std
         json.dump(self.proj_info, open(self._info_name, 'w'))
 
-        info = "Done with: \n\t between-var: %g \n\t " % between_var
-        info += "between-std: %g\n" % between_std
-        print(info)
+        if verbose:
+            duration = time.time() - start_timer
+            info = "Done with: \n\t between-var: %g \n\t " % between_var
+            info += "between-std: %g\n\t" % between_std
+            info += "duration: %d\n" % duration
+            print(info)
 
         return between_var
 
 
-    def update_ratio(self, mode, beta, fps):
+    def update_ratio(self, mode, beta, fps, verbose=False):
         """
          Updates weights, within and between variance for the given beta param.
         :param mode: defines moving markers
         :param beta: to be choosing to yield the biggest ratio
         :param fps: frames per second to be set
                     pass as None not to change default fps
+        :param verbose: verbose display (True) or silent (False)
         """
         self.compute_weights(mode, beta, fps)
-        self.compute_within_variance(fps)
-        self.compute_between_variance(fps)
+        self.compute_within_variance(fps, verbose)
+        self.compute_between_variance(fps, verbose)
 
         within_var = self.proj_info["within_variance"]
         within_std = self.proj_info["within_std"]
@@ -438,9 +391,9 @@ class Training(InstrumentCollector):
             self.proj_info["d-ratio-std"] = ratio_std
         else:
             self.proj_info["d-ratio"] = between_var
-            self.proj_info["d-ratio-std"] = between_var
+            self.proj_info["d-ratio-std"] = between_std
 
-        print("(!) New discriminant ratio: %g" % self.proj_info["d-ratio"])
+        print("(!) New discriminant ratio: %g (FPS = %s)" % (self.proj_info["d-ratio"], fps))
         json.dump(self.proj_info, open(self._info_name, 'w'))
 
 
@@ -451,7 +404,7 @@ class Training(InstrumentCollector):
          :param fps: frames per second to be set
                      pass as None not to change default fps
         """
-        print("%s: choosing the beta with fps = %s" % (self.MotionClass.__name__, fps))
+        print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
         begin = time.time()
         beta_range = [1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]
         gained_ratios = []
@@ -477,31 +430,54 @@ class Training(InstrumentCollector):
         plt.xlabel("beta, log")
         plt.ylabel("discriminant ratio")
         plt.title("Choosing the best beta")
-        plt.savefig("png/choosing_beta_%s.png" % self.MotionClass.__name__)
+        plt.grid()
+        plt.savefig("png/choosing_beta.png")
         end = time.time()
         print("\t Duration: ~%d m" % ((end - begin) / 60.))
         plt.show()
 
 
-    def ratio_vs_fps(self, mode, beta, start, end):
+    def ratio_vs_fps(self, mode, beta, start, end, step=1, reset=False):
         """
          Displays discriminant ratio vs fps.
         :param mode: defines moving markers
         :param beta: to be choosing to yield the biggest ratio
         :param start: lower fps
         :param end: upper fps
+        :param step: fps step
+        :param reset: reset (True) or continue (False) progress
         """
-        fps_range = np.arange(start, end, 1)
-        ratios = []
-        ratios_std = []
-        for fps in fps_range:
-            self.update_ratio(mode, beta, fps)
-            ratios.append(self.proj_info["d-ratio"])
-            ratios_std.append(self.proj_info["d-ratio-std"])
-        plt.errorbar(fps_range, ratios, ratios_std, marker='^', ms=8)
-        plt.xlabel("data freq (fps), 1/s")
+        if not os.path.exists("ratio_vs_fps_progress.json"): reset = True
+        if reset:
+            fps_left = np.arange(start, end+1, step)
+            progress = {"fps_used": [], "r_got": [], "rstd_got": []}
+        else:
+            progress = json.load(open("ratio_vs_fps_progress.json", 'r'))
+            next_fps = progress["fps_used"][-1] + step
+            print("Continue progress from FPS = %d" % next_fps)
+            fps_left = np.arange(next_fps, end+1, step)
+
+        for fps in fps_left:
+            try:
+                self.update_ratio(mode, beta, fps)
+            except AssertionError:
+                continue
+            progress["fps_used"].append(int(fps))
+            progress["r_got"].append(self.proj_info["d-ratio"])
+            progress["rstd_got"].append(self.proj_info["d-ratio-std"])
+            json.dump(progress, open("ratio_vs_fps_progress.json", 'w'))
+
+        fps_used = progress["fps_used"]
+        ratios = progress["r_got"]
+        ratios_std = progress["rstd_got"]
+        print("[(FPS x ratio), ]: ", list(zip(fps_used, ratios)))
+        plt.errorbar(fps_used, ratios, ratios_std, marker='^', ms=8)
+        plt.xlabel("FPS")
         mean_std = 100. * np.average(ratios_std)
-        plt.ylabel("between variance, std=%.1f%%" % mean_std)
-        plt.title("Between variance VS fps")
-        plt.savefig("png/Db_fps.png")
+        print("mean std: %.1f%%" % mean_std)
+        plt.ylabel("R")
+        plt.title("Discriminant ratio VS fps")
+        plt.grid()
+        plt.xlim(0, end+1)
+        plt.savefig("png/ratio_vs_fps.png")
         plt.show()

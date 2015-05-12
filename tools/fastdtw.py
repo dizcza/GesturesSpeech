@@ -39,6 +39,7 @@ def dist_measure(fdata1, fdata2, weights):
     :param weights: (#markers,) joint weights (motion contribution)
     :return: (float) dist, w.r.t. the same markers
     """
+    assert fdata1.shape == fdata2.shape, "data1 and data2 should have the same shape"
     # weights = np.ones(fdata1.shape[0])
     if np.isnan(fdata1).any() or np.isnan(fdata2).any() or np.isnan(weights).any():
         fdata1, fdata2, weights = remove_nan(fdata1, fdata2, weights)

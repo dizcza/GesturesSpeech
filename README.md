@@ -66,7 +66,7 @@
 
 
 
-<h2 id="art">State of art</h2>
+<h2 id="art">State of the art</h2>
 <p>The main idea in gesture recognition is to maximize between class variance <i>Db</i> and minimize within class variance <i>Dw</i> by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">proposed</a>.</p>
 
 <p>It's obvious, that a joint which is active in one gesture class may not be active in another gesture class. Hence weights have to be adjusted accordingly.
@@ -84,8 +84,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 
 
 <h2 id="displacements">Body joint displacements</h2>
-<p>The main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 6 hand markers while MoCap projects operates with 50 (25 x 2) hand markers. Their contribution in the motion is shown below as a  joint's displacement sum over gesture frames (measured in normalized units).
-</p>
+<p>The main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 6 hand markers while MoCap projects operates with 50 (25 x 2) hand markers. Their contribution in the motion is shown below as a  joint's displacement sum over gesture frames (measured in normalized units) with right hand highlighted in light blue colour.</p>
 <table style="width:100%">
 	<tr>
 		<th>Kinect</th>
@@ -154,7 +153,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
     </tr>
 </table>
 
-<p>Using Weighted FastDTW algorithm with only 3 crucial (hand) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) FastDTW algorithm with the same 3 body joints yields 22.5% out-of-sample error.</p>
+<p>Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 22.5% out-of-sample error.</p>
 
 
 <table style="width:60%; margin:0 auto">
@@ -186,9 +185,9 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 
 
 <h2 id="rrate">FPS dependency</h2>
-<p>Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 10 is enough for both projects data.</p>
+<p>Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 12 is enough for both projects data.</p>
 <div align="center">
-	<img src="png/rrate_fps.png"/>
+	<img src="png/error_vs_fps.png"/>
 </div>
 
 
