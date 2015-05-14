@@ -30,6 +30,7 @@ def plot_error_vs_fps():
     plt.ylabel("Etest")
     plt.xlabel("FPS")
     plt.ylim(ymin=-0.01)
+    plt.xlim(1, 14)
     plt.title("out-of-sample error VS fps")
     plt.grid()
     plt.legend(["Kinect", "MoCap"], numpoints=1)

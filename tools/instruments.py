@@ -233,6 +233,7 @@ class Testing(InstrumentCollector):
             test_errors.append(Etest)
         plt.plot(fps_range, test_errors, 'o--', ms=8)
         plt.ylim(ymin=-0.01)
+        plt.xlim(1, 14)
         plt.ylabel("Etest")
         plt.xlabel("FPS")
         plt.title("out-of-sample error VS fps")
@@ -275,7 +276,8 @@ class Training(InstrumentCollector):
          :param fps: frames per second to be set
                      pass as None not to change default fps
          :param verbose: verbose display (True) or silent (False)
-         :return (float), within_var
+         :return (float), averaged variance between two different samples
+                          within the same class
         """
         self.load_info()
         print("%s: COMPUTING WITHIN VARIANCE" % self.MotionClass.__name__)
@@ -287,11 +289,11 @@ class Training(InstrumentCollector):
             log_examples = os.listdir(trn_subfolder)
             current_dir_var = []
             while len(log_examples) > 1:
-                fpath_trn = os.path.join(trn_subfolder, log_examples[0])
-                firstGest = self.MotionClass(fpath_trn, fps)
+                first_log_path = os.path.join(trn_subfolder, log_examples[0])
+                firstGest = self.MotionClass(first_log_path, fps)
                 for another_log in log_examples[1:]:
-                    full_filename = os.path.join(trn_subfolder, another_log)
-                    goingGest = self.MotionClass(full_filename, fps)
+                    other_log_path = os.path.join(trn_subfolder, another_log)
+                    goingGest = self.MotionClass(other_log_path, fps)
                     dist = compare(firstGest, goingGest)
                     current_dir_var.append(dist)
                 log_examples.pop(0)
@@ -325,7 +327,7 @@ class Training(InstrumentCollector):
          :param fps: frames per second to be set
                      pass as None not to change default fps
          :param verbose: verbose display (True) or silent (False)
-         :return: (float), between_var
+         :return: (float), the averaged dist between two samples from different classes
         """
         print("%s: COMPUTING BETWEEN VARIANCE" % self.MotionClass.__name__)
         start_timer = time.time()
@@ -338,8 +340,8 @@ class Training(InstrumentCollector):
             first_dir = roots[0]
             dirs_left = roots[1:]
             for first_log in os.listdir(first_dir):
-                first_log_full = os.path.join(first_dir, first_log)
-                firstGest = self.MotionClass(first_log_full, fps)
+                first_log_path = os.path.join(first_dir, first_log)
+                firstGest = self.MotionClass(first_log_path, fps)
                 for other_dir in dirs_left:
                     for other_log in os.listdir(other_dir):
                         full_filename = os.path.join(other_dir, other_log)
@@ -397,16 +399,17 @@ class Training(InstrumentCollector):
         json.dump(self.proj_info, open(self._info_name, 'w'))
 
 
-    def choose_beta(self, mode, fps):
+    def choose_beta_simple(self, mode, fps):
         """
          Chooses the best beta to get the biggest discriminant ratio.
+         It's a simple form of plotting the results.
+         Use choose_beta_pretty for nice plotting.
          :param mode: defines moving markers
          :param fps: frames per second to be set
                      pass as None not to change default fps
         """
         print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
-        begin = time.time()
-        beta_range = [1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]
+        beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
         gained_ratios = []
         gained_rstds = []
         for beta in beta_range:
@@ -415,26 +418,87 @@ class Training(InstrumentCollector):
             gained_ratios.append(self.proj_info["d-ratio"])
             gained_rstds.append(self.proj_info["d-ratio-std"])
 
-        choosing_beta = tuple(zip(beta_range, gained_ratios, gained_rstds))
-        print(choosing_beta)
-        self.proj_info["choosing beta"] = choosing_beta
-        json.dump(self.proj_info, open(self._info_name, 'w'))
-
         best_ratio = max(gained_ratios)
         ind = np.argmax(gained_ratios)
         best_beta = beta_range[ind]
         print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
-
         plt.errorbar(np.log(beta_range), gained_ratios, gained_rstds,
                      linestyle='None', marker='^', ms=8)
-        plt.xlabel("beta, log")
-        plt.ylabel("discriminant ratio")
+        plt.xlabel("log(beta)")
+        plt.ylabel("discriminant ratio R")
         plt.title("Choosing the best beta")
         plt.grid()
+        plt.show()
+
+
+    def choose_beta_pretty(self, mode, fps):
+        """
+         Chooses the best beta to get the biggest discriminant ratio.
+         It's a pretty version of plotting the results.
+         Use a simple one, if you cannot get the logic.
+         :param mode: defines moving markers
+         :param fps: frames per second to be set
+                     pass as None not to change default fps
+        """
+        print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
+        begin = time.time()
+        beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+
+        wthnvars = []
+        btwvars = []
+        ratios = []
+
+        wthnvar_stds = []
+        btwvar_stds = []
+        ratios_stds = []
+
+        for beta in beta_range:
+            print("BETA: %f" % beta)
+            self.update_ratio(mode, beta, fps)
+
+            wthnvars.append(self.proj_info["within_variance"])
+            btwvars.append(self.proj_info["between_variance"])
+            ratios.append(self.proj_info["d-ratio"])
+
+            wthnvar_stds.append(self.proj_info["within_std"])
+            btwvar_stds.append(self.proj_info["between_std"])
+            ratios_stds.append(self.proj_info["d-ratio-std"])
+
+        choosing_beta = tuple(zip(beta_range, ratios, ratios_stds))
+        self.proj_info["choosing beta"] = choosing_beta
+        json.dump(self.proj_info, open(self._info_name, 'w'))
+
+        best_ratio = max(ratios)
+        ind = np.argmax(ratios)
+        best_beta = beta_range[ind]
+        print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
+
+        if None in wthnvars:
+            plt.plot(np.log(beta_range), ratios, 'b^-', ms=8)
+            plt.ylabel("Db")
+            # std_mean = 100. * np.average(ratios_stds)
+            # plt.legend("Db, std=%.1f%%" % std_mean, numpoints=1, loc=3)
+            plt.grid()
+        else:
+            results = wthnvars, btwvars, ratios
+            resulted_stds = wthnvar_stds, btwvar_stds, ratios_stds
+            std_inf = ["std=%.1f%%" % (100 * np.average(std)) for std in resulted_stds]
+            legends = ["%s, %s" % pair for pair in zip(("Dw", "Db", "R"), std_inf)]
+            markers = 'ys-', 'b^-', 'go-'
+            for i, (rslt, lgnd, mark) in enumerate(zip(results, legends, markers), start=1):
+                plt.subplot(3, 1, i)
+                plt.plot(np.log(beta_range), rslt, mark)
+                # plt.legend([lgnd], numpoints=1, loc=3)
+                plt.ylabel(lgnd.split(',')[0])
+                plt.grid()
+        plt.xlabel("log(beta)")
+        plt.suptitle("Choosing the best beta")
+
         plt.savefig("png/choosing_beta.png")
         end = time.time()
         print("\t Duration: ~%d m" % ((end - begin) / 60.))
         plt.show()
+        # TODO merge Db and Dw on one plot
 
 
     def ratio_vs_fps(self, mode, beta, start, end, step=1, reset=False):
@@ -451,10 +515,11 @@ class Training(InstrumentCollector):
         if reset:
             fps_left = np.arange(start, end+1, step)
             progress = {"fps_used": [], "r_got": [], "rstd_got": []}
+            print("Reset progress.")
         else:
             progress = json.load(open("ratio_vs_fps_progress.json", 'r'))
             next_fps = progress["fps_used"][-1] + step
-            print("Continue progress from FPS = %d" % next_fps)
+            print("Continue progress from FPS = %d." % next_fps)
             fps_left = np.arange(next_fps, end+1, step)
 
         for fps in fps_left:

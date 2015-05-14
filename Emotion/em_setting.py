@@ -23,7 +23,7 @@ def choose_beta(mode=None, fps=None):
      Chooses the best beta (which yields the biggest discriminant ratio R),
      w.r.t. mode and fps params.
     """
-    Training(Emotion).choose_beta(mode, fps)
+    Training(Emotion).choose_beta_pretty(mode, fps)
 
 
 if __name__ == "__main__":

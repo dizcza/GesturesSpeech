@@ -23,7 +23,7 @@ def choose_beta(hand_mode="bothHands", fps=None):
      Chooses the best beta (which yields the biggest discriminant ratio R),
      w.r.t. hand mode and fps params.
     """
-    Training(HumanoidKinect).choose_beta(hand_mode, fps)
+    Training(HumanoidKinect).choose_beta_pretty(hand_mode, fps)
 
 
 if __name__ == "__main__":

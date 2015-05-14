@@ -133,3 +133,4 @@ def show_comparison(known_gest, unknown_gest):
     plt.title("Weighted DTW frames path")
     plt.show()
 
+# TODO use dtw norm
