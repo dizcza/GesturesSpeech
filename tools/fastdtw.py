@@ -48,7 +48,7 @@ def dist_measure(fdata1, fdata2, weights):
 
 def fastdtw(x, y, weights, radius=1):
     """
-     Speeds up classic dtw algorithm.
+     Speeds up Weighted DTW algorithm to O(N) complexity.
     :param x: (#markers, #frames1, #dim) data of the known gest
     :param y: (#markers, #frames2, #dim) data of the unknown gest
     :param radius: constrain, defines window searching field
@@ -68,7 +68,7 @@ def fastdtw(x, y, weights, radius=1):
 
 def _dtw(x, y, weights, window=None):
     """
-     Classic windowed dtw algorithm.
+     Weighted DTW algorithm with O(N^2) complexity.
     :param x: (#markers, #frames1, #dim) data of the known gest
     :param y: (#markers, #frames2, #dim) data of the unknown gest
     :returns: dtw cost, dtw path

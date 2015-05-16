@@ -1,6 +1,10 @@
 # coding=utf-8
 
 import os
+import numpy as np
+import matplotlib.pyplot as plt
+import json
+import time
 from copy import deepcopy
 
 from pybrain.structure import TanhLayer
@@ -10,7 +14,6 @@ from pybrain.tools.shortcuts import buildNetwork
 from pybrain.supervised.trainers import BackpropTrainer
 from pybrain.structure.modules import SoftmaxLayer
 from pybrain.tools.customxml.networkwriter import NetworkWriter
-import numpy as np
 
 from Emotion.emotion import Emotion
 from Kinect.kreader import HumanoidKinect
@@ -18,7 +21,7 @@ from MOCAP.mreader import HumanoidUkr
 from tools.instruments import InstrumentCollector
 
 
-def net_preproc(_gest, moving_marks, use_frames):
+def extract_features(_gest, moving_marks, use_frames):
     """
      Neural network preprocessor.
      Extracts features before feeding them into a NN.
@@ -65,11 +68,65 @@ def get_input_layer_dim(gest, moving_marks, use_frames):
     return input_layer_dim
 
 
+def get_common_moving_markers(gestures, mode):
+    """
+    :param gestures: list of gestures
+    :return: common moving markers for all given gestures
+    """
+    first_sample = deepcopy(gestures[0])
+    first_sample.define_moving_markers(mode)
+    moving_marks = list(first_sample.moving_markers)
+    for gest in gestures[1:]:
+        waste_labels = []
+        for label in moving_marks:
+            if label not in gest.labels:
+                waste_labels.append(label)
+        for bad_label in waste_labels:
+            moving_marks.remove(bad_label)
+    return moving_marks
+
+
+def visualize(results_perc, proj_name):
+    """
+    Visualizes iteration process.
+    :param results_perc: list of (in-sample, out-of-sample) errors
+    """
+    Ein, Eout = zip(*results_perc)
+    plt.plot(Ein, 'bo-')
+    plt.plot(Eout, 'go-')
+    plt.legend(["in-sample", "out-of-sample"], numpoints=1)
+    plt.title("Iteration process")
+    plt.xlabel("# epochs")
+    plt.ylabel("Error, %")
+    plt.savefig("png/%s.png" % proj_name)
+    plt.show()
+
+
+def dump_common_markers(moving_marks, proj_name):
+    fname = "common_markers.json"
+    if os.path.exists(fname):
+        cm = json.load(open(fname))
+    else:
+        cm = {}
+    cm[proj_name] = moving_marks
+    json.dump(cm, open(fname, 'w'))
+
+
+def dump_timing(duration, proj_name):
+    fname = "timings.json"
+    if os.path.exists(fname):
+        timing = json.load(open(fname))
+    else:
+        timing = {}
+    timing[proj_name] = int(duration)
+    json.dump(timing, open(fname, 'w'))
+
+
 def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
-                use_frames=20, hidden_neurons=20, num_epochs=500, lrn_rate=1e-2):
+                use_frames=20, hidden_neurons=20, lrn_rate=0.005, iters_per_epoch=1):
     """
         1) creates a simple perceptron,
-        2) feeds it with all_samples,
+        2) feeds it with trn_samples,
         3) evaluates the results.
     :param trn_samples: list of training samples
     :param tst_samples: list of testing samples
@@ -77,15 +134,13 @@ def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
                              gesture class
     :param mov_mark_mode: moving markers mode (defines NN dimensionality)
     :param use_frames: fixed number of frames to work with
-    :returns:
-        Eout_min - the lowest our-of-sample error,
-        results_perc - list of (Ein, Eout) pairs per epochs,
-        epochs - list of iterations during learning the NN,
-        tstdata - pybrain testing data set (part of all_samples).
     """
+    start = time.time()
     print("Running network \n")
     moving_marks = get_common_moving_markers(trn_samples + tst_samples,
                                              mov_mark_mode)
+    proj_name = trn_samples[0].project
+    dump_common_markers(moving_marks, proj_name)
 
     input_layer_dim = get_input_layer_dim(trn_samples[0],
                                           moving_marks,
@@ -95,7 +150,7 @@ def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
         pybrn_data = ClassificationDataSet(input_layer_dim, 1,
                                            nb_classes=len(names_convention))
         for sample in dataset:
-            features_map, status = net_preproc(sample, moving_marks, use_frames)
+            features_map, status = extract_features(sample, moving_marks, use_frames)
             if status == "OK":
                 letter_class = names_convention[sample.name]
                 pybrn_data.addSample(features_map, [letter_class])
@@ -118,32 +173,27 @@ def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
                               learningrate=lrn_rate)
 
     results_perc = []
-    Eout_min = 1.0
-    iters_per_epoch = 1
-    weights_path = r"weights/%s.xml" % trn_samples[0].project
-    epochs = np.linspace(iters_per_epoch, iters_per_epoch*num_epochs, num_epochs)
-    for i in range(num_epochs):
+    tst_error = 100
+    trn_error = 100
+    weights_path = r"weights/%s.xml" % proj_name
+    while trn_error > 1e-3:
         trainer.trainEpochs(iters_per_epoch)
         trn_error = percentError(trainer.testOnClassData(), trndata['class'])
-        tst_error = percentError(trainer.testOnClassData(
-            dataset=tstdata), tstdata['class'])
-
-        if tst_error / 100.0 < Eout_min:
-            Eout_min = tst_error / 100.0
-            NetworkWriter.writeToFile(fnn, weights_path)
-
-        if i % 10 == 0:
-            epoch_status = "epoch: %4d \t train error: %f%% \t test error: %f%% " % (
-                trainer.totalepochs,
-                trn_error,
-                tst_error
-            )
-            print(epoch_status)
+        tst_error = percentError(trainer.testOnClassData(tstdata), tstdata['class'])
+        epoch_status = "epoch: %d \t train error: %f%% \t test error: %f%% " % (
+            trainer.totalepochs,
+            trn_error,
+            tst_error
+        )
+        print(epoch_status)
         results_perc.append((trn_error, tst_error))
-    misclassified = Eout_min * tst_size
-    print("Eout_min: %f (%g / %d)" % (Eout_min, misclassified, tst_size))
-
-    return Eout_min, results_perc, epochs, tstdata
+    results_perc.append((trn_error, tst_error))
+    NetworkWriter.writeToFile(fnn, weights_path)
+    misclassified = tst_error / 100. * tst_size
+    print("Eout_min: %f%% (%g / %d)" % (tst_error, misclassified, tst_size))
+    duration = time.time() - start
+    dump_timing(duration, proj_name)
+    visualize(results_perc, proj_name)
 
 
 def collect_gestures(instr):
@@ -164,40 +214,22 @@ def collect_gestures(instr):
     return trn_samples, tst_samples, names_convention
 
 
-def get_common_moving_markers(gestures, mode):
-    """
-    :param gestures: list of gestures
-    :return: common moving markers for all given gestures
-    """
-    first_sample = deepcopy(gestures[0])
-    first_sample.define_moving_markers(mode)
-    moving_marks = list(first_sample.moving_markers)
-    for gest in gestures[1:]:
-        waste_labels = []
-        for label in moving_marks:
-            if label not in gest.labels:
-                waste_labels.append(label)
-        for bad_label in waste_labels:
-            moving_marks.remove(bad_label)
-    return moving_marks
-
-
 def train_emotion():
-    instr = InstrumentCollector(Emotion, "")
+    instr = InstrumentCollector(Emotion)
     trn_samples, tst_samples, names_convention = collect_gestures(instr)
-    run_network(trn_samples, tst_samples, names_convention, None, num_epochs=1000)
+    run_network(trn_samples, tst_samples, names_convention, None, iters_per_epoch=10)
 
 
 def train_kinect():
-    instr = InstrumentCollector(HumanoidKinect, "")
+    instr = InstrumentCollector(HumanoidKinect)
     trn_samples, tst_samples, names_convention = collect_gestures(instr)
-    run_network(trn_samples, tst_samples, names_convention, "bothHands", hidden_neurons=20)
+    run_network(trn_samples, tst_samples, names_convention, "bothHands")
 
 
 def train_mocap():
-    instr = InstrumentCollector(HumanoidUkr, "")
+    instr = InstrumentCollector(HumanoidUkr)
     trn_samples, tst_samples, names_convention = collect_gestures(instr)
-    run_network(trn_samples, tst_samples, names_convention, "bothHands", num_epochs=2000, lrn_rate=0.005, use_frames=30)
+    run_network(trn_samples, tst_samples, names_convention, "bothHands", iters_per_epoch=10)
 
 
 if __name__ == "__main__":

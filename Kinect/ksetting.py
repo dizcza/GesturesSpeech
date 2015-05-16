@@ -27,4 +27,5 @@ def choose_beta(hand_mode="bothHands", fps=None):
 
 
 if __name__ == "__main__":
-    plot_ratio_vs_fps()
+    # plot_ratio_vs_fps()
+    choose_beta()

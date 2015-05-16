@@ -15,7 +15,7 @@ from Emotion.emotion import EMOTION_PATH_PICKLES
 
 
 class InstrumentCollector(object):
-    def __init__(self, MotionClass, prefix):
+    def __init__(self, MotionClass, prefix=""):
         self.MotionClass = MotionClass
         self.prefix = prefix
         _paths = {
@@ -190,10 +190,10 @@ class Testing(InstrumentCollector):
                         if verbose:
                             msg = "got %s" % got_pattern.name
                             if hasattr(got_pattern, "fname"):
-                                msg += " (file: %s)" % got_pattern.name
+                                msg += " (file: %s)" % got_pattern.fname
                             msg += ", should be %s" % unknownGest.name
                             if hasattr(unknownGest, "fname"):
-                                msg += " (file: %s)" % unknownGest.name
+                                msg += " (file: %s)" % unknownGest.fname
                             print(msg)
 
                 if min(the_same_costs) >= min_other_cost:
@@ -272,7 +272,6 @@ class Training(InstrumentCollector):
     def compute_within_variance(self, fps, verbose=True):
         """
          Computes aver within variance from the Training dataset.
-         Makes it None in case when
          :param fps: frames per second to be set
                      pass as None not to change default fps
          :param verbose: verbose display (True) or silent (False)
@@ -294,7 +293,13 @@ class Training(InstrumentCollector):
                 for another_log in log_examples[1:]:
                     other_log_path = os.path.join(trn_subfolder, another_log)
                     goingGest = self.MotionClass(other_log_path, fps)
+
+                    # since both firstGest and goingGest have the same weights
+                    # (stored in PROJECTNAME_INFO.json), there is no need to
+                    # alter arguments and compute it explicitly, because
+                    # compare(goingGest, firstGest) == compare(firstGest, goingGest)
                     dist = compare(firstGest, goingGest)
+
                     current_dir_var.append(dist)
                 log_examples.pop(0)
             if any(current_dir_var):
@@ -331,6 +336,40 @@ class Training(InstrumentCollector):
         """
         print("%s: COMPUTING BETWEEN VARIANCE" % self.MotionClass.__name__)
         start_timer = time.time()
+        one_vs_others_var = []
+        trn_samples = self.load_train_samples(fps)
+        for firstGest in trn_samples:
+            for goingGest in trn_samples:
+                if firstGest.name != goingGest.name:
+                    dist = compare(firstGest, goingGest)
+                    one_vs_others_var.append(dist)
+        between_var = np.average(one_vs_others_var)
+        between_std = np.std(one_vs_others_var)
+        self.proj_info["between_variance"] = between_var
+        self.proj_info["between_std"] = between_std
+        json.dump(self.proj_info, open(self._info_name, 'w'))
+
+        if verbose:
+            duration = time.time() - start_timer
+            info = "Done with: \n\t between-var: %g \n\t " % between_var
+            info += "between-std: %g\n\t" % between_std
+            info += "duration: %d sec\n" % duration
+            print(info)
+
+        return between_var
+
+
+    def compute_between_variance_old(self, fps, verbose=True):
+        """
+         Computes aver between variance from the Training dataset.
+         It's incorrect but faster implementation.
+         :param fps: frames per second to be set
+                     pass as None not to change default fps
+         :param verbose: verbose display (True) or silent (False)
+         :return: (float), the averaged dist between two samples from different classes
+        """
+        print("%s: COMPUTING BETWEEN VARIANCE (OLD)" % self.MotionClass.__name__)
+        start_timer = time.time()
         self.load_info()
         trndirs = os.listdir(self.trn_path)
         roots = [os.path.join(self.trn_path, one) for one in trndirs]
@@ -361,7 +400,7 @@ class Training(InstrumentCollector):
             duration = time.time() - start_timer
             info = "Done with: \n\t between-var: %g \n\t " % between_var
             info += "between-std: %g\n\t" % between_std
-            info += "duration: %d\n" % duration
+            info += "duration: %d sec\n" % duration
             print(info)
 
         return between_var
@@ -408,7 +447,7 @@ class Training(InstrumentCollector):
          :param fps: frames per second to be set
                      pass as None not to change default fps
         """
-        print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
+        print("%s: choosing the beta (simple) with FPS = %s" % (self.MotionClass.__name__, fps))
         beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
         gained_ratios = []
         gained_rstds = []
@@ -422,7 +461,7 @@ class Training(InstrumentCollector):
         ind = np.argmax(gained_ratios)
         best_beta = beta_range[ind]
         print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
-        plt.errorbar(np.log(beta_range), gained_ratios, gained_rstds,
+        plt.errorbar(np.log10(beta_range), gained_ratios, gained_rstds,
                      linestyle='None', marker='^', ms=8)
         plt.xlabel("log(beta)")
         plt.ylabel("discriminant ratio R")
@@ -431,7 +470,7 @@ class Training(InstrumentCollector):
         plt.show()
 
 
-    def choose_beta_pretty(self, mode, fps):
+    def choose_beta_pretty(self, mode, fps, reset=False):
         """
          Chooses the best beta to get the biggest discriminant ratio.
          It's a pretty version of plotting the results.
@@ -439,55 +478,64 @@ class Training(InstrumentCollector):
          :param mode: defines moving markers
          :param fps: frames per second to be set
                      pass as None not to change default fps
+         :param reset: reset (True) or continue (False) progress
         """
-        print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
         begin = time.time()
+        print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
+        if not os.path.exists("choosing_beta.json"): reset = True
         beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+        if reset:
+            betas_left = beta_range
+            progress = {
+                "betas_used": [],
+                "wthnvars": [],
+                "btwvars": [],
+                "ratios": [],
+                "wthnvar_stds": [],
+                "btwvar_stds": [],
+                "ratios_stds": []
+            }
+            print("Reset progress.")
+        else:
+            progress = json.load(open("choosing_beta.json"))
+            start = len(progress["betas_used"])
+            betas_left = beta_range[start:]
+            print("Continue progress from beta = %f" % beta_range[start])
 
-        wthnvars = []
-        btwvars = []
-        ratios = []
-
-        wthnvar_stds = []
-        btwvar_stds = []
-        ratios_stds = []
-
-        for beta in beta_range:
+        for beta in betas_left:
             print("BETA: %f" % beta)
             self.update_ratio(mode, beta, fps)
 
-            wthnvars.append(self.proj_info["within_variance"])
-            btwvars.append(self.proj_info["between_variance"])
-            ratios.append(self.proj_info["d-ratio"])
+            progress["wthnvars"].append(self.proj_info["within_variance"])
+            progress["btwvars"].append(self.proj_info["between_variance"])
+            progress["ratios"].append(self.proj_info["d-ratio"])
 
-            wthnvar_stds.append(self.proj_info["within_std"])
-            btwvar_stds.append(self.proj_info["between_std"])
-            ratios_stds.append(self.proj_info["d-ratio-std"])
+            progress["wthnvar_stds"].append(self.proj_info["within_std"])
+            progress["btwvar_stds"].append(self.proj_info["between_std"])
+            progress["ratios_stds"].append(self.proj_info["d-ratio-std"])
 
-        choosing_beta = tuple(zip(beta_range, ratios, ratios_stds))
-        self.proj_info["choosing beta"] = choosing_beta
-        json.dump(self.proj_info, open(self._info_name, 'w'))
+            json.dump(progress, open("choosing_beta.json", 'w'))
 
-        best_ratio = max(ratios)
-        ind = np.argmax(ratios)
+        ind = np.argmax(progress["ratios"])
+        best_ratio = progress["ratios"][ind]
         best_beta = beta_range[ind]
         print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
 
-        if None in wthnvars:
-            plt.plot(np.log(beta_range), ratios, 'b^-', ms=8)
+        if None in progress["wthnvars"]:
+            plt.plot(np.log10(beta_range), progress["ratios"], 'b^-', ms=8)
             plt.ylabel("Db")
             # std_mean = 100. * np.average(ratios_stds)
             # plt.legend("Db, std=%.1f%%" % std_mean, numpoints=1, loc=3)
             plt.grid()
         else:
-            results = wthnvars, btwvars, ratios
-            resulted_stds = wthnvar_stds, btwvar_stds, ratios_stds
-            std_inf = ["std=%.1f%%" % (100 * np.average(std)) for std in resulted_stds]
+            keys = "wthnvars", "btwvars", "ratios"
+            keys_std = "wthnvar_stds", "btwvar_stds", "ratios_stds"
+            std_inf = ["std=%.1f%%" % (100 * np.average(progress[key_std])) for key_std in keys_std]
             legends = ["%s, %s" % pair for pair in zip(("Dw", "Db", "R"), std_inf)]
             markers = 'ys-', 'b^-', 'go-'
-            for i, (rslt, lgnd, mark) in enumerate(zip(results, legends, markers), start=1):
+            for i, (key, lgnd, mark) in enumerate(zip(keys, legends, markers), start=1):
                 plt.subplot(3, 1, i)
-                plt.plot(np.log(beta_range), rslt, mark)
+                plt.plot(np.log10(beta_range), progress[key], mark)
                 # plt.legend([lgnd], numpoints=1, loc=3)
                 plt.ylabel(lgnd.split(',')[0])
                 plt.grid()
@@ -513,14 +561,14 @@ class Training(InstrumentCollector):
         """
         if not os.path.exists("ratio_vs_fps_progress.json"): reset = True
         if reset:
-            fps_left = np.arange(start, end+1, step)
+            fps_left = np.arange(start, end+step, step)
             progress = {"fps_used": [], "r_got": [], "rstd_got": []}
             print("Reset progress.")
         else:
             progress = json.load(open("ratio_vs_fps_progress.json", 'r'))
             next_fps = progress["fps_used"][-1] + step
             print("Continue progress from FPS = %d." % next_fps)
-            fps_left = np.arange(next_fps, end+1, step)
+            fps_left = np.arange(next_fps, end+step, step)
 
         for fps in fps_left:
             try:

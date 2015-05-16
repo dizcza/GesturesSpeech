@@ -87,7 +87,7 @@
 	</tr>
 	<tr>
     	<td>NN</td>
-		<td>31 / 36</td>
+		<td>29 / 36</td>
 	</tr>
 
 </table>

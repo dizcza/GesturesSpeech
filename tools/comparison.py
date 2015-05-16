@@ -92,7 +92,11 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
         print("WARNING: dtw comparison gave np.inf")
 
     # you can play around with cost normalization
-    # dist /= float(len(path))
+    dist /= float(len(path))
+    # NOTE. If you use precise dtw cost (without a normalization),
+    #       you can end up with better recognition performance
+    #       (lower out-of-sample error) in case of small variance of gesture lengths.
+    #       BUT! It'll cause loss of generality.
 
     return dist
 

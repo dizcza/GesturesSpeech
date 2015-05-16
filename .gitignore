@@ -4,4 +4,3 @@ temp.py
 .idea
 MOCAP/animation/
 __pycache__/
-*ratio_vs_fps_progress.json

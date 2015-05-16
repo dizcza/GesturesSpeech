@@ -71,7 +71,7 @@
 
 
 <p>Given C3D files have too large points frequency (FPS = 120). It's a matter of fact, that between class variance <i>Db</i> does not much depend of the chosen frequency: omitting 90% of data (take each 12'th frame) gives  nearly the same between class variance as raw data do.</p>
-<img src="png/fps.png"/>
+<img src="png/ratio_vs_fps.png"/>
 
 <p>But we should not forget about the within class variance. Unfortunately, having only 1 training example per unique gesture, it's impossibly to compute this characteristic. It can turn out that with the FPS diminishing within class variance will go up, ipso facto reducing the discriminant ratio <i>R = Db / Dw</i>. </p>
 
