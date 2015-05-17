@@ -14,9 +14,6 @@ from tools.kalman import kalman_filter
 
 EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
 
-# TODO deal with camera jerking (58-1-1) --> blur
-# TODO decide what to do with gaussian filter and slope aligning
-
 
 class Emotion(BasicMotion):
     def __init__(self, pkl_path, fps=None):
@@ -49,6 +46,7 @@ class Emotion(BasicMotion):
         return s
 
     def preprocessor(self):
+        # TODO deal with camera jerking and camera slope
         # step 0: dealing with first frame bug
         self.data = self.data[:, 1:, :]
         self.frames -= 1
@@ -139,6 +137,7 @@ class Emotion(BasicMotion):
         """
          Applies gaussian smoothing filter (also called low-pass filter)
          to the sequence of XY for each marker independently.
+         (NOT USED ANYMORE)
         """
         track_next = 7
         frames_total = self.norm_data.shape[1]
@@ -166,21 +165,6 @@ class Emotion(BasicMotion):
                 blur_factor = 1. - np.exp(- accumulated_offset / (2 * sigmas))
                 _dx *= blur_factor
                 self.norm_data[markerID,frame,:] = self.norm_data[markerID,frame-1,:] + _dx
-
-    def slope_align(self):
-        # step 2: slope aligning (not used anymore)
-        eyebrow_ids = self.get_ids("ebr_or", "ebr_ir", "ebr_il", "ebr_ol")
-        eye_ids = self.get_ids("eup_r", "edn_r", "eup_l", "edn_l")
-        cheek_ids = self.get_ids("chr", "wr", "wl", "chl")
-        lip_ids = self.get_ids("lir", "liup", "lidn", "lil")
-        jaw_id = self.get_ids("jaw")
-        median_points = []
-        for ids in (eyebrow_ids, eye_ids, cheek_ids, lip_ids, jaw_id):
-            xy_aver = np.average(np.average(self.data[ids, ::], axis=1), axis=0)
-            median_points.append(xy_aver)
-            print(xy_aver)
-        median_points = np.resize(median_points, new_shape=(5, 2))
-        self.coef = np.polyfit(median_points[:, 0], median_points[:, 1], deg=1)
 
     def next_frame(self, frame):
         """
@@ -249,7 +233,8 @@ def demo_run():
     """
      Emotion project demo.
     """
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\47-3-1.pkl")
+    em_path = os.path.join(EMOTION_PATH_PICKLES, "Training", "улыбка", "47-3-1.pkl")
+    em = Emotion(em_path)
     print(em)
     em.show_displacements(None, ("liup", "lidn", "jaw", "lir", "lil"))
     em.animate()

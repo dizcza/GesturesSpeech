@@ -23,7 +23,7 @@
   <source src="video_example.mp4" type="video/mp4">
 </video>
 
-
+<img src="png/anim.gif"/>
 
 <h2 id="info">Projects info</h2>
 <ul>

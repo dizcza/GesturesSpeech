@@ -93,7 +93,10 @@ class InstrumentCollector(object):
         """
          Computes aver weights from the Training dataset.
         :param mode: defines moving markers
-        :param beta: to be choosing to yield the biggest ratio
+        :param beta: (float), defines weights activity;
+                      the best beta value is around 100;
+                      set it to None to model when beta vanishes;
+                      warn: setting beta to 0 causes an error.
         :param fps: frames per second to be set
                     pass as None not to change default fps
         """
@@ -121,7 +124,7 @@ class InstrumentCollector(object):
             sub_project = os.path.basename(self.prefix)
             self.proj_info["weights"][sub_project] = global_weights
 
-        json.dump(self.proj_info,  open(self._info_name,  'w'))
+        json.dump(self.proj_info, open(self._info_name, 'w'))
         print("New weights are saved in %s" % self._info_name)
 
 
@@ -135,15 +138,13 @@ class Testing(InstrumentCollector):
 
     def the_worst_comparison(self, fps, verbose=True):
         """
-         Computes the worst and the best out-of-sample error.
-         NOTE: comparison is made by choosing the ABSOLUTE lowest DTW cost
-               among examples -- without its normalizing by the path length,
-               since the last one rises in-sample and out-of-sample errors.
+         Computes the worst and the best out-of-sample error, using WDTW algorithm.
         :param fps: fps to be set in each gesture
                     pass as None not to change default fps
         :param verbose: verbose display (True) or silent (False)
         """
-        print("%s: the_worst_between_comparison is running (FPS = %s)" % (self.MotionClass.__name__, fps))
+        # TODO set confidence measure
+        print("%s: TWE WORST COMPARISON is running (FPS = %s)" % (self.MotionClass.__name__, fps))
         start = time.time()
 
         patterns = {}
@@ -209,7 +210,9 @@ class Testing(InstrumentCollector):
             tst_samples = len(os.listdir(tst_subfolder))
             total_samples += tst_samples
             if verbose:
-                msg = "  %s: \t\t min = %d, max = %d out of %d test samples" % (dir, infimum[dir], supremum[dir], tst_samples)
+                msg = "  %s: \t\t min = %d, max = %d out of %d test samples" % (
+                    dir, infimum[dir], supremum[dir], tst_samples
+                )
                 print(msg)
         total_supremum = sum(supremum.values())
         total_infimum = sum(infimum.values())
@@ -221,13 +224,19 @@ class Testing(InstrumentCollector):
         return total_infimum, total_supremum, total_samples
 
 
-    def error_vs_fps(self):
+    def error_vs_fps(self, mode, beta):
         """
          Plots the out-of-sample error VS fps.
+         :param mode: defines moving markers
+         :param beta: (float), defines weights activity;
+                      the best beta value is around 100;
+                      set it to None to model when beta vanishes;
+                      warn: setting beta to 0 causes an error.
         """
-        fps_range = range(2, 14, 1)
+        fps_range = range(2, 11, 1)
         test_errors = []
         for fps in fps_range:
+            self.compute_weights(mode, beta, fps)
             inf, sup, tot = self.the_worst_comparison(fps, verbose=False)
             Etest = float(sup) / tot
             test_errors.append(Etest)
@@ -410,7 +419,10 @@ class Training(InstrumentCollector):
         """
          Updates weights, within and between variance for the given beta param.
         :param mode: defines moving markers
-        :param beta: to be choosing to yield the biggest ratio
+        :param beta: (float), defines weights activity;
+                      the best beta value is around 100;
+                      set it to None to model when beta vanishes;
+                      warn: setting beta to 0 causes an error.
         :param fps: frames per second to be set
                     pass as None not to change default fps
         :param verbose: verbose display (True) or silent (False)
@@ -448,19 +460,19 @@ class Training(InstrumentCollector):
                      pass as None not to change default fps
         """
         print("%s: choosing the beta (simple) with FPS = %s" % (self.MotionClass.__name__, fps))
-        beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+        beta_range = 1e-6, 1e-3, 1e0, 1e1, 1e2, 1e3
         gained_ratios = []
         gained_rstds = []
         for beta in beta_range:
-            print("BETA: %f" % beta)
+            print("BETA: %.1e" % beta)
             self.update_ratio(mode, beta, fps)
             gained_ratios.append(self.proj_info["d-ratio"])
             gained_rstds.append(self.proj_info["d-ratio-std"])
 
-        best_ratio = max(gained_ratios)
         ind = np.argmax(gained_ratios)
+        best_ratio = gained_ratios[ind]
         best_beta = beta_range[ind]
-        print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
+        print("BEST RATIO: %g, w.r.t. beta = %.1e" % (best_ratio, best_beta))
         plt.errorbar(np.log10(beta_range), gained_ratios, gained_rstds,
                      linestyle='None', marker='^', ms=8)
         plt.xlabel("log(beta)")
@@ -483,7 +495,7 @@ class Training(InstrumentCollector):
         begin = time.time()
         print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
         if not os.path.exists("choosing_beta.json"): reset = True
-        beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+        beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5
         if reset:
             betas_left = beta_range
             progress = {
@@ -493,17 +505,19 @@ class Training(InstrumentCollector):
                 "ratios": [],
                 "wthnvar_stds": [],
                 "btwvar_stds": [],
-                "ratios_stds": []
+                "ratios_stds": [],
+                "duration": None
             }
             print("Reset progress.")
         else:
             progress = json.load(open("choosing_beta.json"))
             start = len(progress["betas_used"])
             betas_left = beta_range[start:]
-            print("Continue progress from beta = %f" % beta_range[start])
+            print("Last computed beta was %.1e" % beta_range[start-1])
 
         for beta in betas_left:
-            print("BETA: %f" % beta)
+            start_clock = time.ctime() + ":\t"
+            print(start_clock + "PROCESSING BETA = %.1e" % beta)
             self.update_ratio(mode, beta, fps)
 
             progress["wthnvars"].append(self.proj_info["within_variance"])
@@ -514,46 +528,55 @@ class Training(InstrumentCollector):
             progress["btwvar_stds"].append(self.proj_info["between_std"])
             progress["ratios_stds"].append(self.proj_info["d-ratio-std"])
 
+            progress["betas_used"].append(beta)
+            progress["duration"] += int(time.time() - begin)
+
             json.dump(progress, open("choosing_beta.json", 'w'))
 
-        ind = np.argmax(progress["ratios"])
-        best_ratio = progress["ratios"][ind]
-        best_beta = beta_range[ind]
-        print("BEST RATIO: %g, w.r.t. beta = %g" % (best_ratio, best_beta))
+        ind_highlight = np.argmax(progress["ratios"])
+        best_ratio = progress["ratios"][ind_highlight]
+        best_beta = beta_range[ind_highlight]
+        print("BEST RATIO: %g, w.r.t. beta = %.1e" % (best_ratio, best_beta))
 
         if None in progress["wthnvars"]:
             plt.plot(np.log10(beta_range), progress["ratios"], 'b^-', ms=8)
             plt.ylabel("Db")
-            # std_mean = 100. * np.average(ratios_stds)
-            # plt.legend("Db, std=%.1f%%" % std_mean, numpoints=1, loc=3)
+            std_pct = np.divide(progress["ratios_stds"], progress["ratios"])
+            std_mean = 100. * np.average(std_pct)
+            plt.legend("Db, std=%.1f%%" % std_mean, numpoints=1, loc=3)
             plt.grid()
         else:
             keys = "wthnvars", "btwvars", "ratios"
             keys_std = "wthnvar_stds", "btwvar_stds", "ratios_stds"
-            std_inf = ["std=%.1f%%" % (100 * np.average(progress[key_std])) for key_std in keys_std]
+            std_inf = []
+            for i in range(3):
+                std_pct = np.divide(progress[keys_std[i]], progress[keys[i]])
+                std_pct = 100. * np.average(std_pct)
+                std_inf.append("std=%.1f%%" % std_pct)
             legends = ["%s, %s" % pair for pair in zip(("Dw", "Db", "R"), std_inf)]
             markers = 'ys-', 'b^-', 'go-'
             for i, (key, lgnd, mark) in enumerate(zip(keys, legends, markers), start=1):
                 plt.subplot(3, 1, i)
                 plt.plot(np.log10(beta_range), progress[key], mark)
-                # plt.legend([lgnd], numpoints=1, loc=3)
+                plt.legend([lgnd], numpoints=1, loc=6)
                 plt.ylabel(lgnd.split(',')[0])
                 plt.grid()
         plt.xlabel("log(beta)")
         plt.suptitle("Choosing the best beta")
-
         plt.savefig("png/choosing_beta.png")
-        end = time.time()
-        print("\t Duration: ~%d m" % ((end - begin) / 60.))
+        json.dump(progress, open("choosing_beta.json", 'w'))
+        print("\t Duration: ~%d m" % (progress["duration"] / 60.))
         plt.show()
-        # TODO merge Db and Dw on one plot
 
 
     def ratio_vs_fps(self, mode, beta, start, end, step=1, reset=False):
         """
          Displays discriminant ratio vs fps.
         :param mode: defines moving markers
-        :param beta: to be choosing to yield the biggest ratio
+        :param beta: (float), defines weights activity;
+                      the best beta value is around 100;
+                      set it to None to model when beta vanishes;
+                      warn: setting beta to 0 causes an error.
         :param start: lower fps
         :param end: upper fps
         :param step: fps step

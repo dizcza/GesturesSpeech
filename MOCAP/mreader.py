@@ -187,7 +187,8 @@ def demo_run():
     """
      MoCap project demo.
     """
-    gest = HumanoidUkr(r"D:\GesturesDataset\MoCap\splitAll\M1_02_v2_gest1_sample0.c3d")
+    gest_path = os.path.join(MOCAP_PATH, "Training", "M1_02_v2_gest1", "M1_02_v2_gest1_sample0.c3d")
+    gest = HumanoidUkr(gest_path)
     print(gest)
     rhand_labels = [label for label in gest.moving_markers if label[0] == 'R']
     gest.plot_displacement("bothHands", rhand_labels)

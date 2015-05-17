@@ -1,7 +1,7 @@
-# coding = utf-8
+# coding=utf-8
 
 """
-Reference:
+Kinect project (HumanoidKinect class) is based upon database from the reference:
   @inproceedings{celebi2013gesture,
       author    = {Sait Celebi and Ali Selman Aydin and Talha Tarik Temiz and Tarik Arici},
       title     = {{Gesture Recognition Using Skeleton Data with Weighted Dynamic Time Warping}},
@@ -136,9 +136,9 @@ def demo_run():
     """
      Kinect project demo.
     """
-    gest = HumanoidKinect("D:\GesturesDataset\KINECT\Training\RightHandPushUp\RightHandPushUp_000.txt")
+    gest_path = os.path.join(KINECT_PATH, "Training", "RightHandPushUp", "RightHandPushUp_000.txt")
+    gest = HumanoidKinect(gest_path)
     print(gest)
-    print(gest.labels)
     gest.show_displacements("bothHands", ("ElbowRight", "WristRight", "HandRight"))
     gest.animate()
 

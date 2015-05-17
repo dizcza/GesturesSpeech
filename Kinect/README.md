@@ -28,10 +28,6 @@
     <td>plots training results</td>
   </tr>
   <tr>
-    <td>choosing_beta_log.txt</td>
-    <td>gathers the log session during the training process</td>
-  </tr>
-  <tr>
     <td>KINECT_INFO.json</td>
     <td>stores the weights and the last training results</td>
   </tr>

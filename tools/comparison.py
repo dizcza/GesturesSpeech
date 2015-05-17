@@ -97,6 +97,8 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
     #       you can end up with better recognition performance
     #       (lower out-of-sample error) in case of small variance of gesture lengths.
     #       BUT! It'll cause loss of generality.
+    #       In our case, using normalization yields better results
+    #       and thus without loss of generality.
 
     return dist
 
@@ -136,5 +138,3 @@ def show_comparison(known_gest, unknown_gest):
     plt.ylabel("FRAMES #2: %s" % unknown_gest.name)
     plt.title("Weighted DTW frames path")
     plt.show()
-
-# TODO use dtw norm

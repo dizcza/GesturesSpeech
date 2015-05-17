@@ -9,9 +9,6 @@ from numpy.linalg import norm
 from tools.basic import BasicMotion
 
 
-# TODO set confidence measure
-
-
 class HumanoidBasic(BasicMotion):
     """
      Constructs a humanoid with empty fields and basic methods.

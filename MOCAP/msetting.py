@@ -18,14 +18,15 @@ def upd_ratio(hand_mode="bothHands", beta=None, fps=None):
     Training(HumanoidUkr).update_ratio(hand_mode, beta, fps, verbose=True)
 
 
-def choose_beta(hand_mode="bothHands", fps=None):
+def choose_beta(hand_mode="bothHands", fps=None, reset=False):
     """
      Chooses the best beta (which yields the biggest discriminant ratio R),
      w.r.t. hand mode and fps params.
     """
-    Training(HumanoidUkr).choose_beta_pretty(hand_mode, fps)
+    Training(HumanoidUkr).choose_beta_pretty(hand_mode, fps, reset)
 
 
 if __name__ == "__main__":
-    plot_ratio_vs_fps()
+    # plot_ratio_vs_fps()
+    choose_beta()
     # FIXME repair fps.png

@@ -93,10 +93,11 @@ class Viewer(pyglet.window.Window):
             config = screen.get_best_config(Config())
 
         super(Viewer, self).__init__(
-            width=800, height=450, resizable=True, vsync=False, config=config)
+            width=800, height=650, resizable=True, vsync=False, config=config)
 
         self._frames = c3d_reader.read_frames(copy=False)
         self._frame_rate = c3d_reader.header.frame_rate
+        self._frame_id = 0
 
         self._maxlen = 16
         self._trails = [[] for _ in range(c3d_reader.point_used)]
@@ -105,11 +106,11 @@ class Viewer(pyglet.window.Window):
         self.trace = trace
         self.paused = paused
 
-        self.zoom = 2
+        self.zoom = 2.2
         self.ty = 0
         self.tz = -1
-        self.ry = 10
-        self.rz = -60
+        self.ry = 30
+        self.rz = -50
 
         # self.fps = pyglet.clock.ClockDisplay()
 
@@ -224,6 +225,8 @@ class Viewer(pyglet.window.Window):
         self._trails = [collections.deque(t, self._maxlen) for t in self._trails]
 
     def _next_frame(self):
+        # pyglet.image.get_buffer_manager().get_color_buffer().save("%d.png" % self._frame_id)
+        self._frame_id += 1
         return next(self._frames)
 
     def update(self, dt):

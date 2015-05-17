@@ -40,13 +40,10 @@ class BasicMotion(object):
         s += "\t data std: \t\t %.5f m " % self.std
         return s
 
-    def is_good(self):
-        """
-        :return: tells whether it contains nan weights (bad guy) or not (good guy)
-        """
-        return True
-
     def define_moving_markers(self, mode):
+        """
+        Defines moving markers to be used in WDTW, w.r.t. mode.
+        """
         msg = "moving markers should be defined properly or set by default"
         assert mode is None, msg
         self.moving_markers = tuple(self.labels)

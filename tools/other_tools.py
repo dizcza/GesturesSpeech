@@ -16,7 +16,7 @@ def plot_error_vs_fps():
      Plots the out-of-sample error VS fps for both projects:
      Kinect and MOCAP (in comparison)
     """
-    fps_range = range(2, 14, 1)
+    fps_range = range(2, 11, 1)
     mark_size = 10
     for class_name in (HumanoidKinect, HumanoidUkr):
         proj = Testing(class_name)
