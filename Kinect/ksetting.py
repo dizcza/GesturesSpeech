@@ -11,13 +11,6 @@ def plot_ratio_vs_fps(hand_mode="bothHands", beta=None, reset=False):
     Training(HumanoidKinect).ratio_vs_fps(hand_mode, beta, 2, 30, 1, reset)
 
 
-def upd_ratio(hand_mode="bothHands", beta=None, fps=None):
-    """
-     Updates discriminant ratio, w.r.t. hand mode, beta and fps params.
-    """
-    Training(HumanoidKinect).update_ratio(hand_mode, beta, fps, verbose=True)
-
-
 def choose_beta(hand_mode="bothHands", fps=None, reset=False):
     """
      Chooses the best beta (which yields the biggest discriminant ratio R),
@@ -27,5 +20,5 @@ def choose_beta(hand_mode="bothHands", fps=None, reset=False):
 
 
 if __name__ == "__main__":
-    plot_ratio_vs_fps(reset=False)
-    # choose_beta(reset=False)
+    # plot_ratio_vs_fps(reset=False)
+    choose_beta()

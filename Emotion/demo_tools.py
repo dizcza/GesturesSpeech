@@ -1,13 +1,13 @@
 # coding=utf-8
 
 import os
-
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
+from copy import deepcopy
 
 from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
-from tools.kalman import kalman_1d
+from tools.kalman import kalman_1d, kalman_filter
 
 
 def estimate_sensory_noise():
@@ -33,7 +33,7 @@ def demo_kalman():
         plt.subplot(211)
         x_real = em.data[markerID, :, 0]
         x_real = x_real[~np.isnan(x_real)]
-        x_real_opt = kalman_1d(x_real, 0.2)
+        x_real_opt = kalman_1d(x_real, 0.15)
         # x_real_opt = kalman_1d(x_real_opt)
         plt.plot(x_real, linewidth=2)
         plt.plot(x_real_opt, linewidth=2)
@@ -54,7 +54,8 @@ def demo_kalman():
         plt.show()
 
 
+
 if __name__ == "__main__":
-    sigma_sensor = estimate_sensory_noise()
-    print(sigma_sensor)
-    # demo_kalman()
+    demo_kalman()
+    # sigma_sensor = estimate_sensory_noise()
+    # print(sigma_sensor)

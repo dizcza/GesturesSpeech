@@ -2,6 +2,7 @@
 
 import numpy as np
 import json
+import time
 from pybrain.tools.customxml.networkreader import NetworkReader
 from tools.neural_network.trainingNN import extract_features, collect_gestures
 
@@ -12,6 +13,7 @@ from tools.instruments import InstrumentCollector
 
 
 def test_project(instr):
+    start = time.time()
     print("%s: NETWORK TESTING" % instr.MotionClass.__name__)
     trn_samples, tst_samples, names_convention = collect_gestures(instr)
 
@@ -24,18 +26,17 @@ def test_project(instr):
     sizes = len(trn_samples), len(tst_samples)
     for i, patch_set in enumerate([trn_samples, tst_samples]):
         for sample in patch_set:
-            features_map, status = extract_features(sample, moving_marks, use_frames)
-            if status == "OK":
-                prob = net.activate(features_map)
-                ind_got = np.argmax(prob)
-                ind_shouldbe = names_convention[sample.name]
-                if ind_got != ind_shouldbe:
-                    misclassified[i] += 1
-            else:
-                sizes[i] -= 1
+            features_map = extract_features(sample, moving_marks, use_frames)
+            prob = net.activate(features_map)
+            ind_got = np.argmax(prob)
+            ind_shouldbe = names_convention[sample.name]
+            if ind_got != ind_shouldbe:
+                misclassified[i] += 1
     errors = 100. * np.divide(misclassified, sizes)
+    duration_per_sample = 1000. * (time.time() - start) / sum(sizes)
     msg = "in-sample error: %f%% (%d / %d)\n" % (errors[0], misclassified[0], sizes[0])
-    msg += "out-of-sample error: %f%% (%d / %d)" % (errors[1], misclassified[1], sizes[1])
+    msg += "out-of-sample error: %f%% (%d / %d)\n" % (errors[1], misclassified[1], sizes[1])
+    msg += "duration per sample: %d ms" % duration_per_sample
     print(msg)
 
 
@@ -53,5 +54,6 @@ def test_emotion():
 
 
 if __name__ == "__main__":
-    # test_emotion()
-    test_kinect()
+    test_emotion()
+    # test_kinect()
+    # test_mocap()

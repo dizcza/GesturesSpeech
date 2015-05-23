@@ -24,13 +24,13 @@ def plot_error_vs_fps():
         for fps in fps_range:
             inf, sup, tot = proj.the_worst_comparison(fps, verbose=False)
             Etest = float(sup) / tot
-            test_errors.append(Etest)
+            test_errors.append(100. * Etest)
         plt.plot(fps_range, test_errors, 'o--', ms=mark_size)
         mark_size -= 3
-    plt.ylabel("Etest")
+    plt.ylabel("Etest, %")
     plt.xlabel("FPS")
     plt.ylim(ymin=-0.01)
-    plt.xlim(1, 14)
+    plt.xlim(1, 12)
     plt.title("out-of-sample error VS fps")
     plt.grid()
     plt.legend(["Kinect", "MoCap"], numpoints=1)

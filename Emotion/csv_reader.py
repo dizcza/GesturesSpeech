@@ -108,22 +108,39 @@ def dump_pickles():
           "#################################################################"
     print(msg)
     for directory in os.listdir(EMOTION_PATH_CSV):
-        file_info = {}
-        data_dic = {}
-        dir_path = os.path.join(EMOTION_PATH_CSV, directory)
-        for marker_log in os.listdir(dir_path):
-            if marker_log.endswith(".csv"):
-                log_path = os.path.join(dir_path, marker_log)
-                data_dic[marker_log[:-4]] = np.genfromtxt(log_path, delimiter=',')
-        gathered_data = to_array(data_dic)
-        file_info["data"] = cut_frames_if_needed(gathered_data, boundaries, directory)
-        file_info["author"] = find_key_by_val(writers, directory)
-        file_info["emotion"] = find_key_by_val(emotions, directory)
-        file_info["labels"] = list(data_dic.keys())
-        fpath = os.path.join(EMOTION_PATH_PICKLES, directory + ".pkl")
-        pickle.dump(file_info, open(fpath, 'wb'))
+        convert_dir(directory, emotions, writers, boundaries)
     upd_excel()
     split_data()
+
+
+def convert_dir(directory, *args):
+    """
+     Converts specified csv directory into pickled format.
+    :param directory: dir with csv files for each tracked marker
+    :param emotions: emotions basket (dict)
+    :param writers: authors basket (dict)
+    :param boundaries: cut-off boundaries (dict)
+    """
+    if args:
+        emotions, writers, boundaries = args
+    else:
+        emotions, writers, boundaries = parse_xls()
+        check_uniqueness(writers)
+        check_uniqueness(emotions)
+    file_info = {}
+    data_dic = {}
+    dir_path = os.path.join(EMOTION_PATH_CSV, directory)
+    for marker_log in os.listdir(dir_path):
+        if marker_log.endswith(".csv"):
+            log_path = os.path.join(dir_path, marker_log)
+            data_dic[marker_log[:-4]] = np.genfromtxt(log_path, delimiter=',')
+    gathered_data = to_array(data_dic)
+    file_info["data"] = cut_frames_if_needed(gathered_data, boundaries, directory)
+    file_info["author"] = find_key_by_val(writers, directory)
+    file_info["emotion"] = find_key_by_val(emotions, directory)
+    file_info["labels"] = list(data_dic.keys())
+    fpath = os.path.join(EMOTION_PATH_PICKLES, directory + ".pkl")
+    pickle.dump(file_info, open(fpath, 'wb'))
 
 
 def to_array(data_dic):
@@ -279,3 +296,4 @@ def split_data(trn_rate=0.5):
 if __name__ == "__main__":
     dump_pickles()
     # split_data()
+    # convert_dir("46-4-1")

@@ -65,8 +65,7 @@ class Emotion(BasicMotion):
         base_line = norm(top_point - self.data[jaw,0,:])
         self.norm_data /= base_line
 
-        # step 3: gaussian blurring filter
-        # self.gaussian_filter()
+        # step 3: kalman filter
         self.norm_data = kalman_filter(self.norm_data)
 
         # step 4: deal eye winking
@@ -198,7 +197,6 @@ class Emotion(BasicMotion):
                                        blit=True)
         try:
             plt.show(self.fig)
-            # plt.draw()
         except AttributeError:
             pass
 

@@ -176,8 +176,7 @@ class BasicMotion(object):
         :param beta: param to be chosen during the training
         """
         self.compute_displacement(mode)
-        if beta is None:
-            # beta == 0
+        if beta is None or beta == 0:
             denom = np.sum(list(self.joint_displace.values()))
             for marker in self.labels:
                 self.weights[marker] = self.joint_displace[marker] / denom

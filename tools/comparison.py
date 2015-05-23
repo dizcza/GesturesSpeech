@@ -64,7 +64,7 @@ def align_data_shape(known_gest, unknown_gest):
     return data1, data2, weights
 
 
-def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
+def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True):
     """
      Main comparison function for two gesture examples.
      NOTE:
@@ -74,6 +74,7 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
     :param known_gest: sequence known to be in some gesture class
     :param unknown_gest: unknown test sequence
     :param dtw_chosen: fastdtw or _dtw (classic)
+    :param weighted: use weighted FastDTW modification or just FastDTW
     :return: (float), similarity (cost) of the given gestures
     """
     if known_gest.labels == unknown_gest.labels:
@@ -82,6 +83,8 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw):
         weights = known_gest.get_weights()
     else:
         data1, data2, weights = align_data_shape(known_gest, unknown_gest)
+
+    if not weighted: weights = np.ones(data1.shape[0])
 
     if not data1.any() or not data2.any():
         print("Incompatible data dimensions. Returned np.inf")

@@ -44,12 +44,11 @@ def extract_features(_gest, moving_marks, use_frames):
                 else:
                     visibleMarker_lastFrame[markerID] = frame
 
-    if np.isnan(data).any():
-        return [], "FAIL"
+    assert not np.isnan(data).any(), "do smth with NaNs"
 
     x = np.ravel(data)
     delta = np.max(x) - np.min(x)
-    return tuple(x / delta), "OK"
+    return tuple(x / delta)
 
 
 def get_input_layer_dim(gest, moving_marks, use_frames):
@@ -150,10 +149,9 @@ def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
         pybrn_data = ClassificationDataSet(input_layer_dim, 1,
                                            nb_classes=len(names_convention))
         for sample in dataset:
-            features_map, status = extract_features(sample, moving_marks, use_frames)
-            if status == "OK":
-                letter_class = names_convention[sample.name]
-                pybrn_data.addSample(features_map, [letter_class])
+            features_map = extract_features(sample, moving_marks, use_frames)
+            letter_class = names_convention[sample.name]
+            pybrn_data.addSample(features_map, [letter_class])
         pybrn_data._convertToOneOfMany()
         two_datasets.append(pybrn_data)
     trndata, tstdata = two_datasets
@@ -233,6 +231,6 @@ def train_mocap():
 
 
 if __name__ == "__main__":
-    # train_emotion()
+    train_emotion()
     # train_kinect()
-    train_mocap()
+    # train_mocap()

@@ -18,19 +18,15 @@ class InstrumentCollector(object):
     def __init__(self, MotionClass, prefix=""):
         self.MotionClass = MotionClass
         self.prefix = prefix
-        _paths = {
-            "HumanoidUkr": MOCAP_PATH,
-            "HumanoidKinect": KINECT_PATH,
-            "Emotion": EMOTION_PATH_PICKLES,
-            "EmotionArea": None
-        }
+        _paths = dict(HumanoidUkr=MOCAP_PATH,
+                      HumanoidKinect=KINECT_PATH,
+                      Emotion=EMOTION_PATH_PICKLES,
+                      EmotionArea=None)
         self.proj_path = _paths[MotionClass.__name__]
-        names_collection = {
-            "HumanoidUkr": "MOCAP_INFO.json",
-            "HumanoidKinect": "KINECT_INFO.json",
-            "Emotion": "EMOTION_INFO.json",
-            "EmotionArea": "EMOTION_AREAS_INFO.json"
-        }
+        names_collection = dict(HumanoidUkr="MOCAP_INFO.json",
+                                HumanoidKinect="KINECT_INFO.json",
+                                Emotion="EMOTION_INFO.json",
+                                EmotionArea="EMOTION_AREAS_INFO.json")
         self.proj_info = {}
         self._info_name = names_collection[MotionClass.__name__]
         if prefix == "":
@@ -67,13 +63,13 @@ class InstrumentCollector(object):
                     pass as None not to change default fps
         :return: training gestures
         """
-        for directory in os.listdir(self.trn_path):
-            trn_subfolder = os.path.join(self.trn_path, directory)
-            for trn_name in os.listdir(trn_subfolder):
-                fpath_trn = os.path.join(trn_subfolder, trn_name)
+        for class_name in os.listdir(self.trn_path):
+            class_path = os.path.join(self.trn_path, class_name)
+            for trn_name in os.listdir(class_path):
+                fpath_trn = os.path.join(class_path, trn_name)
                 gest = self.MotionClass(fpath_trn, fps)
                 self.train_gestures.append(gest)
-        return self.train_gestures
+        return tuple(self.train_gestures)
 
     def load_test_samples(self, fps):
         """
@@ -87,16 +83,15 @@ class InstrumentCollector(object):
                 fpath_tst = os.path.join(tst_subfolder, tst_name)
                 gest = self.MotionClass(fpath_tst, fps)
                 self.test_gestures.append(gest)
-        return self.test_gestures
+        return tuple(self.test_gestures)
 
     def compute_weights(self, mode, beta, fps):
         """
          Computes aver weights from the Training dataset.
         :param mode: defines moving markers
         :param beta: (float), defines weights activity;
-                      the best beta value is around 100;
+                      the best beta value is around 1e2;
                       set it to None to model when beta vanishes;
-                      warn: setting beta to 0 causes an error.
         :param fps: frames per second to be set
                     pass as None not to change default fps
         """
@@ -136,16 +131,29 @@ class Testing(InstrumentCollector):
     def __init__(self, MotionClass, prefix=""):
         InstrumentCollector.__init__(self, MotionClass, prefix)
 
-    def the_worst_comparison(self, fps, verbose=True):
+    def the_worst_comparison(self, fps, verbose=True, weighted=True):
         """
          Computes the worst and the best out-of-sample error, using WDTW algorithm.
         :param fps: fps to be set in each gesture
                     pass as None not to change default fps
         :param verbose: verbose display (True) or silent (False)
+        :param weighted: use weighted FastDTW modification or just FastDTW
         """
         # TODO set confidence measure
+
+        def print_err(got_pattern, unknownGest):
+            if verbose:
+                msg = "got %s" % got_pattern.name
+                if hasattr(got_pattern, "fname"):
+                    msg += " (file: %s)" % got_pattern.fname
+                msg += ", should be %s" % unknownGest.name
+                if hasattr(unknownGest, "fname"):
+                    msg += " (file: %s)" % unknownGest.fname
+                print(msg)
+
         print("%s: TWE WORST COMPARISON is running (FPS = %s)" % (self.MotionClass.__name__, fps))
         start = time.time()
+        self.load_info()
 
         patterns = {}
         supremum = {}
@@ -171,37 +179,33 @@ class Testing(InstrumentCollector):
                 other_costs = []
 
                 for theSamePattern in patterns[directory]:
-                    dist = compare(theSamePattern, unknownGest)
+                    dist = compare(theSamePattern, unknownGest, weighted=weighted)
                     the_same_costs.append(dist)
 
                 other_patterns = []
                 for class_name, gestsLeft in patterns.items():
                     if class_name != directory:
                         for knownGest in gestsLeft:
-                            dist = compare(knownGest, unknownGest)
+                            dist = compare(knownGest, unknownGest, weighted=weighted)
                             other_costs.append(dist)
                             other_patterns.append(knownGest)
                 min_other_cost = min(other_costs)
 
                 if max(the_same_costs) >= min_other_cost:
+                    # the worst test scenario is FAILED
                     ind = np.argmin(other_costs)
                     got_pattern = other_patterns[ind]
-                    if got_pattern.name != unknownGest.name:
-                        supremum[directory] += 1.
-                        if verbose:
-                            msg = "got %s" % got_pattern.name
-                            if hasattr(got_pattern, "fname"):
-                                msg += " (file: %s)" % got_pattern.fname
-                            msg += ", should be %s" % unknownGest.name
-                            if hasattr(unknownGest, "fname"):
-                                msg += " (file: %s)" % unknownGest.fname
-                            print(msg)
+                    assert got_pattern.name != unknownGest.name, "smth is wrong"
+                    supremum[directory] += 1.
+                    # print_err(got_pattern, unknownGest)
 
                 if min(the_same_costs) >= min_other_cost:
+                    # both the worst and the best test scenarios are FAILED
                     ind = np.argmin(other_costs)
                     got_pattern = other_patterns[ind]
-                    if got_pattern.name != unknownGest.name:
-                        infimum[directory] += 1
+                    assert got_pattern.name != unknownGest.name, "smth is wrong"
+                    infimum[directory] += 1
+                    print_err(got_pattern, unknownGest)
 
         total_samples = 0
         print("The result is shown in number of misclassified samples: ")
@@ -216,6 +220,8 @@ class Testing(InstrumentCollector):
                 print(msg)
         total_supremum = sum(supremum.values())
         total_infimum = sum(infimum.values())
+        self.proj_info["error"]["inf"] = float(total_infimum) / total_samples
+        self.proj_info["error"]["sup"] = float(total_supremum) / total_samples
         print("*** THE BEST CASE: %d; \tTHE WORST CASE: %d; \t TOTAL SAMPLES: %d" %
               (total_infimum, total_supremum, total_samples))
         duration = time.time() - start
@@ -231,7 +237,6 @@ class Testing(InstrumentCollector):
          :param beta: (float), defines weights activity;
                       the best beta value is around 100;
                       set it to None to model when beta vanishes;
-                      warn: setting beta to 0 causes an error.
         """
         fps_range = range(2, 11, 1)
         test_errors = []
@@ -348,7 +353,7 @@ class Training(InstrumentCollector):
         one_vs_others_var = []
         trn_samples = self.load_train_samples(fps)
         for firstGest in trn_samples:
-            for goingGest in trn_samples:
+            for goingGest in tuple(trn_samples):
                 if firstGest.name != goingGest.name:
                     dist = compare(firstGest, goingGest)
                     one_vs_others_var.append(dist)
@@ -360,55 +365,8 @@ class Training(InstrumentCollector):
 
         if verbose:
             duration = time.time() - start_timer
-            info = "Done with: \n\t between-var: %g \n\t " % between_var
-            info += "between-std: %g\n\t" % between_std
-            info += "duration: %d sec\n" % duration
-            print(info)
-
-        return between_var
-
-
-    def compute_between_variance_old(self, fps, verbose=True):
-        """
-         Computes aver between variance from the Training dataset.
-         It's incorrect but faster implementation.
-         :param fps: frames per second to be set
-                     pass as None not to change default fps
-         :param verbose: verbose display (True) or silent (False)
-         :return: (float), the averaged dist between two samples from different classes
-        """
-        print("%s: COMPUTING BETWEEN VARIANCE (OLD)" % self.MotionClass.__name__)
-        start_timer = time.time()
-        self.load_info()
-        trndirs = os.listdir(self.trn_path)
-        roots = [os.path.join(self.trn_path, one) for one in trndirs]
-
-        one_vs_others_var = []
-        while len(roots) > 1:
-            first_dir = roots[0]
-            dirs_left = roots[1:]
-            for first_log in os.listdir(first_dir):
-                first_log_path = os.path.join(first_dir, first_log)
-                firstGest = self.MotionClass(first_log_path, fps)
-                for other_dir in dirs_left:
-                    for other_log in os.listdir(other_dir):
-                        full_filename = os.path.join(other_dir, other_log)
-                        goingGest = self.MotionClass(full_filename, fps)
-                        dist = compare(firstGest, goingGest)
-                        one_vs_others_var.append(dist)
-            roots.pop(0)
-
-        between_var = np.average(one_vs_others_var)
-        between_std = np.std(one_vs_others_var)
-
-        self.proj_info["between_variance"] = between_var
-        self.proj_info["between_std"] = between_std
-        json.dump(self.proj_info, open(self._info_name, 'w'))
-
-        if verbose:
-            duration = time.time() - start_timer
-            info = "Done with: \n\t between-var: %g \n\t " % between_var
-            info += "between-std: %g\n\t" % between_std
+            info = "Done with: \n\t between-var: %f \n\t " % between_var
+            info += "between-std: %f\n\t" % between_std
             info += "duration: %d sec\n" % duration
             print(info)
 
@@ -422,7 +380,6 @@ class Training(InstrumentCollector):
         :param beta: (float), defines weights activity;
                       the best beta value is around 100;
                       set it to None to model when beta vanishes;
-                      warn: setting beta to 0 causes an error.
         :param fps: frames per second to be set
                     pass as None not to change default fps
         :param verbose: verbose display (True) or silent (False)
@@ -446,7 +403,7 @@ class Training(InstrumentCollector):
             self.proj_info["d-ratio"] = between_var
             self.proj_info["d-ratio-std"] = between_std
 
-        print("(!) New discriminant ratio: %g (FPS = %s)" % (self.proj_info["d-ratio"], fps))
+        print("(!) New discriminant ratio: %f (FPS = %s)" % (self.proj_info["d-ratio"], fps))
         json.dump(self.proj_info, open(self._info_name, 'w'))
 
 
@@ -506,7 +463,7 @@ class Training(InstrumentCollector):
                 "wthnvar_stds": [],
                 "btwvar_stds": [],
                 "ratios_stds": [],
-                "duration": None
+                "duration": 0
             }
             print("Reset progress.")
         else:
@@ -518,7 +475,7 @@ class Training(InstrumentCollector):
         for beta in betas_left:
             start_clock = time.ctime() + ":\t"
             print(start_clock + "PROCESSING BETA = %.1e" % beta)
-            self.update_ratio(mode, beta, fps)
+            self.update_ratio(mode, beta, fps, verbose=False)
 
             progress["wthnvars"].append(self.proj_info["within_variance"])
             progress["btwvars"].append(self.proj_info["between_variance"])
@@ -543,7 +500,7 @@ class Training(InstrumentCollector):
             plt.ylabel("Db")
             std_pct = np.divide(progress["ratios_stds"], progress["ratios"])
             std_mean = 100. * np.average(std_pct)
-            plt.legend("Db, std=%.1f%%" % std_mean, numpoints=1, loc=3)
+            plt.legend(["Db, std=%.1f%%" % std_mean], numpoints=1, loc=3)
             plt.grid()
         else:
             keys = "wthnvars", "btwvars", "ratios"
@@ -558,7 +515,7 @@ class Training(InstrumentCollector):
             for i, (key, lgnd, mark) in enumerate(zip(keys, legends, markers), start=1):
                 plt.subplot(3, 1, i)
                 plt.plot(np.log10(beta_range), progress[key], mark)
-                plt.legend([lgnd], numpoints=1, loc=6)
+                plt.legend([lgnd], numpoints=1, loc=3)
                 plt.ylabel(lgnd.split(',')[0])
                 plt.grid()
         plt.xlabel("log(beta)")
@@ -576,7 +533,6 @@ class Training(InstrumentCollector):
         :param beta: (float), defines weights activity;
                       the best beta value is around 100;
                       set it to None to model when beta vanishes;
-                      warn: setting beta to 0 causes an error.
         :param start: lower fps
         :param end: upper fps
         :param step: fps step
@@ -614,6 +570,6 @@ class Training(InstrumentCollector):
         plt.ylabel("R")
         plt.title("Discriminant ratio VS fps")
         plt.grid()
-        plt.xlim(0, end+1)
+        plt.xlim(0, end + 1)
         plt.savefig("png/ratio_vs_fps.png")
         plt.show()
