@@ -35,8 +35,6 @@ class InstrumentCollector(object):
         else:
             self.trn_path = os.path.join(prefix, "Training")
             self.tst_path = os.path.join(prefix, "Testing")
-        self.train_gestures = []
-        self.test_gestures = []
 
     def load_info(self):
         """
@@ -63,13 +61,14 @@ class InstrumentCollector(object):
                     pass as None not to change default fps
         :return: training gestures
         """
+        train_gestures = []
         for class_name in os.listdir(self.trn_path):
             class_path = os.path.join(self.trn_path, class_name)
             for trn_name in os.listdir(class_path):
                 fpath_trn = os.path.join(class_path, trn_name)
                 gest = self.MotionClass(fpath_trn, fps)
-                self.train_gestures.append(gest)
-        return tuple(self.train_gestures)
+                train_gestures.append(gest)
+        return tuple(train_gestures)
 
     def load_test_samples(self, fps):
         """
@@ -77,13 +76,14 @@ class InstrumentCollector(object):
                     pass as None not to change default fps
         :return: testing gestures
         """
+        test_gestures = []
         for directory in os.listdir(self.tst_path):
             tst_subfolder = os.path.join(self.tst_path, directory)
             for tst_name in os.listdir(tst_subfolder):
                 fpath_tst = os.path.join(tst_subfolder, tst_name)
                 gest = self.MotionClass(fpath_tst, fps)
-                self.test_gestures.append(gest)
-        return tuple(self.test_gestures)
+                test_gestures.append(gest)
+        return tuple(test_gestures)
 
     def compute_weights(self, mode, beta, fps):
         """
@@ -134,12 +134,13 @@ class Testing(InstrumentCollector):
     def the_worst_comparison(self, fps, verbose=True, weighted=True):
         """
          Computes the worst and the best out-of-sample error, using WDTW algorithm.
+         The confidence measure is set to be a margin between the chosen positive
+         result and the first negative result.
         :param fps: fps to be set in each gesture
                     pass as None not to change default fps
         :param verbose: verbose display (True) or silent (False)
         :param weighted: use weighted FastDTW modification or just FastDTW
         """
-        # TODO set confidence measure
 
         def print_err(got_pattern, unknownGest):
             if verbose:
@@ -158,6 +159,7 @@ class Testing(InstrumentCollector):
         patterns = {}
         supremum = {}
         infimum = {}
+        margin = 0
 
         for directory in os.listdir(self.trn_path):
             patterns[directory] = []
@@ -190,8 +192,10 @@ class Testing(InstrumentCollector):
                             other_costs.append(dist)
                             other_patterns.append(knownGest)
                 min_other_cost = min(other_costs)
+                min_the_same_cost = min(the_same_costs)
+                max_the_same_cost = max(the_same_costs)
 
-                if max(the_same_costs) >= min_other_cost:
+                if max_the_same_cost >= min_other_cost:
                     # the worst test scenario is FAILED
                     ind = np.argmin(other_costs)
                     got_pattern = other_patterns[ind]
@@ -199,13 +203,17 @@ class Testing(InstrumentCollector):
                     supremum[directory] += 1.
                     # print_err(got_pattern, unknownGest)
 
-                if min(the_same_costs) >= min_other_cost:
+                if min_the_same_cost >= min_other_cost:
                     # both the worst and the best test scenarios are FAILED
                     ind = np.argmin(other_costs)
                     got_pattern = other_patterns[ind]
                     assert got_pattern.name != unknownGest.name, "smth is wrong"
                     infimum[directory] += 1
                     print_err(got_pattern, unknownGest)
+
+                interval = max_the_same_cost - min_the_same_cost
+                how_good = (min_other_cost - min_the_same_cost) / interval
+                margin += min(1, max(0, how_good))
 
         total_samples = 0
         print("The result is shown in number of misclassified samples: ")
@@ -220,10 +228,12 @@ class Testing(InstrumentCollector):
                 print(msg)
         total_supremum = sum(supremum.values())
         total_infimum = sum(infimum.values())
+        margin *= 100. / total_samples
         self.proj_info["error"]["inf"] = float(total_infimum) / total_samples
         self.proj_info["error"]["sup"] = float(total_supremum) / total_samples
         print("*** THE BEST CASE: %d; \tTHE WORST CASE: %d; \t TOTAL SAMPLES: %d" %
               (total_infimum, total_supremum, total_samples))
+        print("*** margin: %.3g%%" % margin)
         duration = time.time() - start
         print("Duration: %d sec" % duration)
 
@@ -300,7 +310,6 @@ class Training(InstrumentCollector):
         for directory in os.listdir(self.trn_path):
             trn_subfolder = os.path.join(self.trn_path, directory)
             log_examples = os.listdir(trn_subfolder)
-            current_dir_var = []
             while len(log_examples) > 1:
                 first_log_path = os.path.join(trn_subfolder, log_examples[0])
                 firstGest = self.MotionClass(first_log_path, fps)
@@ -314,10 +323,9 @@ class Training(InstrumentCollector):
                     # compare(goingGest, firstGest) == compare(firstGest, goingGest)
                     dist = compare(firstGest, goingGest)
 
-                    current_dir_var.append(dist)
+                    one_vs_the_same_var.append(dist)
+
                 log_examples.pop(0)
-            if any(current_dir_var):
-                one_vs_the_same_var.append(np.average(current_dir_var))
 
         if any(one_vs_the_same_var):
             within_var = np.average(one_vs_the_same_var)
@@ -353,7 +361,7 @@ class Training(InstrumentCollector):
         one_vs_others_var = []
         trn_samples = self.load_train_samples(fps)
         for firstGest in trn_samples:
-            for goingGest in tuple(trn_samples):
+            for goingGest in (trn_samples + tuple()):
                 if firstGest.name != goingGest.name:
                     dist = compare(firstGest, goingGest)
                     one_vs_others_var.append(dist)
@@ -449,6 +457,7 @@ class Training(InstrumentCollector):
                      pass as None not to change default fps
          :param reset: reset (True) or continue (False) progress
         """
+        # TODO recompute all plots
         begin = time.time()
         print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
         if not os.path.exists("choosing_beta.json"): reset = True
@@ -496,6 +505,7 @@ class Training(InstrumentCollector):
         print("BEST RATIO: %g, w.r.t. beta = %.1e" % (best_ratio, best_beta))
 
         if None in progress["wthnvars"]:
+            # only between-class variance was computed
             plt.plot(np.log10(beta_range), progress["ratios"], 'b^-', ms=8)
             plt.ylabel("Db")
             std_pct = np.divide(progress["ratios_stds"], progress["ratios"])
@@ -518,6 +528,7 @@ class Training(InstrumentCollector):
                 plt.legend([lgnd], numpoints=1, loc=3)
                 plt.ylabel(lgnd.split(',')[0])
                 plt.grid()
+        plt.ylim(0.995 * min(progress["ratios"]), 1.005 * max(progress["ratios"]))
         plt.xlabel("log(beta)")
         plt.suptitle("Choosing the best beta")
         plt.savefig("png/choosing_beta.png")

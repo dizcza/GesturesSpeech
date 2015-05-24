@@ -11,9 +11,10 @@
   <ol>
     <li><a href="#info">Projects info</a></li>
 	<li><a href="#art">State of art</a></li>
-	<li><a href="#preprocess">Data preprocessing</a></li>
+	<li><a href="#preprocess">Data pre-processing</a></li>
 	<li><a href="#displacements">Body joint displacements</a></li>
 	<li><a href="#weights">Body joint weights. Discriminant ratio</a></li>
+	<li><a href="#scenario">The worst and the best testing scenarios</a></li>
 	<li><a href="#wdtw">Weighted DTW comparison</a></li>
 	<li><a href="#tools">Packages</a></li>
   </ol>
@@ -26,69 +27,124 @@
 <img src="png/anim.gif"/>
 
 <h2 id="info">Projects info</h2>
-<ul>
-  <li>MoCap (Graphics Lab Motion Capture):
-    <ul>
-      <li>covers common Ukrainian gestures</li>
-      <li>file type: c3d</li>
-      <li>body joints: 83</li>
-      <li>data is measured in millimeters</li>
-      <li>FPS: 120</li>
-      <li>unique gesture classes: 139</li>
-      <li>samples per gesture: 2</li>
-    </ul>
-  </li>
-  <li><a href="http://datascience.sehir.edu.tr/visapp2013">Kinect</a>:</li>
-    <ul>
-      <li>covers basic hand motions</li>
-      <li>file type: txt</li>
-      <li>body joints: 20</li>
-      <li>data is measured in meters</li>
-      <li>FPS: 30</li>
-      <li>unique gesture classes: 8</li>
-      <li>samples per gesture: 28</li>
-    </ul>
-  <li>Emotion:
-    <ul>
-      <li>covers basic human facial emotions</li>
-      <li>file type: blend --> csv --> pkl</li>
-      <li>facial joints: 18</li>
-      <li>data is measured in pixels</li>
-      <li>FPS: 24</li>
-      <li>unique gesture classes: 9</li>
-      <li>samples per gesture: 3 ... 27</li>
-    </ul>
-</ul>
 
-
-<p><b>Notes</b>. The Kinect project is based on <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">this</a> paper and their <a href="http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar">data</a> to compare its results with our MoCap project. Below is shown a skeleton of using Weighted DTW algorithm for MoCap and Kinect projects.</p>
-<p>If you want to see the results of facial emotion recognition, go to <i>Emotion</i> folder.</p>
-
+<table style="width:100%; margin:0 auto">
+	<tr>
+		<th rowspan="2"></th>
+		<th colspan="3">Data base</th>
+	</tr>
+	<tr>
+		<td>MoCap</td>
+		<td><a href="http://datascience.sehir.edu.tr/visapp2013">Kinect</a></td>
+		<td>Emotion</td>
+	</tr>
+	<tr>
+    	<td>contents</td>
+		<td>common Ukrainian gestures</td>
+		<td>basic hand motions</td>
+		<td>facial emotions</td>
+	</tr>
+	<tr>
+    	<td>data type</td>
+		<td>c3d</td>
+		<td>txt</td>
+		<td>blend --> csv --> pkl</td>
+	</tr>
+	<tr>
+    	<td>data dimension</td>
+		<td>3D</td>
+		<td>3D</td>
+		<td>2D</td>
+	</tr>
+	<tr>
+    	<td>data is measured in</td>
+		<td>millimeters</td>
+		<td>meters</td>
+		<td>pixels</td>
+	</tr>
+	<tr>
+    	<td># markers</td>
+		<td>83</td>
+		<td>20</td>
+		<td>18</td>
+	</tr>
+	<tr>
+    	<td># active markers</td>
+		<td>50</td>
+		<td>6</td>
+		<td>18</td>
+	</tr>
+	<tr>
+    	<td>FPS</td>
+		<td>120</td>
+		<td>30</td>
+		<td>24</td>
+	</tr>
+	<tr>
+    	<td>unique gestures</td>
+		<td>139</td>
+		<td>8</td>
+		<td>9</td>
+	</tr>
+	<tr>
+    	<td>samples per gesture</td>
+		<td>2</td>
+		<td>28</td>
+		<td>3..27</td>
+	</tr>
+	<tr>
+    	<td>train dataset size</td>
+		<td>1 x 139 = 139</td>
+		<td>8 x 8 = 64</td>
+		<td>42</td>
+	</tr>
+	<tr>
+    	<td>test dataset size</td>
+		<td>1 x 139 = 139</td>
+		<td>20 x 8 = 139</td>
+		<td>36</td>
+	</tr>
+	<tr>
+    	<td># actors</td>
+		<td>1</td>
+		<td>unknown</td>
+		<td>3</td>
+	</tr>
+</table>
+<ol>
+<b>Notes</b>
+	<li>The Kinect project is based on <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">this</a> paper and their <a href="http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar">data</a> to compare its results with our MoCap project.</li>
+	<li><i>Active markers</i> are the ones that carry information about the motion body parts. Hence we don't need to track them all. This parameter is set manually for each project.</li>
+	<li>Number of <i>actors</i> is the number of humans, who were involved directly into data acquisition.</li>
+	<li>For simplicity and generality, each facial emotion can be viewed and called as a gesture.</li>
+</ol>
 
 
 <h2 id="art">State of the art</h2>
-<p>The main idea in gesture recognition is to maximize between class variance <i>Db</i> and minimize within class variance <i>Dw</i> by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">proposed</a>.</p>
+<p>The main idea in gesture recognition is to maximize between-class variance <i>Db</i> and minimize within-class variance <i>Dw</i> by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been <a href="http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf">proposed</a>.</p>
 
 <p>It's obvious, that a joint which is active in one gesture class may not be active in another gesture class. Hence weights have to be adjusted accordingly.
 As Reyes et al. (2011) have observed, only six out of the 20 joints contribute in identifying a hand gesture: left hand, right hand, left wrist, right wrist, left elbow, right elbow. For example, for the right-hand-push-up gesture, one would expect the right hand, right elbow and right wrist joints to have large weights, but to have smaller weights for the left-hand-push-up gesture. We propose to use only 3 of them, w.r.t. to the left or right hand.</p>
 
 
 
-<h2 id="preprocess">Data preprocessing</h2>
-<p>Data preprocessing for both projects includes 2 steps:</p>
+<h2 id="preprocess">Data pre-processing</h2>
+<p>Data pre-processing for MoCap and Kinect projects includes 2 steps:</p>
 <ol>
     <li>Subtracting the shoulder center from all joints, which accounts for cases where the user is not in the center of the depth image.</li>
     <li>Normalizing the data with the distance between the left and the right shoulders to account for the variations due to the person's size.</li>
 </ol>
+<p>Additionally, besides these two steps, Emotion data pre-processing includes also slope aligning, Kalman filtering and dealing with eyes blinking.</p>
 
 
 
 <h2 id="displacements">Body joint displacements</h2>
-<p>The main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 6 hand markers while MoCap projects operates with 50 (25 x 2) hand markers. Their contribution in the motion is shown below as a  joint's displacement sum over gesture frames (measured in normalized units) with right hand highlighted in light blue colour.</p>
+<p>Except datasets sizes, the main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 3 markers per hand while MoCap project operates with 50 (25 x 2) hand markers. Their contribution in the motion (or their activity) is shown below as a  joint's displacement sum over gesture frames (measured in normalized units) with right hand highlighted in light blue colour for Kinect sample and left hand - for MoCap sample, shown above as an animation of Ukrainian gesture "Добрий ранок". For Emotion project, a <i>smile</i> sample was taken with mouth markers highlighted in light blue.</p>
 <table style="width:100%">
 	<tr>
 		<th>Kinect</th>
 		<th>MoCap</th>
+		<th>Emotion</th>
 	<tr>
     <tr>
         <td>
@@ -96,6 +152,9 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
         </td>
         <td>
             <img src="MOCAP/png/joint_displacements.png"/>
+        </td>
+		<td>
+            <img src="Emotion/png/joint_displacements.png"/>
         </td>
     </tr>
 </table>
@@ -111,7 +170,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 <div align="center"><img src="http://latex.codecogs.com/gif.latex?D_j=\sum_{i=2}^N \|  \overrightarrow{X}_i^j - \overrightarrow{X}_{i-1}^j  \|,"/></div>
 <p>where <img src="http://latex.codecogs.com/gif.latex?\overrightarrow{X}_i^j = \big( x_i^j, y_i^j, z_i^j \big) "/> is a <i>j'</i>s joint position in the  frame "<i>i</i>".</p>
 
-<p>Best <img src="http://latex.codecogs.com/gif.latex?\beta"/> yields the biggest discriminant ratio <img src="http://latex.codecogs.com/gif.latex?R = \rfrac{D_b}{/D_w}"/>. In our case, although within variance <i>Dw</i> goes up with the <img src="http://latex.codecogs.com/gif.latex?\beta"/> decreasing, the <img src="http://latex.codecogs.com/gif.latex?R_{max}"/> is obtained when  <img src="http://latex.codecogs.com/gif.latex?\beta"/> vanishes. That means</p>
+<p>Best <img src="http://latex.codecogs.com/gif.latex?\beta"/> yields the biggest discriminant ratio <img src="http://latex.codecogs.com/gif.latex?R = \rfrac{D_b}{/D_w}"/>. In our case, the <img src="http://latex.codecogs.com/gif.latex?R_{max}"/> obtains when  <img src="http://latex.codecogs.com/gif.latex?\beta"/> vanishes. That means</p>
 <div align="center"><img src="http://latex.codecogs.com/gif.latex?\omega_j^g \xrightarrow{\beta \to 0} \frac{D_j^g}{\sum_{k}D_k^g}"/>
 </div>
 
@@ -119,6 +178,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 	<tr>
 		<th>Kinect</th>
 		<th>MoCap</th>
+		<th>Emotion</th>
 	<tr>
     <tr>
         <td>
@@ -127,10 +187,24 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
         <td>
             <img src="MOCAP/png/choosing_beta.png"/>
         </td>
+		<td>
+            <img src="Emotion/png/choosing_beta.png"/>
+        </td>
     </tr>
 </table>
 
-<p>The secondary difference between the projects is that MoCap has only 1 training example and 1 testing example per unique gesture, while Kinect provides 20 training and 8 testing ones. Thus, we cannot compute the within class variance for the MoCap project -- only between class variance is availible for demonstration confidence measure (or discriminant ratio).</p>
+<p>Note, that MoCap has only 1 training example and 1 testing example per unique gesture, while Kinect provides 20 training and 8 testing ones. Thus, we cannot compute the within-class variance for the MoCap project -- only between-class variance is availible for the discriminant ratio demonstration.</p>
+
+
+
+<h2 id="#scenario">The worst and the best testing scenarios</h2>
+<p>The WORST test scenario is passed (with OK status) when the <b>max</b> DTW cost (or its modification) among the test sample "c" and all THE SAME class train samples <img src="http://latex.codecogs.com/gif.latex?q_i"/> is lower than the min DTW cost among the test sample "c" and all OTHER classes samples <img src="http://latex.codecogs.com/gif.latex?h_j"/>:</p>
+<div align="center"><img src="http://latex.codecogs.com/gif.latex?\max_i WDTW(c,q_i) < \min_j WDTW(c,h_j)"/>
+</div>
+<p>The BEST test scenario is passed (with OK status) when the <b>min</b> DTW cost (or its modification) among the test sample "c" and all THE SAME class train samples <img src="http://latex.codecogs.com/gif.latex?q_i"/> is lower than the min DTW cost among the test sample "c" and all OTHER classes samples <img src="http://latex.codecogs.com/gif.latex?h_j"/>:</p>
+<div align="center"><img src="http://latex.codecogs.com/gif.latex?\min_i WDTW(c,q_i) < \min_j WDTW(c,h_j)"/>
+</div>
+<img src="png/scenarios.png"/>
 
 
 
@@ -153,39 +227,56 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
     </tr>
 </table>
 
-<p>Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> are classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 22.5% out-of-sample error.</p>
+<p>Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> were classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario.</p>
 
 
-<table style="width:60%; margin:0 auto">
+<table style="width:100%; margin:0 auto">
 	<caption><font size="2"><i>Single gesture recognition accuracy, % </i></font></caption>
 	<tr>
-		<th rowspan="2">Algorithm</th>
-		<th colspan="2">Data base</th>
+		<th rowspan="3">Algorithm</th>
+		<th colspan="6">Data base</th>
 	</tr>
 	<tr>
-		<td>MoCap</td>
-		<td>Kinect</td>
+		<td colspan="2" align="center">MoCap</td>
+		<td colspan="2" align="center">Kinect</td>
+		<td colspan="2" align="center">Emotion</td>
 	</tr>
 	<tr>
-
+    	<td>worst</td>
+		<td>best</td>
+		<td>worst</td>
+		<td>best</td>
+		<td>worst</td>
+		<td>best</td>
+	</tr>
+	<tr>
     	<td>WDTW</td>
-		<td>100 %</td>
-		<td>100 %</td>
+		<td>100</td>
+		<td>100</td>
+		<td>100</td>
+		<td>100</td>
+		<td>0</td>
+		<td>80.6</td>
 	</tr>
 	<tr>
-    	<td>DTW and FastDTW</td>
-		<td>100 %</td>
-		<td>77.5 %</td>
+    	<td>DTW or FastDTW</td>
+		<td>100</td>
+		<td>100</td>
+		<td>69.4</td>
+		<td>78.8</td>
+		<td>0</td>
+		<td>83.3</td>
 	</tr>
 </table>
 
 
-<p>At the same time, MoCap's simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly,  there is only 1 training and 1 testing example per unique gesture in MoCap project and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.</p>
+<p>At the same time, MoCap's simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly,  there is too much information per MoCap sample (too high FPS and too many markers) and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.</p>
+<p>WDTW algorithm correctly identified 29 / 36 emotions, while simple DTW identified 30 / 36. The difference in 1 correctly recognized sample doesn't make a weather. Nevertheless, the explanation lies in the variation of markers fasteting on the face, sensory noise and variation of facial expressions per unique emotion class.</p>
 
 
 
 <h2 id="rrate">FPS dependency</h2>
-<p>Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 12 is enough for both projects data.</p>
+<p>Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 8 is enough for both projects data.</p>
 <div align="center">
 	<img src="png/error_vs_fps.png"/>
 </div>
@@ -200,7 +291,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
   <li><a href="http://www.c-motion.com/free-downloads/">Free CMO Reader</a></li>
 </ul>
 
-<p>The current project is portable: although it's built and maintained upon Python 3.4 x32 version, you can use 2.7.8 or higher 32 bit version of Python.</p>
+<p>The current project is portable. Although it's built and maintained upon Python 3.4 x32 version, you can use 2.7.8 or higher 32 bit version of Python.</p>
 
 <p>Obligatory Python </a> packages (can be found at <a href="http://www.lfd.uci.edu/~gohlke/pythonlibs">http://www.lfd.uci.edu/~gohlke/pythonlibs)</a>:</p>
 <ul>

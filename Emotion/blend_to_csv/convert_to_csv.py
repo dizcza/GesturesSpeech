@@ -1,6 +1,5 @@
 # coding=utf-8
 
-from __future__ import print_function
 import bpy
 import os
 import numpy as np
@@ -31,9 +30,9 @@ def gather_labels():
     """
      Gathers and stores joint labels in order.
     """
-    blend_fpath = r"D:\GesturesDataset\Emotion\blend\raw_blend\29-1-1.blend"
+    test_file_path = os.path.join(RAW_BLENDER_DIR, os.listdir(RAW_BLENDER_DIR)[0])
     try:
-        bpy.ops.wm.open_mainfile(filepath=blend_fpath)
+        bpy.ops.wm.open_mainfile(filepath=test_file_path)
     except RuntimeError:
         print("Invalid blend file path. Breaking down.")
         return

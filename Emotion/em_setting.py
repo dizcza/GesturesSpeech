@@ -23,3 +23,5 @@ def choose_beta(mode=None, fps=None, reset=False):
 
 if __name__ == "__main__":
     choose_beta()
+    # Training(Emotion).update_ratio(None, 1e2, None, True)
+

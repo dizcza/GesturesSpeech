@@ -32,5 +32,4 @@ def run_the_worst_comparison(mode="bothHands", beta=None, fps=None, weighted=Tru
 
 if __name__ == "__main__":
     # plot_error_vs_fps()
-    # FIXME beta is None, not 1e2
     run_the_worst_comparison()

@@ -33,4 +33,5 @@ def face_areas_test(fps):
 
 
 if __name__ == "__main__":
+    # unstable version
     face_areas_test(None)

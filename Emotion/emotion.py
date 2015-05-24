@@ -34,6 +34,7 @@ class Emotion(BasicMotion):
         self.labels = tuple(info["labels"])
         self.frames = self.data.shape[1]
         self.name = self.emotion
+        self.slope = 0
 
         self.set_fps(fps)
         self.preprocessor()
@@ -41,12 +42,17 @@ class Emotion(BasicMotion):
 
     def __str__(self):
         s = BasicMotion.__str__(self)
+        s += "\n\t slope:\t\t\t %.3g°" % self.slope
         s += "\n\t file name:\t\t %s" % self.fname
         s += "\n\t author:\t\t %s" % self.author
         return s
 
     def preprocessor(self):
-        # TODO deal with camera jerking and camera slope
+        """
+         5-steps pre-processor.
+         NOTE. All Emotion samples should begin with relaxed state.
+        """
+        # TODO deal with camera jerking
         # step 0: dealing with first frame bug
         self.data = self.data[:, 1:, :]
         self.frames -= 1
@@ -65,10 +71,13 @@ class Emotion(BasicMotion):
         base_line = norm(top_point - self.data[jaw,0,:])
         self.norm_data /= base_line
 
-        # step 3: kalman filter
+        # step 3: slope aligning
+        self.slope_align()
+
+        # step 4: kalman filter
         self.norm_data = kalman_filter(self.norm_data)
 
-        # step 4: deal eye winking
+        # step 5: deal with eyes winking
         self.deal_with_winking()
 
     def define_moving_markers(self, mode):
@@ -82,6 +91,24 @@ class Emotion(BasicMotion):
         else:
             BasicMotion.define_moving_markers(self, mode)
 
+    def slope_align(self):
+        """
+         Aligns slope of the whole picture of markers.
+         The resulted picture is vertically aligned.
+        """
+        left_marks = "eup_l", "edn_l", "lil", "wl", "chl", "ebr_ol", "ebr_il"
+        right_marks = [mark[:-1] + "r" for mark in left_marks]
+        left_ids = self.get_ids(*left_marks)
+        right_ids = self.get_ids(*right_marks)
+        angl = 0.
+        for lid, rid in zip(left_ids, right_ids):
+            dx, dy = self.norm_data[lid, 0, :] - self.norm_data[rid, 0, :]
+            angl += np.arctan2(dy, dx)
+        angl /= len(left_marks)
+        self.slope = angl * 180 / np.pi
+        rot_matrix = np.array([[np.cos(angl), -np.sin(angl)],
+                               [np.sin(angl), np.cos(angl)]])
+        self.norm_data = self.norm_data.dot(rot_matrix)
 
     def deal_with_winking(self):
         """
@@ -203,7 +230,7 @@ class Emotion(BasicMotion):
 
 def test_nan_weights():
     """
-     Tests each sample for having nan weights.
+     Tests each sample for having no nan weights.
     """
     for log_pkl in os.listdir(EMOTION_PATH_PICKLES):
         if log_pkl.endswith(".pkl"):
@@ -222,8 +249,7 @@ def show_all_emotions():
             pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
             em = Emotion(pkl_path)
             if em.emotion != "undefined":
-                em.animate()
-                em.data = kalman_filter(em.data)
+                em.data = em.norm_data
                 em.animate()
 
 

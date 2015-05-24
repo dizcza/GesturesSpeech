@@ -22,3 +22,4 @@ def choose_beta(hand_mode="bothHands", fps=None, reset=False):
 if __name__ == "__main__":
     # plot_ratio_vs_fps(reset=False)
     choose_beta()
+    # Training(HumanoidKinect).update_ratio("bothHands", 10, None)

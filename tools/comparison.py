@@ -1,26 +1,12 @@
 # coding=utf-8
 
 from functools import partial
-
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+
 from dtw import dtw
-
 from tools.fastdtw import dist_measure, fastdtw
-
-
-def swap_first_two_cols(data):
-    """
-     Swaps markers with frames columns.
-    :param data: (#markers, frames, 3) ndarray
-    :return: (#frames, #markers, 3) data
-    """
-    new_shape = data.shape[1], data.shape[0], data.shape[2]
-    swapped_data = np.empty(shape=new_shape)
-    for frame in range(data.shape[1]):
-        swapped_data[frame, ::] = data[:, frame, :]
-    return swapped_data
 
 
 def modify_weights(gest, thrown_labels):
@@ -64,6 +50,21 @@ def align_data_shape(known_gest, unknown_gest):
     return data1, data2, weights
 
 
+def align_markers_pos(known_data, unknown_data):
+    """
+     Aligns all markers data from an unknown gest as it was in first frame of a known gest.
+    :param known_data: (#markers, frames, 3) data of a known gest
+    :param unknown_data: (#markers, frames, 3) data of an unknown gest
+    :return: aligned by first markers pos unknown data
+    """
+    if_error = "Invalid markers dim. Align data shapes first."
+    assert known_data.shape[0] == unknown_data.shape[0], if_error
+    offset = known_data[:, 0, :] - unknown_data[:, 0, :]
+    offset = offset.reshape((known_data.shape[0], 1, known_data.shape[2]))
+    unknown_data += offset
+    return unknown_data
+
+
 def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True):
     """
      Main comparison function for two gesture examples.
@@ -78,19 +79,24 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True):
     :return: (float), similarity (cost) of the given gestures
     """
     if known_gest.labels == unknown_gest.labels:
-        data1 = known_gest.get_norm_data()
-        data2 = unknown_gest.get_norm_data()
+        known_data = known_gest.get_norm_data()
+        unknown_data = unknown_gest.get_norm_data()
         weights = known_gest.get_weights()
     else:
-        data1, data2, weights = align_data_shape(known_gest, unknown_gest)
+        known_data, unknown_data, weights = align_data_shape(known_gest, unknown_gest)
 
-    if not weighted: weights = np.ones(data1.shape[0])
+    # NOTE. Using this reduces level of generality,
+    #       but in some cases yields better result.
+    #       In our case, do not use it.
+    # unknown_data = align_markers_pos(known_data, unknown_data)
 
-    if not data1.any() or not data2.any():
+    if not weighted: weights = np.ones(known_data.shape[0])
+
+    if not known_data.any() or not unknown_data.any():
         print("Incompatible data dimensions. Returned np.inf")
         return np.inf
 
-    dist, path = dtw_chosen(data1, data2, weights)
+    dist, path = dtw_chosen(known_data, unknown_data, weights)
     if dist == np.inf:
         print("WARNING: dtw comparison gave np.inf")
 
@@ -112,6 +118,19 @@ def show_comparison(known_gest, unknown_gest):
     :param known_gest: a BasicMotion example
     :param unknown_gest: a BasicMotion example
     """
+
+    def swap_first_two_cols(data):
+        """
+         Swaps markers with frames columns.
+        :param data: (#markers, frames, 3) ndarray
+        :return: (#frames, #markers, 3) data
+        """
+        new_shape = data.shape[1], data.shape[0], data.shape[2]
+        swapped_data = np.empty(shape=new_shape)
+        for frame in range(data.shape[1]):
+            swapped_data[frame, ::] = data[:, frame, :]
+        return swapped_data
+
     data1 = known_gest.get_norm_data()
     data2 = unknown_gest.get_norm_data()
     weights = known_gest.get_weights()
