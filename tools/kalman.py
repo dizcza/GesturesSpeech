@@ -31,5 +31,9 @@ def kalman_filter(data):
         for markerID in range(data.shape[0]):
             for dim in range(data.shape[2]):
                 x_opt = kalman_1d(data[markerID, :, dim])
+
+                # put NaNs back, if you want
+                # x_opt[np.isnan(data[markerID, ::]).any(axis=1)] = np.nan
+
                 data[markerID, :, dim] = x_opt
     return data

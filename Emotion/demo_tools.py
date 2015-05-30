@@ -28,22 +28,21 @@ def estimate_sensory_noise():
 
 
 def demo_kalman():
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\31-2-2.pkl")
+    # em = Emotion(r"D:\GesturesDataset\Emotion\pickles\31-2-2.pkl")
+    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\49-2-1.pkl")
+    filtered_data = kalman_filter(em.data)
     for markerID, marker in enumerate(em.labels):
+        if marker not in ("edn_r", "edn_l", "eup_l"): continue
         plt.subplot(211)
         x_real = em.data[markerID, :, 0]
-        x_real = x_real[~np.isnan(x_real)]
-        x_real_opt = kalman_1d(x_real, 0.15)
-        # x_real_opt = kalman_1d(x_real_opt)
+        x_real_opt = filtered_data[markerID, :, 0]
         plt.plot(x_real, linewidth=2)
         plt.plot(x_real_opt, linewidth=2)
         plt.ylabel("Xs")
-        # plt.legend(["noisy (real)", "kalman", "mov aver"])
 
         plt.subplot(212)
         x_real = em.data[markerID, :, 1]
-        x_real = x_real[~np.isnan(x_real)]
-        x_real_opt = kalman_1d(x_real, 0.3)
+        x_real_opt = filtered_data[markerID, :, 1]
         plt.plot(x_real, linewidth=2)
         plt.plot(x_real_opt, linewidth=2)
         plt.ylabel("Ys")

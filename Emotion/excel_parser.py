@@ -238,6 +238,7 @@ def how_many_examples_we_have():
 
 
 if __name__ == "__main__":
+    # TODO deal with "так себе"
     # verify_excel_file()
     em_basket, auth_basket, bound = parse_xls()
     pprint(em_basket)

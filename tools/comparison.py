@@ -24,7 +24,7 @@ def modify_weights(gest, thrown_labels):
     return weights_ordered
 
 
-def align_data_shape(known_gest, unknown_gest):
+def take_common_markers(known_gest, unknown_gest):
     """
     :param known_gest: sequence known to be in some gesture class
     :param unknown_gest: unknown test sequence
@@ -42,8 +42,8 @@ def align_data_shape(known_gest, unknown_gest):
     del_ids1 = known_gest.get_ids(*throw_labels_known)
     del_ids2 = unknown_gest.get_ids(*throw_labels_unknown)
 
-    data1 = np.delete(known_gest.get_norm_data(), del_ids1, axis=0)
-    data2 = np.delete(unknown_gest.get_norm_data(), del_ids2, axis=0)
+    data1 = np.delete(known_gest.norm_data, del_ids1, axis=0)
+    data2 = np.delete(unknown_gest.norm_data, del_ids2, axis=0)
 
     weights = modify_weights(known_gest, throw_labels_known)
 
@@ -65,15 +65,15 @@ def align_markers_pos(known_data, unknown_data):
     return unknown_data
 
 
-def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True):
+def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True, labels_map=None):
     """
      Main comparison function for two gesture examples.
      NOTE:
         - input gestures must have get_norm_data() and get_weights() methods.
         - unknown gesture weights are NOT involved into comparison
           (only known gesture weights are used)
-    :param known_gest: sequence known to be in some gesture class
-    :param unknown_gest: unknown test sequence
+    :param known_gest: known train sample
+    :param unknown_gest: unknown test sample
     :param dtw_chosen: fastdtw or _dtw (classic)
     :param weighted: use weighted FastDTW modification or just FastDTW
     :return: (float), similarity (cost) of the given gestures
@@ -83,7 +83,8 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True):
         unknown_data = unknown_gest.get_norm_data()
         weights = known_gest.get_weights()
     else:
-        known_data, unknown_data, weights = align_data_shape(known_gest, unknown_gest)
+        # TODO apply fines for throwing out markers in test gest because of their absence in train gest
+        known_data, unknown_data, weights = take_common_markers(known_gest, unknown_gest)
 
     # NOTE. Using this reduces level of generality,
     #       but in some cases yields better result.
@@ -136,7 +137,7 @@ def show_comparison(known_gest, unknown_gest):
     weights = known_gest.get_weights()
 
     if data1.shape[0] != data2.shape[0]:
-        data1, data2, weights = align_data_shape(known_gest, unknown_gest)
+        data1, data2, weights = take_common_markers(known_gest, unknown_gest)
         print("aligned to ", data1.shape, data2.shape)
 
     if not data1.any() or not data2.any():

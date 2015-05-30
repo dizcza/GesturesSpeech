@@ -197,14 +197,15 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 
 
 
-<h2 id="#scenario">The worst and the best testing scenarios</h2>
+<h2 id="scenario">The worst and the best testing scenarios</h2>
 <p>The WORST test scenario is passed (with OK status) when the <b>max</b> DTW cost (or its modification) among the test sample "c" and all THE SAME class train samples <img src="http://latex.codecogs.com/gif.latex?q_i"/> is lower than the min DTW cost among the test sample "c" and all OTHER classes samples <img src="http://latex.codecogs.com/gif.latex?h_j"/>:</p>
-<div align="center"><img src="http://latex.codecogs.com/gif.latex?\max_i WDTW(c,q_i) < \min_j WDTW(c,h_j)"/>
-</div>
+<div align="center"><img src="http://latex.codecogs.com/gif.latex?\max_i WDTW(c,q_i) < \min_j WDTW(c,h_j)"/></div>
 <p>The BEST test scenario is passed (with OK status) when the <b>min</b> DTW cost (or its modification) among the test sample "c" and all THE SAME class train samples <img src="http://latex.codecogs.com/gif.latex?q_i"/> is lower than the min DTW cost among the test sample "c" and all OTHER classes samples <img src="http://latex.codecogs.com/gif.latex?h_j"/>:</p>
-<div align="center"><img src="http://latex.codecogs.com/gif.latex?\min_i WDTW(c,q_i) < \min_j WDTW(c,h_j)"/>
+<div align="center"><img src="http://latex.codecogs.com/gif.latex?\min_i WDTW(c,q_i) < \min_j WDTW(c,h_j)"/></div>
+<div align="center">
+<img src="png/scenarios.png" height="60%"/>
 </div>
-<img src="png/scenarios.png"/>
+<p>It should be clear that the best scenario is also a <i>classic</i> scenario at finding the best fitted known pattern to unknown test sample.</p>
 
 
 
@@ -230,7 +231,7 @@ As Reyes et al. (2011) have observed, only six out of the 20 joints contribute i
 <p>Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the <a href="http://datascience.sehir.edu.tr/visapp2013/">database</a> were classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario.</p>
 
 
-<table style="width:100%; margin:0 auto">
+<table style="width:100%">
 	<caption><font size="2"><i>Single gesture recognition accuracy, % </i></font></caption>
 	<tr>
 		<th rowspan="3">Algorithm</th>

@@ -25,6 +25,7 @@ def split_movies():
     """
     emotion_basket = parse_xls()[0]
     emotion_folder = r"D:\videos_mocap_18_11\emotions"
+    shutil.rmtree(emotion_folder)
 
     for emotion in emotion_basket:
         em_path = os.path.join(emotion_folder, emotion)

@@ -55,6 +55,9 @@ class InstrumentCollector(object):
                 "error": {"inf": None, "sup": None}
             }
 
+    def dump_info(self):
+        json.dump(self.proj_info, open(self._info_name, 'w'))
+
     def load_train_samples(self, fps):
         """
         :param fps: frames per second to be set
@@ -108,9 +111,10 @@ class InstrumentCollector(object):
                 fpath_trn = os.path.join(trn_subfolder, trn_name)
                 gest = self.MotionClass(fpath_trn, fps)
                 gest.compute_weights(mode, beta)
-                current_dir_weights.append(gest.get_weights())
-                error_msg = "got NaN weights in %s" % gest.fname
-                assert not np.isnan(gest.get_weights()).any(), error_msg
+                weights_array = gest.get_weights()
+                if np.isnan(weights_array).any(): continue
+                current_dir_weights.append(weights_array)
+            assert len(current_dir_weights) > 0, "too many files with NaN weights"
             global_weights[directory] = np.average(current_dir_weights, axis=0).tolist()
 
         if self.prefix == "":
@@ -119,7 +123,7 @@ class InstrumentCollector(object):
             sub_project = os.path.basename(self.prefix)
             self.proj_info["weights"][sub_project] = global_weights
 
-        json.dump(self.proj_info, open(self._info_name, 'w'))
+        self.dump_info()
         print("New weights are saved in %s" % self._info_name)
 
 
@@ -150,11 +154,21 @@ class Testing(InstrumentCollector):
                 msg += ", should be %s" % unknownGest.name
                 if hasattr(unknownGest, "fname"):
                     msg += " (file: %s)" % unknownGest.fname
+                if hasattr(unknownGest, "author") and hasattr(got_pattern, "author"):
+                    if unknownGest.author == got_pattern.author:
+                        msg += " -- the same author"
+                    else:
+                        msg += " -- different authors"
                 print(msg)
 
         print("%s: TWE WORST COMPARISON is running (FPS = %s)" % (self.MotionClass.__name__, fps))
         start = time.time()
         self.load_info()
+
+        if "interchangeable_markers" in self.proj_info:
+            labels_map = self.proj_info["interchangeable_markers"]
+        else:
+            labels_map = None
 
         patterns = {}
         supremum = {}
@@ -171,7 +185,7 @@ class Testing(InstrumentCollector):
                 knownGest = self.MotionClass(fname, fps)
                 patterns[directory].append(knownGest)
         
-        for directory in os.listdir(self.trn_path):
+        for directory in os.listdir(self.tst_path):
             tst_subfolder = os.path.join(self.tst_path, directory)
             if verbose: print(" testing %s" % directory)
             for _sampleID, test_name in enumerate(os.listdir(tst_subfolder)):
@@ -181,14 +195,14 @@ class Testing(InstrumentCollector):
                 other_costs = []
 
                 for theSamePattern in patterns[directory]:
-                    dist = compare(theSamePattern, unknownGest, weighted=weighted)
+                    dist = compare(theSamePattern, unknownGest, weighted=weighted, labels_map=labels_map)
                     the_same_costs.append(dist)
 
                 other_patterns = []
                 for class_name, gestsLeft in patterns.items():
                     if class_name != directory:
                         for knownGest in gestsLeft:
-                            dist = compare(knownGest, unknownGest, weighted=weighted)
+                            dist = compare(knownGest, unknownGest, weighted=weighted, labels_map=labels_map)
                             other_costs.append(dist)
                             other_patterns.append(knownGest)
                 min_other_cost = min(other_costs)
@@ -295,7 +309,7 @@ class Training(InstrumentCollector):
 
     def compute_within_variance(self, fps, verbose=True):
         """
-         Computes aver within variance from the Training dataset.
+         Computes averaged within-class variance from the Training dataset.
          :param fps: frames per second to be set
                      pass as None not to change default fps
          :param verbose: verbose display (True) or silent (False)
@@ -336,7 +350,7 @@ class Training(InstrumentCollector):
 
         self.proj_info["within_variance"] = within_var
         self.proj_info["within_std"] = within_std
-        json.dump(self.proj_info, open(self._info_name, 'w'))
+        self.dump_info()
 
         if verbose:
             duration = time.time() - start_timer
@@ -350,7 +364,7 @@ class Training(InstrumentCollector):
 
     def compute_between_variance(self, fps, verbose=True):
         """
-         Computes aver between variance from the Training dataset.
+         Computes averaged between-class variance from the Training dataset.
          :param fps: frames per second to be set
                      pass as None not to change default fps
          :param verbose: verbose display (True) or silent (False)
@@ -457,7 +471,6 @@ class Training(InstrumentCollector):
                      pass as None not to change default fps
          :param reset: reset (True) or continue (False) progress
         """
-        # TODO recompute all plots
         begin = time.time()
         print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
         if not os.path.exists("choosing_beta.json"): reset = True
@@ -505,7 +518,7 @@ class Training(InstrumentCollector):
         print("BEST RATIO: %g, w.r.t. beta = %.1e" % (best_ratio, best_beta))
 
         if None in progress["wthnvars"]:
-            # only between-class variance was computed
+            # only between-class variance is available
             plt.plot(np.log10(beta_range), progress["ratios"], 'b^-', ms=8)
             plt.ylabel("Db")
             std_pct = np.divide(progress["ratios_stds"], progress["ratios"])
@@ -573,7 +586,6 @@ class Training(InstrumentCollector):
         fps_used = progress["fps_used"]
         ratios = progress["r_got"]
         ratios_std = progress["rstd_got"]
-        print("[(FPS x ratio), ]: ", list(zip(fps_used, ratios)))
         plt.errorbar(fps_used, ratios, ratios_std, marker='^', ms=8)
         plt.xlabel("FPS")
         mean_std = 100. * np.average(ratios_std)

@@ -35,11 +35,11 @@ def remove_nan(fdata1, fdata2, weights):
 def dist_measure(fdata1, fdata2, weights):
     """
     :param fdata1, fdata2: (#markers, #dim) frame data
-    :param weights: (#markers,) joint weights (motion contribution)
+    :param weights: (#markers,) markers weights (motion contribution)
     :return: (float) dist, w.r.t. the same markers
     """
+    # TODO apply fines for throwing out markers from test fdata2, when train fdata1 have NaN coords
     assert fdata1.shape == fdata2.shape, "data1 and data2 should have the same shape"
-    # weights = np.ones(fdata1.shape[0])
     if np.isnan(fdata1).any() or np.isnan(fdata2).any() or np.isnan(weights).any():
         fdata1, fdata2, weights = remove_nan(fdata1, fdata2, weights)
     return np.sum(norm(fdata1 - fdata2, axis=1) * weights)
@@ -50,6 +50,7 @@ def fastdtw(x, y, weights, radius=1):
      Speeds up Weighted DTW algorithm to O(N) complexity.
     :param x: (#markers, #frames1, #dim) data of the known gest
     :param y: (#markers, #frames2, #dim) data of the unknown gest
+    :param weights: (#markers,) markers weights (motion contribution)
     :param radius: constrain, defines window searching field
     :returns: dtw cost, dtw path
     """
@@ -70,6 +71,8 @@ def _dtw(x, y, weights, window=None):
      Weighted DTW algorithm with O(N^2) complexity.
     :param x: (#markers, #frames1, #dim) data of the known gest
     :param y: (#markers, #frames2, #dim) data of the unknown gest
+    :param weights: (#markers,) markers weights (motion contribution)
+    :param window: searching area
     :returns: dtw cost, dtw path
     """
     len_x, len_y = x.shape[1], y.shape[1]

@@ -52,7 +52,7 @@ class BasicMotion(object):
         """
         :return: (#markers, #frames, 3) normalized data
         """
-        return self.norm_data
+        return np.copy(self.norm_data)
 
     def set_fps(self, new_fps):
         """
@@ -106,17 +106,15 @@ class BasicMotion(object):
                 if frames_xyz_delta.shape[0] > 0:
                     dist_per_frame = norm(frames_xyz_delta, axis=1)
                 else:
-                    # that marker isn't involved in DTW comparison anymore
+                    # that marker won't be involved in WDTW comparison
                     dist_per_frame = 0
 
-                # offset: average --> sum
-                offset = np.sum(dist_per_frame)
-
-                j_std = np.std(dist_per_frame, dtype=np.float64)
+                activity = np.sum(dist_per_frame)
+                j_std = np.std(dist_per_frame)
             else:
-                offset = 0
+                activity = 0
                 j_std = 0
-            self.joint_displace[marker] = offset
+            self.joint_displace[marker] = activity
             self.joint_std[marker] = j_std
 
     def define_plot_style(self):
@@ -170,6 +168,15 @@ class BasicMotion(object):
         self.plot_displacement(mode, highlight)
         plt.show()
 
+    def set_constant_weights(self, mode):
+        """
+         Sets all weights to be constant.
+        :param mode: defines moving markers
+        """
+        self.define_moving_markers(mode)
+        m_num = len(self.moving_markers)
+        self.weights = {marker: 1. / m_num for marker in self.labels}
+
     def compute_weights(self, mode, beta):
         """
          Computes weights to be used in DTW.
@@ -178,13 +185,19 @@ class BasicMotion(object):
         self.compute_displacement(mode)
         if beta is None or beta == 0:
             denom = np.sum(list(self.joint_displace.values()))
-            for marker in self.labels:
-                self.weights[marker] = self.joint_displace[marker] / denom
+            if denom == 0:
+                self.set_constant_weights(mode)
+            else:
+                for marker in self.labels:
+                    self.weights[marker] = self.joint_displace[marker] / denom
         else:
             displacements = np.array(list(self.joint_displace.values()))
             denom = np.sum(1. - np.exp(-beta * displacements))
-            for marker in self.labels:
-                self.weights[marker] = (1. - np.exp(-beta * self.joint_displace[marker])) / denom
+            if denom == 0:
+                self.set_constant_weights(mode)
+            else:
+                for marker in self.labels:
+                    self.weights[marker] = (1. - np.exp(-beta * self.joint_displace[marker])) / denom
 
     def set_weights(self):
         """

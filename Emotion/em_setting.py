@@ -4,11 +4,11 @@ from Emotion.emotion import Emotion
 from tools.instruments import Training
 
 
-def plot_ratio_vs_fps(mode=None, beta=1e2):
+def plot_ratio_vs_fps(mode=None, beta=None, reset=False):
     """
      Plots discriminant ratio VS fps.
     """
-    Training(Emotion).ratio_vs_fps(mode, beta, 1, 24)
+    Training(Emotion).ratio_vs_fps(mode, beta, 1, 24, reset=reset)
 
 
 def choose_beta(mode=None, fps=None, reset=False):
@@ -22,6 +22,5 @@ def choose_beta(mode=None, fps=None, reset=False):
 
 
 if __name__ == "__main__":
+    # plot_ratio_vs_fps()
     choose_beta()
-    # Training(Emotion).update_ratio(None, 1e2, None, True)
-

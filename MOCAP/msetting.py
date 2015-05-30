@@ -4,7 +4,7 @@ from MOCAP.mreader import HumanoidUkr
 from tools.instruments import Training
 
 
-def plot_ratio_vs_fps(hand_mode="bothHands", beta=1e2):
+def plot_ratio_vs_fps(hand_mode="bothHands", beta=None):
     """
      Plots discriminant ratio VS fps.
     """

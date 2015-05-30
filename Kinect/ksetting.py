@@ -8,7 +8,7 @@ def plot_ratio_vs_fps(hand_mode="bothHands", beta=None, reset=False):
     """
      Plots discriminant ratio VS fps.
     """
-    Training(HumanoidKinect).ratio_vs_fps(hand_mode, beta, 2, 30, 1, reset)
+    Training(HumanoidKinect).ratio_vs_fps(hand_mode, beta, 1, 30, 1, reset)
 
 
 def choose_beta(hand_mode="bothHands", fps=None, reset=False):
@@ -20,6 +20,5 @@ def choose_beta(hand_mode="bothHands", fps=None, reset=False):
 
 
 if __name__ == "__main__":
-    # plot_ratio_vs_fps(reset=False)
-    choose_beta()
-    # Training(HumanoidKinect).update_ratio("bothHands", 10, None)
+    plot_ratio_vs_fps()
+    # choose_beta()
