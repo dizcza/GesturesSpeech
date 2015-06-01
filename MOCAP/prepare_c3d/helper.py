@@ -6,11 +6,10 @@ import warnings
 
 import numpy as np
 
-
 try:
     import btk
 except ImportError:
-    import MOCAP.btk_fake as btk
+    import MOCAP.local_tools.btk_fake as btk
 
 
 def print_info(filename):

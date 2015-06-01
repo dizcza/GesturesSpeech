@@ -10,7 +10,7 @@ import matplotlib.animation as animation
 
 from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
 from Emotion.FaceLocations.preparation import define_valid_face_actions, get_face_markers, get_face_areas
-from Emotion.excel_parser import parse_xls
+from Emotion.prepare_data import parse_xls
 
 
 def load_emotions(specify):

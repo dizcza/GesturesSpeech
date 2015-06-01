@@ -16,10 +16,6 @@
     <td>Emotion: a BasicMotion class wrapper</td>
   </tr>
   <tr>
-    <td>csv_reader.py</td>
-    <td>reads csv data and dumps it into pickles</td>
-  </tr>
-  <tr>
     <td>em_setting.py</td>
     <td>emotion: training (setting) best parameters</td>
   </tr>
@@ -28,25 +24,12 @@
     <td>emotion: testing part</td>
   </tr>
   <tr>
-    <td>excel_parser.py</td>
-    <td>reads and modifies excel data</td>
-  </tr>
-  <tr>
     <td>valid_labels.txt</td>
     <td>list of 18 valid face marker names</td>
   </tr>
   <tr>
-    <td>demo_tools.py</td>
+    <td>demo_kalman.py</td>
     <td>demo of kalman filter tools</td>
-  </tr>
-
-  <tr>
-    <td>description.xls</td>
-    <td>tells about emotion class for each file name</td>
-  </tr>
-  <tr>
-    <td>missed_data.xlsx</td>
-    <td>info about missed emotions and incompatible data shapes</td>
   </tr>
   <tr>
     <td>EMOTION_INFO.json</td>

@@ -114,26 +114,6 @@ def verify_excel_file():
     print("verify_excel_file: \tOKAY. Ready to parse xls.")
 
 
-def read_my_comments(cell_val):
-    """
-     Prints out lower and upper bound for some csv/blend files to be fit in.
-     :param cell_val: K's column cell value
-    """
-    if cell_val is not None:
-        a_comment = str(cell_val)
-        if "begin from " in a_comment:
-            a_comment = a_comment.strip("begin from ")
-            begin = int(a_comment.split(' ')[0])
-        else:
-            begin = 0
-        if "stop on " in a_comment:
-            a_comment = a_comment.split("stop on ")[-1]
-            end = int(a_comment)
-        else:
-            end = "--"
-        print("comment: %s; begin: %s, end: %s" % (str(cell_val), begin, end))
-
-
 def parse_whole_xls():
     """
     :returns:
@@ -166,7 +146,6 @@ def parse_whole_xls():
         secondname_val = secondname_val.replace("e", "-")
         joined_fname = firsname_val + secondname_val
         author = str(ws.Range(author_col + str(row)))
-        # read_my_comments(ws.Range("K" + str(row)).Value)
         if valid_label not in emotions_basket:
             # it is not a valid label anymore, actually
             emotions_basket[valid_label] = []
@@ -239,7 +218,6 @@ def how_many_examples_we_have():
 
 if __name__ == "__main__":
     # TODO deal with "так себе"
-    # verify_excel_file()
     em_basket, auth_basket, bound = parse_xls()
     pprint(em_basket)
     # how_many_examples_we_have()

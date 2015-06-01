@@ -1,8 +1,12 @@
 # coding=utf-8
 
-from MOCAP.splitter import *
 import os
+
 import matplotlib.pyplot as plt
+import numpy as np
+
+from MOCAP.prepare_c3d.splitter import HumanoidUkrSplitter
+from MOCAP.mreader import MOCAP_PATH
 
 
 def add_bar_plane(corrupted_frames, frames_num, init_fr=0):

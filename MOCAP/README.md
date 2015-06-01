@@ -10,18 +10,13 @@
     <th>files</th>
     <th>info</th>
   </tr>
-
   <tr>
     <td>mreader.py</td>
     <td>MoCap C3D files reader</td>
   </tr>
   <tr>
     <td>btk_fake.py</td>
-    <td>provides all necessary functions to use c3d package as native btk</td>
-  </tr>
-  <tr>
-    <td>c3d-viewer.py</td>
-    <td>OpenGL c3d animation</td>
+    <td>provides all necessary functions to use C3d package as a native btk</td>
   </tr>
   <tr>
     <td>msetting.py</td>
@@ -30,34 +25,6 @@
   <tr>
     <td>mtesting.py</td>
     <td>MoCap testing part</td>
-  </tr>
-  <tr>
-    <td>mplotter.py</td>
-    <td>plots training results</td>
-  </tr>
-  <tr>
-    <td>helper.py</td>
-    <td>prints info about open C3D file</td>
-  </tr>
-  <tr>
-    <td>labelling.py</td>
-    <td>contains all 83 markers (labels) names with init (relaxed) frame for each C3D file</td>
-  </tr>
-  <tr>
-    <td>splitter.py</td>
-    <td>HumanoidUkrSplitter class implementation</td>
-  </tr>
-  <tr>
-    <td>troubles_hunter.py</td>
-    <td>checks split C3D files for having troubles and shows them if any</td>
-  </tr>
-  <tr>
-    <td>dactyls.py</td>
-    <td>provides manual instrument to split dactyls C3D files</td>
-  </tr>
-  <tr>
-    <td>writer.py</td>
-    <td>rewriting C3D file by changing its orientation, etc.</td>
   </tr>
   <tr>
     <td>valid_labels.txt</td>

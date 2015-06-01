@@ -7,7 +7,7 @@ import numpy as np
 import win32com.client as win32
 import shutil
 
-from Emotion.excel_parser import parse_xls, upd_column, parse_whole_xls
+from Emotion.prepare_data import parse_xls, upd_column, parse_whole_xls
 from Emotion.emotion import EMOTION_PATH_PICKLES
 
 
@@ -19,7 +19,7 @@ def clean_labels():
     """
      Removes tracked marker log files, if they aren't in valid_labels.txt
     """
-    valid_labels = np.genfromtxt('valid_labels.txt', dtype='str')
+    valid_labels = np.genfromtxt(r"../valid_labels.txt", dtype='str')
     for directory in os.listdir(EMOTION_PATH_CSV):
         dir_path = os.path.join(EMOTION_PATH_CSV, directory)
         for marker_log in os.listdir(dir_path):
@@ -36,7 +36,7 @@ def verify_labels():
      Verifies all samples to have the same labels.
     """
     labels_casket = {}
-    valid_labels = np.genfromtxt('valid_labels.txt', dtype='str')
+    valid_labels = np.genfromtxt(r"../valid_labels.txt", dtype='str')
     for directory in os.listdir(EMOTION_PATH_CSV):
         labels_casket[directory] = []
         dir_path = os.path.join(EMOTION_PATH_CSV, directory)
@@ -296,4 +296,3 @@ def split_data(trn_rate=0.5):
 if __name__ == "__main__":
     dump_pickles()
     # split_data()
-    # convert_dir("46-4-1")

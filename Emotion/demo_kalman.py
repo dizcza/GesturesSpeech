@@ -4,7 +4,6 @@ import os
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
-from copy import deepcopy
 
 from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
 from tools.kalman import kalman_1d, kalman_filter

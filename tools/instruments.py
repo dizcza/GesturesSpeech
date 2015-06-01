@@ -60,8 +60,8 @@ class InstrumentCollector(object):
 
     def load_train_samples(self, fps):
         """
-        :param fps: frames per second to be set
-                    pass as None not to change default fps
+        :param fps: frames per second to be set;
+                    pass as None to use the default fps
         :return: training gestures
         """
         train_gestures = []
@@ -75,8 +75,8 @@ class InstrumentCollector(object):
 
     def load_test_samples(self, fps):
         """
-        :param fps: frames per second to be set
-                    pass as None not to change default fps
+        :param fps: frames per second to be set;
+                    pass as None to use the default fps
         :return: testing gestures
         """
         test_gestures = []
@@ -95,8 +95,8 @@ class InstrumentCollector(object):
         :param beta: (float), defines weights activity;
                       the best beta value is around 1e2;
                       set it to None to model when beta vanishes;
-        :param fps: frames per second to be set
-                    pass as None not to change default fps
+        :param fps: frames per second to be set;
+                    pass as None to use the default fps
         """
         self.load_info()
         self.proj_info["beta"] = beta
@@ -140,8 +140,8 @@ class Testing(InstrumentCollector):
          Computes the worst and the best out-of-sample error, using WDTW algorithm.
          The confidence measure is set to be a margin between the chosen positive
          result and the first negative result.
-        :param fps: fps to be set in each gesture
-                    pass as None not to change default fps
+        :param fps: fps to be set in each gesture;
+                    pass as None to use the default fps
         :param verbose: verbose display (True) or silent (False)
         :param weighted: use weighted FastDTW modification or just FastDTW
         """
@@ -310,8 +310,8 @@ class Training(InstrumentCollector):
     def compute_within_variance(self, fps, verbose=True):
         """
          Computes averaged within-class variance from the Training dataset.
-         :param fps: frames per second to be set
-                     pass as None not to change default fps
+         :param fps: frames per second to be set;
+                     pass as None to use the default fps
          :param verbose: verbose display (True) or silent (False)
          :return (float), averaged variance between two different samples
                           within the same class
@@ -365,8 +365,8 @@ class Training(InstrumentCollector):
     def compute_between_variance(self, fps, verbose=True):
         """
          Computes averaged between-class variance from the Training dataset.
-         :param fps: frames per second to be set
-                     pass as None not to change default fps
+         :param fps: frames per second to be set;
+                     pass as None to use the default fps
          :param verbose: verbose display (True) or silent (False)
          :return: (float), the averaged dist between two samples from different classes
         """
@@ -402,8 +402,8 @@ class Training(InstrumentCollector):
         :param beta: (float), defines weights activity;
                       the best beta value is around 100;
                       set it to None to model when beta vanishes;
-        :param fps: frames per second to be set
-                    pass as None not to change default fps
+        :param fps: frames per second to be set;
+                    pass as None to use the default fps
         :param verbose: verbose display (True) or silent (False)
         """
         self.compute_weights(mode, beta, fps)
@@ -435,8 +435,8 @@ class Training(InstrumentCollector):
          It's a simple form of plotting the results.
          Use choose_beta_pretty for nice plotting.
          :param mode: defines moving markers
-         :param fps: frames per second to be set
-                     pass as None not to change default fps
+         :param fps: frames per second to be set;
+                     pass as None to use the default fps
         """
         print("%s: choosing the beta (simple) with FPS = %s" % (self.MotionClass.__name__, fps))
         beta_range = 1e-6, 1e-3, 1e0, 1e1, 1e2, 1e3
@@ -467,13 +467,13 @@ class Training(InstrumentCollector):
          It's a pretty version of plotting the results.
          Use a simple one, if you cannot get the logic.
          :param mode: defines moving markers
-         :param fps: frames per second to be set
-                     pass as None not to change default fps
+         :param fps: frames per second to be set;
+                     pass as None to use the default fps
          :param reset: reset (True) or continue (False) progress
         """
         begin = time.time()
         print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
-        if not os.path.exists("choosing_beta.json"): reset = True
+        if not os.path.exists("progress/choosing_beta.json"): reset = True
         beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5
         if reset:
             betas_left = beta_range
@@ -489,7 +489,7 @@ class Training(InstrumentCollector):
             }
             print("Reset progress.")
         else:
-            progress = json.load(open("choosing_beta.json"))
+            progress = json.load(open("progress/choosing_beta.json"))
             start = len(progress["betas_used"])
             betas_left = beta_range[start:]
             print("Last computed beta was %.1e" % beta_range[start-1])
@@ -510,7 +510,7 @@ class Training(InstrumentCollector):
             progress["betas_used"].append(beta)
             progress["duration"] += int(time.time() - begin)
 
-            json.dump(progress, open("choosing_beta.json", 'w'))
+            json.dump(progress, open("progress/choosing_beta.json", 'w'))
 
         ind_highlight = np.argmax(progress["ratios"])
         best_ratio = progress["ratios"][ind_highlight]
@@ -545,7 +545,7 @@ class Training(InstrumentCollector):
         plt.xlabel("log(beta)")
         plt.suptitle("Choosing the best beta")
         plt.savefig("png/choosing_beta.png")
-        json.dump(progress, open("choosing_beta.json", 'w'))
+        json.dump(progress, open("progress/choosing_beta.json", 'w'))
         print("\t Duration: ~%d m" % (progress["duration"] / 60.))
         plt.show()
 
@@ -562,13 +562,13 @@ class Training(InstrumentCollector):
         :param step: fps step
         :param reset: reset (True) or continue (False) progress
         """
-        if not os.path.exists("ratio_vs_fps_progress.json"): reset = True
+        if not os.path.exists("progress/ratio_vs_fps.json"): reset = True
         if reset:
             fps_left = np.arange(start, end+step, step)
             progress = {"fps_used": [], "r_got": [], "rstd_got": []}
             print("Reset progress.")
         else:
-            progress = json.load(open("ratio_vs_fps_progress.json", 'r'))
+            progress = json.load(open("progress/ratio_vs_fps.json", 'r'))
             next_fps = progress["fps_used"][-1] + step
             print("Continue progress from FPS = %d." % next_fps)
             fps_left = np.arange(next_fps, end+step, step)
@@ -581,7 +581,7 @@ class Training(InstrumentCollector):
             progress["fps_used"].append(int(fps))
             progress["r_got"].append(self.proj_info["d-ratio"])
             progress["rstd_got"].append(self.proj_info["d-ratio-std"])
-            json.dump(progress, open("ratio_vs_fps_progress.json", 'w'))
+            json.dump(progress, open("progress/ratio_vs_fps.json", 'w'))
 
         fps_used = progress["fps_used"]
         ratios = progress["r_got"]

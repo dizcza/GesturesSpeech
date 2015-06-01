@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from Emotion.excel_parser import parse_xls
+from Emotion.prepare_data import parse_xls
 
 
 def find_emotion(emotion_basket, src_path):

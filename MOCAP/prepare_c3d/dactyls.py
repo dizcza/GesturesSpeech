@@ -1,9 +1,10 @@
 # coding=utf-8
 
-import numpy as np
 import os
-from MOCAP.writer import split_file
 
+import numpy as np
+
+from MOCAP.prepare_c3d.writer import split_file
 
 UKR_ALPHABET = u"абвгґдеєжзиіїйклмнопрстуфхцчшщьюя'"
 

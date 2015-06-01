@@ -24,10 +24,6 @@
     <td>Kinect testing part</td>
   </tr>
   <tr>
-    <td>kplotter.py</td>
-    <td>plots training results</td>
-  </tr>
-  <tr>
     <td>KINECT_INFO.json</td>
     <td>stores the weights and the last training results</td>
   </tr>

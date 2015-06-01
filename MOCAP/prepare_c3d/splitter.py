@@ -1,11 +1,12 @@
 # coding=utf-8
 
-import MOCAP.helper as helper
-from MOCAP.mreader import HumanoidUkr
-from MOCAP.helper import get_corrupted_frames
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+
+from MOCAP.mreader import HumanoidUkr
+from MOCAP.prepare_c3d.helper import get_corrupted_frames, init_frame
 
 
 class HumanoidUkrSplitter(HumanoidUkr):
@@ -22,7 +23,7 @@ class HumanoidUkrSplitter(HumanoidUkr):
         :param mode: whether use only hands marker or full set of markers
         :param step: number of frames per step
         """
-        relaxed_frame = helper.init_frame(self.fpath)
+        relaxed_frame = init_frame(self.fpath)
         init_pos = self.data[:, relaxed_frame, :]
         if mode == "bothHands":
             hand_ids = self.get_ids(self.hand_markers)

@@ -6,12 +6,12 @@
 #       For more details, look at btk_fake.py source header in the current project scope.                              #
 ########################################################################################################################
 
-from MOCAP.splitter import *
+from MOCAP.prepare_c3d.splitter import *
 
 try:
     import btk
 except ImportError:
-    import MOCAP.btk_fake as btk
+    import MOCAP.local_tools.btk_fake as btk
 
 
 def rewrite_files_in(folder):

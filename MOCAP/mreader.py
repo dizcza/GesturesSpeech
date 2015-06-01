@@ -2,18 +2,17 @@
 
 import os
 import numpy as np
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+import c3d
 
 from tools.humanoid import HumanoidBasic
-import MOCAP.labelling as labelling
-from MOCAP.c3d_viewer import Viewer
-import c3d
+import MOCAP.local_tools.labelling as labelling
+from MOCAP.local_tools.c3d_viewer import Viewer
 
 try:
     import btk
 except ImportError:
-    import MOCAP.btk_fake as btk
+    import MOCAP.local_tools.btk_fake as btk
 
 MOCAP_PATH = r"D:\GesturesDataset\MoCap\splitAll"
 
@@ -24,10 +23,10 @@ def gather_points_data(acq):
     :return: (#markers, #frames, 3) ndarray of 3d points data
     """
     if hasattr(acq, "fake") and acq.fake is True:
-        # returning data read by c3d module
+        # returning data read with c3d module
         return acq.GetData()
     else:
-        # returning data read by btk module
+        # returning data read with native btk module
         data = np.empty((3, acq.GetPointFrameNumber(), 1))
         for i in range(0, acq.GetPoints().GetItemNumber()):
             label_id = acq.GetPoint(i).GetLabel()
@@ -94,8 +93,7 @@ class HumanoidUkr(HumanoidBasic):
         :return: string representation of gesture
         """
         s = HumanoidBasic.__str__(self)
-        self.estimate_hand_contribution()
-        rhand = self.rhand_contib * 100.
+        rhand = self.estimate_hand_contribution()
         lhand = 100. - rhand
         s += "\n\t rhand x lhand: \t %.1f%% x %.1f%%" % (rhand, lhand)
         return s
@@ -127,14 +125,15 @@ class HumanoidUkr(HumanoidBasic):
                 rhand_contrib += deviation
             elif marker[0] == "L":
                 lhand_contrib += deviation
-        self.rhand_contib = rhand_contrib / (rhand_contrib + lhand_contrib)
+        rhand_contib = 100. * rhand_contrib / (rhand_contrib + lhand_contrib)
+        return rhand_contib
 
     def save_displacement(self, mode="bothHands"):
         """
             Saves joint displacements in png.
         :param mode: use both hand (by default) or only prime one
         """
-        HumanoidBasic.plot_displacement(self, mode)
+        HumanoidBasic.plot_displacement(self, mode, ())
         plt.savefig("joint_displacements.png")
 
     def animate(self, faster=7):
@@ -152,23 +151,6 @@ class HumanoidUkr(HumanoidBasic):
             Viewer(c3d.Reader(open(self.fpath, 'rb'))).mainloop()
         except StopIteration:
             pass
-
-    def save_anim(self, faster=7):
-        """
-         Saves animation in mp4 video file.
-        :param faster: how much faster animate it
-        """
-        self.init_3d()
-        self.faster = faster
-
-        anim = animation.FuncAnimation(self.fig,
-                                       func=self.next_frame,
-                                       frames=int(self.frames/faster),
-                                       interval=1.,     # in ms
-                                       blit=True)
-        mp4_file = self.name + '.mp4'
-        anim.save(mp4_file, writer='ffmpeg', fps=50)
-        print("Animation is saved in %s" % mp4_file)
 
 
 def test_nan_weights():
