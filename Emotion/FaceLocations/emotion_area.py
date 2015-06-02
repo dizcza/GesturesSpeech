@@ -4,7 +4,7 @@ import pickle
 import json
 import os
 import numpy as np
-from Emotion.emotion import Emotion
+from Emotion.em_reader import Emotion
 from Emotion.FaceLocations.preparation import get_face_areas
 
 

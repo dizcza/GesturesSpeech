@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 
-from Emotion.emotion import EMOTION_PATH_PICKLES
+from Emotion.em_reader import EMOTION_PATH_PICKLES
 from Emotion.FaceLocations.emotion_area import EmotionArea
 from Emotion.FaceLocations.preparation import get_face_areas
 from tools.instruments import Testing

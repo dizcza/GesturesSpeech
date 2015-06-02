@@ -65,7 +65,7 @@ def align_markers_pos(known_data, unknown_data):
     return unknown_data
 
 
-def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True, labels_map=None):
+def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True):
     """
      Main comparison function for two gesture examples.
      NOTE:

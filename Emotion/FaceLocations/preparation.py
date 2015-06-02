@@ -5,7 +5,7 @@ import os
 import shutil
 import json
 import pickle
-from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
+from Emotion.em_reader import Emotion, EMOTION_PATH_PICKLES
 
 
 def get_face_markers():

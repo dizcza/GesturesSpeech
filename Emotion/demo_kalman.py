@@ -5,7 +5,7 @@ import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
-from Emotion.emotion import Emotion, EMOTION_PATH_PICKLES
+from Emotion.em_reader import Emotion, EMOTION_PATH_PICKLES
 from tools.kalman import kalman_1d, kalman_filter
 
 

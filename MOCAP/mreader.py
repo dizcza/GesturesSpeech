@@ -170,6 +170,7 @@ def demo_run():
      MoCap project demo.
     """
     gest_path = os.path.join(MOCAP_PATH, "Training", "M1_02_v2_gest1", "M1_02_v2_gest1_sample0.c3d")
+    assert os.path.exists(gest_path), "Unable to find the %s" % gest_path
     gest = HumanoidUkr(gest_path)
     print(gest)
     rhand_labels = [label for label in gest.moving_markers if label[0] == 'R']

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from tools.comparison import compare, show_comparison
 from Kinect.kreader import KINECT_PATH
 from MOCAP.mreader import MOCAP_PATH
-from Emotion.emotion import EMOTION_PATH_PICKLES
+from Emotion.em_reader import EMOTION_PATH_PICKLES
 
 
 class InstrumentCollector(object):
@@ -165,11 +165,6 @@ class Testing(InstrumentCollector):
         start = time.time()
         self.load_info()
 
-        if "interchangeable_markers" in self.proj_info:
-            labels_map = self.proj_info["interchangeable_markers"]
-        else:
-            labels_map = None
-
         patterns = {}
         supremum = {}
         infimum = {}
@@ -195,14 +190,14 @@ class Testing(InstrumentCollector):
                 other_costs = []
 
                 for theSamePattern in patterns[directory]:
-                    dist = compare(theSamePattern, unknownGest, weighted=weighted, labels_map=labels_map)
+                    dist = compare(theSamePattern, unknownGest, weighted=weighted)
                     the_same_costs.append(dist)
 
                 other_patterns = []
                 for class_name, gestsLeft in patterns.items():
                     if class_name != directory:
                         for knownGest in gestsLeft:
-                            dist = compare(knownGest, unknownGest, weighted=weighted, labels_map=labels_map)
+                            dist = compare(knownGest, unknownGest, weighted=weighted)
                             other_costs.append(dist)
                             other_patterns.append(knownGest)
                 min_other_cost = min(other_costs)
@@ -213,7 +208,7 @@ class Testing(InstrumentCollector):
                     # the worst test scenario is FAILED
                     ind = np.argmin(other_costs)
                     got_pattern = other_patterns[ind]
-                    assert got_pattern.name != unknownGest.name, "smth is wrong"
+                    assert got_pattern.name != unknownGest.name, "invalid data structure"
                     supremum[directory] += 1.
                     # print_err(got_pattern, unknownGest)
 
@@ -221,7 +216,7 @@ class Testing(InstrumentCollector):
                     # both the worst and the best test scenarios are FAILED
                     ind = np.argmin(other_costs)
                     got_pattern = other_patterns[ind]
-                    assert got_pattern.name != unknownGest.name, "smth is wrong"
+                    assert got_pattern.name != unknownGest.name, "invalid data structure"
                     infimum[directory] += 1
                     print_err(got_pattern, unknownGest)
 

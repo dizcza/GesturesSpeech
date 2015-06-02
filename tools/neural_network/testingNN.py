@@ -7,7 +7,7 @@ from pybrain.tools.customxml.networkreader import NetworkReader
 from tools.neural_network.trainingNN import extract_features, collect_gestures
 from tools.instruments import InstrumentCollector
 
-from Emotion.emotion import Emotion
+from Emotion.em_reader import Emotion
 from Kinect.kreader import HumanoidKinect
 from MOCAP.mreader import HumanoidUkr
 

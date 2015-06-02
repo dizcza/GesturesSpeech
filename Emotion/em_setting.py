@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from Emotion.emotion import Emotion
+from Emotion.em_reader import Emotion
 from tools.instruments import Training
 
 

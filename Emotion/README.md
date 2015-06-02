@@ -12,8 +12,8 @@
   </tr>
 
   <tr>
-    <td>emotion.py</td>
-    <td>Emotion: a BasicMotion class wrapper</td>
+    <td>em_reader.py</td>
+    <td>Emotion class for reading pickled data (refer to <a href="https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data">_data </a>directory)</td>
   </tr>
   <tr>
     <td>em_setting.py</td>

@@ -258,6 +258,7 @@ def demo_run():
      Emotion project demo.
     """
     em_path = os.path.join(EMOTION_PATH_PICKLES, "Training", "улыбка", "47-3-1.pkl")
+    assert os.path.exists(em_path), "Unable to find the %s" % em_path
     em = Emotion(em_path)
     print(em)
     em.show_displacements(None, ("liup", "lidn", "jaw", "lir", "lil"))

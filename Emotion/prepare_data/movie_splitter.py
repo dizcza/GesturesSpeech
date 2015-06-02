@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from Emotion.prepare_data import parse_xls
+from Emotion.prepare_data.excel_parser import parse_xls
 
 
 def find_emotion(emotion_basket, src_path):
@@ -25,12 +25,12 @@ def split_movies():
     """
     emotion_basket = parse_xls()[0]
     emotion_folder = r"D:\videos_mocap_18_11\emotions"
-    shutil.rmtree(emotion_folder)
+    shutil.rmtree(emotion_folder, ignore_errors=True)
+    os.mkdir(emotion_folder)
 
     for emotion in emotion_basket:
-        em_path = os.path.join(emotion_folder, emotion)
-        shutil.rmtree(em_path, ignore_errors=True)
-        os.mkdir(em_path)
+        class_path = os.path.join(emotion_folder, emotion)
+        os.mkdir(class_path)
 
     movies_path = r"D:\videos_mocap_18_11\alexandr\cut"
     for mov in os.listdir(movies_path):

@@ -13,9 +13,10 @@
 6.  [Body joint weights. Discriminant ratio](#weights)
 7.  [The worst and the best testing scenarios](#scenario)
 8.  [Weighted DTW comparison](#wdtw)
-9.  [Packages](#tools)
+9.  [Tools](#tools)
 </nav>
 ![Добрий ранок](png/anim.gif)
+
 
 
 <h2 id="info">Projects info</h2>
@@ -113,20 +114,21 @@
 
 
 <h2 id="run">How to run a project</h2>
-To run a particular project (_MoCap_, _Kinect_ or _Emotion_), first of all, make sure you've completely installed all [obligatory Python packages](#tools). After that, open the respective folder and run 
+To run a particular project (_MoCap_, _Kinect_ or _Emotion_), first of all, make sure you've completely installed all [obligatory Python packages](#tools). Secondly, each ```[PREFIX]reader.py``` initializes a constant ```PROJECTNAME_PATH``` -- a path to data directory for current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you should change that constant as well. Keep in mind, that the chosen data directory should preserve the original structure, used in a project (see [Kinect database structure](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar) for example):
+
+<div align="center"><img src="png/data_structure.PNG" width="300"></div>
+
+After that, open the respective folder and run 
 
 * ```[PREFIX]reader.py``` for data demonstration (visualization);
-* ```[PREFIX]test.py``` for WDTW testing;
 * ```[PREFIX]setting.py``` for WDTW training,
-
-
-where [PREFIX] is the first character of the project name. 
+* ```[PREFIX]test.py``` for WDTW testing;
 
 
 
 <h2 id="diagram">Class diagram</h2>
 
-<div align="center"><img src="http://yuml.me/diagram/scruffy/class/[BasicMotion]^-[HumanoidBasic], [BasicMotion]^-[Emotion], [HumanoidBasic]^-[MoCap], [HumanoidBasic]^-[Kinect]"></div>
+<div align="center"><img src="http://yuml.me/diagram/scruffy/class/[BasicMotion]^-[HumanoidBasic], [BasicMotion]^-[Emotion], [HumanoidBasic]^-[MoCap], [HumanoidBasic]^-[Kinect]" width=250></div>
 
 
 
@@ -299,7 +301,7 @@ Another interesting observation shows that there is no need to use the whole den
 
 
 
-<h2 id="tools">Packages</h2>
+<h2 id="tools">Tools</h2>
 
 Free 3D Graphics Lab Motion Capture visualizers:
 
@@ -309,9 +311,9 @@ Free 3D Graphics Lab Motion Capture visualizers:
 
 The current project is portable. Although it's built and maintained upon Python 3.4 x32 version, you can use 2.7.8 or higher 32 bit version of Python.
 
-Obligatory Python packages (can be found at [http://www.lfd.uci.edu/~gohlke/pythonlibs)](http://www.lfd.uci.edu/~gohlke/pythonlibs):
+**Obligatory Python packages** (can be found at [http://www.lfd.uci.edu/~gohlke/pythonlibs)](http://www.lfd.uci.edu/~gohlke/pythonlibs):
 
-*   [c3d](https://github.com/EmbodiedCognition/py-c3d) to read and display c3d contents (**Note**: if you use Python 2.7.x, install also native [Biomechanical ToolKit](http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe))
+*   [c3d](https://github.com/EmbodiedCognition/py-c3d) to read and display c3d contents (Note: if you use Python 2.7.x, install also native [Biomechanical ToolKit](http://code.google.com/p/b-tk/downloads/detail?name=python-btk-0.3.0_win32.exe))
 *   for pretty animation like in OpenGL:
     *   [climate](http://github.com/lmjohns3/py-cli)
     *   [curses](http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses)

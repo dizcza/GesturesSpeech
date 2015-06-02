@@ -15,7 +15,7 @@ from pybrain.supervised.trainers import BackpropTrainer
 from pybrain.structure.modules import SoftmaxLayer
 from pybrain.tools.customxml.networkwriter import NetworkWriter
 
-from Emotion.emotion import Emotion
+from Emotion.em_reader import Emotion
 from Kinect.kreader import HumanoidKinect
 from MOCAP.mreader import HumanoidUkr
 from tools.instruments import InstrumentCollector

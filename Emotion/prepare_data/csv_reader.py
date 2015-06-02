@@ -7,8 +7,8 @@ import numpy as np
 import win32com.client as win32
 import shutil
 
-from Emotion.prepare_data import parse_xls, upd_column, parse_whole_xls
-from Emotion.emotion import EMOTION_PATH_PICKLES
+from Emotion.prepare_data.excel_parser import parse_xls, upd_column, parse_whole_xls
+from Emotion.em_reader import EMOTION_PATH_PICKLES
 
 
 EMOTION_PATH_CSV = r"D:\GesturesDataset\Emotion\csv"

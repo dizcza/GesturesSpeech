@@ -137,6 +137,7 @@ def demo_run():
      Kinect project demo.
     """
     gest_path = os.path.join(KINECT_PATH, "Training", "RightHandPushUp", "RightHandPushUp_000.txt")
+    assert os.path.exists(gest_path), "Unable to find the %s" % gest_path
     gest = HumanoidKinect(gest_path)
     print(gest)
     gest.show_displacements("bothHands", ("ElbowRight", "WristRight", "HandRight"))
