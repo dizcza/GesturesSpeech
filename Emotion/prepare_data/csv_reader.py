@@ -140,7 +140,7 @@ def convert_dir(directory, *args):
     file_info["emotion"] = find_key_by_val(emotions, directory)
     file_info["labels"] = list(data_dic.keys())
     fpath = os.path.join(EMOTION_PATH_PICKLES, directory + ".pkl")
-    pickle.dump(file_info, open(fpath, 'wb'))
+    pickle.dump(file_info, open(fpath, 'wb'), protocol=2)
 
 
 def to_array(data_dic):

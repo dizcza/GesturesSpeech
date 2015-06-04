@@ -4,13 +4,17 @@ import pickle
 import json
 import os
 import numpy as np
-from Emotion.em_reader import Emotion
+import warnings
+from Emotion.em_reader import Emotion, EMOTION_PATH_PICKLES
 from Emotion.FaceLocations.preparation import get_face_areas
 
 
 isString = lambda item: type(item).__name__ in ("str", "unicode")
 isList = lambda item: type(item).__name__ in ("list", "tuple")
 isMultipleActions = lambda item: type(item).__name__ == "MultipleActions"
+
+
+warnings.warn("Emotion Area project is not finished yet!")
 
 
 class MultipleActions(object):
@@ -106,10 +110,10 @@ class EmotionArea(Emotion):
 
 
 def test_face_area():
-    smiles = r"D:\GesturesDataset\Emotion\pickles\FaceAreas\mouth\Training\smile"
-    first_smile = os.listdir(smiles)[0]
-    first_smile = os.path.join(smiles, first_smile)
-    emArea = EmotionArea(first_smile)
+    smiles_dir = os.path.join(EMOTION_PATH_PICKLES, r"FaceAreas\mouth\Training\smile")
+    first_smile_path = os.listdir(smiles_dir)[0]
+    first_smile_path = os.path.join(smiles_dir, first_smile_path)
+    emArea = EmotionArea(first_smile_path)
     emArea.data = emArea.norm_data
     print(emArea)
     emArea.show_displacements(None)

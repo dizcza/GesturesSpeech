@@ -9,6 +9,8 @@ from Kinect.kreader import HumanoidKinect
 from MOCAP.mreader import HumanoidUkr
 
 import matplotlib.pyplot as plt
+import sys
+import os
 
 
 def plot_error_vs_fps():
@@ -34,7 +36,8 @@ def plot_error_vs_fps():
     plt.title("out-of-sample error VS fps")
     plt.grid()
     plt.legend(["Kinect", "MoCap"], numpoints=1)
-    plt.savefig("../png/error_vs_fps.png")
+    png_path = os.path.join(os.path.dirname(sys.argv[0]), "../png/error_vs_fps.png")
+    plt.savefig(png_path)
     plt.show()
 
 

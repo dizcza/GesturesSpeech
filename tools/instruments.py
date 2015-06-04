@@ -3,6 +3,7 @@
 import os
 import time
 import json
+import sys
 
 import numpy as np
 from numpy.linalg import norm
@@ -18,6 +19,7 @@ class InstrumentCollector(object):
     def __init__(self, MotionClass, prefix=""):
         self.MotionClass = MotionClass
         self.prefix = prefix
+        self.script_dir_path = os.path.dirname(sys.argv[0])
         _paths = dict(HumanoidUkr=MOCAP_PATH,
                       HumanoidKinect=KINECT_PATH,
                       Emotion=EMOTION_PATH_PICKLES,
@@ -41,8 +43,9 @@ class InstrumentCollector(object):
          Initializes empty PROJECT_INFO.
         """
         try:
-            self.proj_info = json.load(open(self._info_name, 'r'))
-        except FileNotFoundError:
+            proj_info_path = os.path.join(self.script_dir_path, self._info_name)
+            self.proj_info = json.load(open(proj_info_path, 'r'))
+        except IOError:
             self.proj_info = {
                 "weights": {},
                 "beta": None,
@@ -56,7 +59,8 @@ class InstrumentCollector(object):
             }
 
     def dump_info(self):
-        json.dump(self.proj_info, open(self._info_name, 'w'))
+        proj_info_path = os.path.join(self.script_dir_path, self._info_name)
+        json.dump(self.proj_info, open(proj_info_path, 'w'))
 
     def load_train_samples(self, fps):
         """
@@ -271,7 +275,8 @@ class Testing(InstrumentCollector):
         plt.xlabel("FPS")
         plt.title("out-of-sample error VS fps")
         plt.grid()
-        plt.savefig("png/error_vs_fps.png")
+        png_path = os.path.join(self.script_dir_path, "png", "error_vs_fps.png")
+        plt.savefig(png_path)
         plt.show()
 
 
@@ -378,7 +383,7 @@ class Training(InstrumentCollector):
         between_std = np.std(one_vs_others_var)
         self.proj_info["between_variance"] = between_var
         self.proj_info["between_std"] = between_std
-        json.dump(self.proj_info, open(self._info_name, 'w'))
+        self.dump_info()
 
         if verbose:
             duration = time.time() - start_timer
@@ -421,7 +426,7 @@ class Training(InstrumentCollector):
             self.proj_info["d-ratio-std"] = between_std
 
         print("(!) New discriminant ratio: %f (FPS = %s)" % (self.proj_info["d-ratio"], fps))
-        json.dump(self.proj_info, open(self._info_name, 'w'))
+        self.dump_info()
 
 
     def choose_beta_simple(self, mode, fps):
@@ -468,7 +473,8 @@ class Training(InstrumentCollector):
         """
         begin = time.time()
         print("%s: choosing the beta with FPS = %s" % (self.MotionClass.__name__, fps))
-        if not os.path.exists("progress/choosing_beta.json"): reset = True
+        progress_beta_path = os.path.join(self.script_dir_path, "progress", "choosing_beta.json")
+        if not os.path.exists(progress_beta_path): reset = True
         beta_range = 1e-6, 1e-4, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5
         if reset:
             betas_left = beta_range
@@ -484,7 +490,7 @@ class Training(InstrumentCollector):
             }
             print("Reset progress.")
         else:
-            progress = json.load(open("progress/choosing_beta.json"))
+            progress = json.load(open(progress_beta_path))
             start = len(progress["betas_used"])
             betas_left = beta_range[start:]
             print("Last computed beta was %.1e" % beta_range[start-1])
@@ -505,7 +511,7 @@ class Training(InstrumentCollector):
             progress["betas_used"].append(beta)
             progress["duration"] += int(time.time() - begin)
 
-            json.dump(progress, open("progress/choosing_beta.json", 'w'))
+            json.dump(progress, open(progress_beta_path, 'w'))
 
         ind_highlight = np.argmax(progress["ratios"])
         best_ratio = progress["ratios"][ind_highlight]
@@ -539,8 +545,8 @@ class Training(InstrumentCollector):
         plt.ylim(0.995 * min(progress["ratios"]), 1.005 * max(progress["ratios"]))
         plt.xlabel("log(beta)")
         plt.suptitle("Choosing the best beta")
-        plt.savefig("png/choosing_beta.png")
-        json.dump(progress, open("progress/choosing_beta.json", 'w'))
+        png_path = os.path.join(self.script_dir_path, "png", "choosing_beta.png")
+        plt.savefig(png_path)
         print("\t Duration: ~%d m" % (progress["duration"] / 60.))
         plt.show()
 
@@ -557,13 +563,16 @@ class Training(InstrumentCollector):
         :param step: fps step
         :param reset: reset (True) or continue (False) progress
         """
-        if not os.path.exists("progress/ratio_vs_fps.json"): reset = True
+        progress_ratio_path = os.path.join(self.script_dir_path,
+                                           "progress",
+                                           "ratio_vs_fps.json")
+        if not os.path.exists(progress_ratio_path): reset = True
         if reset:
             fps_left = np.arange(start, end+step, step)
             progress = {"fps_used": [], "r_got": [], "rstd_got": []}
             print("Reset progress.")
         else:
-            progress = json.load(open("progress/ratio_vs_fps.json", 'r'))
+            progress = json.load(open(progress_ratio_path, 'r'))
             next_fps = progress["fps_used"][-1] + step
             print("Continue progress from FPS = %d." % next_fps)
             fps_left = np.arange(next_fps, end+step, step)
@@ -576,7 +585,7 @@ class Training(InstrumentCollector):
             progress["fps_used"].append(int(fps))
             progress["r_got"].append(self.proj_info["d-ratio"])
             progress["rstd_got"].append(self.proj_info["d-ratio-std"])
-            json.dump(progress, open("progress/ratio_vs_fps.json", 'w'))
+            json.dump(progress, open(progress_ratio_path, 'w'))
 
         fps_used = progress["fps_used"]
         ratios = progress["r_got"]
@@ -589,5 +598,6 @@ class Training(InstrumentCollector):
         plt.title("Discriminant ratio VS fps")
         plt.grid()
         plt.xlim(0, end + 1)
-        plt.savefig("png/ratio_vs_fps.png")
+        png_path = os.path.join(self.script_dir_path, "png", "ratio_vs_fps.png")
+        plt.savefig(png_path)
         plt.show()

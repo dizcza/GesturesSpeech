@@ -122,7 +122,7 @@ def split_face_areas_tricky(trn_rate=0.5):
                         "action": val_act
                     }
                     obj_path = os.path.join(_area_act_path, "%s.pkl" % a_file)
-                    pickle.dump(obj, open(obj_path, 'wb'))
+                    pickle.dump(obj, open(obj_path, 'wb'), protocol=2)
 
 
 def resave_face_structure_json():

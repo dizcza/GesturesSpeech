@@ -38,9 +38,9 @@ def init_unique_emotion_classes():
 
 def get_authors():
     authors = {
-        u"volodymyr",
-        u"oleksandr",
-        u"alexandr"
+        "volodymyr",
+        "oleksandr",
+        "alexandr"
     }
     return authors
 
@@ -92,7 +92,6 @@ def verify_excel_file():
     """
      Checks for not overlapping cell values in xlsx file.
     """
-    # excel = win32.GetActiveObject('Excel.Application')
     excel = win32.gencache.EnsureDispatch('Excel.Application')
     wb = excel.Workbooks.Open(get_description_path())
     ws = wb.Worksheets(u"границы сегментов")
@@ -217,7 +216,5 @@ def how_many_examples_we_have():
 
 
 if __name__ == "__main__":
-    # TODO deal with "так себе"
     em_basket, auth_basket, bound = parse_xls()
     pprint(em_basket)
-    # how_many_examples_we_have()

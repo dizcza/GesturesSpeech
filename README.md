@@ -114,7 +114,7 @@
 
 
 <h2 id="run">How to run a project</h2>
-To run a particular project (_MoCap_, _Kinect_ or _Emotion_), first of all, make sure you've completely installed all [obligatory Python packages](#tools). Secondly, each ```[PREFIX]reader.py``` initializes a constant ```PROJECTNAME_PATH``` -- a path to data directory for current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you should change that constant as well. Keep in mind, that the chosen data directory should preserve the original structure, used in a project (see [Kinect database structure](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar) for example):
+To run a particular project (_MoCap_, _Kinect_ or _Emotion_), first of all, make sure you've completely installed all [obligatory Python packages](#tools). Secondly, each ```[PREFIX]reader.py``` initializes a constant ```PROJECTNAME_PATH``` -- a path to data directory for current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you should change that constant as well. Keep in mind, that the chosen data directory should preserve the original structure, used in a project (see [Kinect database](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar) or [Emotion database](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data) structures  for example):
 
 <div align="center"><img src="png/data_structure.PNG" width="300"></div>
 
@@ -124,6 +124,7 @@ After that, open the respective folder and run
 * ```[PREFIX]setting.py``` for WDTW training,
 * ```[PREFIX]test.py``` for WDTW testing;
 
+Whether it's a reader, setting or a testing script file, you can run it through Python IDE (PyCharm is used here) or via cmd by typing ```$ python -m PROJECTNAME.filename``` (without a ```.py```) inside a global project directory, which is  ```GesturesSpeech```. For example, type ```$ python -m Kinect.kreader``` to run Kinect demo.
 
 
 <h2 id="diagram">Class diagram</h2>

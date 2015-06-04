@@ -128,14 +128,6 @@ class HumanoidUkr(HumanoidBasic):
         rhand_contib = 100. * rhand_contrib / (rhand_contrib + lhand_contrib)
         return rhand_contib
 
-    def save_displacement(self, mode="bothHands"):
-        """
-            Saves joint displacements in png.
-        :param mode: use both hand (by default) or only prime one
-        """
-        HumanoidBasic.plot_displacement(self, mode, ())
-        plt.savefig("joint_displacements.png")
-
     def animate(self, faster=7):
         """
          Animates 3d data.
@@ -175,7 +167,7 @@ def demo_run():
     print(gest)
     rhand_labels = [label for label in gest.moving_markers if label[0] == 'R']
     gest.plot_displacement("bothHands", rhand_labels)
-    plt.title("'Добрий ранок' joint displacement")
+    plt.title(u"'Добрий ранок' joint displacement")
     plt.show()
     gest.animate_pretty()
 

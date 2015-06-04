@@ -1,11 +1,12 @@
 # coding=utf-8
 
 import numpy as np
-import matplotlib.pyplot as plt
 from numpy.linalg import norm
-import json
+import matplotlib.pyplot as plt
 from matplotlib import rc
+import json
 import os
+import sys
 
 
 font = {'family': 'Verdana',
@@ -203,12 +204,15 @@ class BasicMotion(object):
         """
          Loads weights from _INFO.json
         """
+        active_dirname = os.path.dirname(sys.argv[0])
         json_file = self.project.upper() + "_INFO.json"
+        json_file = os.path.join(active_dirname, json_file)
         if not os.path.exists(json_file):
-            json_file = "../" + json_file
+            active_dirname = os.path.dirname(active_dirname)
+            json_file = os.path.join(active_dirname, json_file)
         try:
             dic_info = json.load(open(json_file, 'r'))
-        except FileNotFoundError:
+        except IOError:
             dic_info = {"weights": ()}
 
         weights_aver_dic = dic_info["weights"]

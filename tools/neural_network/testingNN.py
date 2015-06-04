@@ -1,5 +1,7 @@
 # coding=utf-8
 
+import sys
+import os
 import numpy as np
 import json
 import time
@@ -41,7 +43,8 @@ def test_project(instr):
 
     project_name = tst_samples[0].project
     net = NetworkReader.readFrom(r"weights/%s.xml" % project_name)
-    moving_marks = json.load(open("common_markers.json"))[project_name]
+    common_markers_path = os.path.join(os.path.dirname(sys.argv[0]), "common_markers.json")
+    moving_marks = json.load(open(common_markers_path))[project_name]
     use_frames = 20
 
     misclassified = [0, 0]

@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import json
@@ -97,28 +98,29 @@ def visualize(results_perc, proj_name):
     plt.title("Iteration process")
     plt.xlabel("# epochs")
     plt.ylabel("Error, %")
-    plt.savefig("png/%s.png" % proj_name)
+    png_path = os.path.join(os.path.dirname(sys.argv[0]), "png/%s.png" % proj_name)
+    plt.savefig(png_path)
     plt.show()
 
 
 def dump_common_markers(moving_marks, proj_name):
-    fname = "common_markers.json"
-    if os.path.exists(fname):
-        cm = json.load(open(fname))
+    common_markers_path = os.path.join(os.path.dirname(sys.argv[0]), "common_markers.json")
+    if os.path.exists(common_markers_path):
+        cm = json.load(open(common_markers_path))
     else:
         cm = {}
     cm[proj_name] = moving_marks
-    json.dump(cm, open(fname, 'w'))
+    json.dump(cm, open(common_markers_path, 'w'))
 
 
 def dump_timing(duration, proj_name):
-    fname = "timings.json"
-    if os.path.exists(fname):
-        timing = json.load(open(fname))
+    timings_path = os.path.join(os.path.dirname(sys.argv[0]), "timings.json")
+    if os.path.exists(timings_path):
+        timing = json.load(open(timings_path))
     else:
         timing = {}
     timing[proj_name] = int(duration)
-    json.dump(timing, open(fname, 'w'))
+    json.dump(timing, open(timings_path, 'w'))
 
 
 def run_network(trn_samples, tst_samples, names_convention, mov_mark_mode=None,
