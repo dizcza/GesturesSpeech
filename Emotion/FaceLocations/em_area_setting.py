@@ -6,7 +6,7 @@ import numpy as np
 
 from Emotion.FaceLocations.emotion_area import EmotionArea
 from Emotion.FaceLocations.preparation import get_face_areas
-from Emotion.em_reader import EMOTION_PATH_PICKLES
+from Emotion.em_reader import EMOTION_PATH
 from tools.instruments import Training
 
 
@@ -20,7 +20,7 @@ def face_area_compute_variance(fps):
     within_vars, between_vars = [], []
     for area in face_areas:
         print("*** TOOK FACE AREA: %s" % area)
-        area_folder = os.path.join(EMOTION_PATH_PICKLES, "FaceAreas", area)
+        area_folder = os.path.join(EMOTION_PATH, "FaceAreas", area)
         instruments = Training(EmotionArea, prefix=area_folder)
         instruments.compute_weights(None, None, fps)
         wvar = instruments.compute_within_variance(fps)

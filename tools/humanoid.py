@@ -2,7 +2,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg import norm
 
@@ -69,7 +68,7 @@ class HumanoidBasic(BasicMotion):
         self.ymin = 0.1
         self.ymax = 0.1
 
-    def init_3d(self):
+    def init_animation(self):
         """
          Initialize empty 3d plots.
         """
@@ -99,23 +98,6 @@ class HumanoidBasic(BasicMotion):
             self.pts[marker].set_data([x], [y])
             self.pts[marker].set_3d_properties([z])
         return []
-
-    def animate(self, faster=1):
-        """
-         Animates 3d data.
-        """
-        self.init_3d()
-        self.faster = faster
-
-        anim = animation.FuncAnimation(self.fig,
-                                       func=self.next_frame,
-                                       frames=int(self.frames/faster),
-                                       interval=1.,     # in ms
-                                       blit=True)
-        try:
-            plt.show(self.fig)
-        except AttributeError:
-            pass
 
 
 def align_gestures(self, other):

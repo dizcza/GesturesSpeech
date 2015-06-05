@@ -5,7 +5,7 @@ import os
 import shutil
 import json
 import pickle
-from Emotion.em_reader import Emotion, EMOTION_PATH_PICKLES
+from Emotion.em_reader import Emotion, EMOTION_PATH
 
 
 def get_face_markers():
@@ -51,7 +51,7 @@ def split_face_areas_tricky(trn_rate=0.5):
         valid_actions[face_ar] = valid_actions[face_ar][:-1]
 
     for area in face_areas:
-        area_folder = os.path.join(EMOTION_PATH_PICKLES, "FaceAreas", area)
+        area_folder = os.path.join(EMOTION_PATH, "FaceAreas", area)
         shutil.rmtree(area_folder, ignore_errors=True)
         os.mkdir(area_folder)
         trn_path = os.path.join(area_folder, "Training")
@@ -75,20 +75,20 @@ def split_face_areas_tricky(trn_rate=0.5):
                     facearea_action_filename[_area][this_act].append(fname)
 
     filename_pickle = {}
-    for pkl_log in os.listdir(EMOTION_PATH_PICKLES):
+    for pkl_log in os.listdir(EMOTION_PATH):
         if pkl_log.endswith(".pkl"):
-            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+            pkl_path = os.path.join(EMOTION_PATH, pkl_log)
             pkl_obj = pickle.load(open(pkl_path, 'rb'))
             filename_pickle[pkl_log[:-4]] = pkl_obj
 
     objects_dic = {}
-    for pkl_log in os.listdir(EMOTION_PATH_PICKLES):
+    for pkl_log in os.listdir(EMOTION_PATH):
         if pkl_log.endswith(".pkl"):
-            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+            pkl_path = os.path.join(EMOTION_PATH, pkl_log)
             objects_dic[pkl_log[:-4]] = Emotion(pkl_path)
 
     for area in face_areas:
-        area_folder = os.path.join(EMOTION_PATH_PICKLES, "FaceAreas", area)
+        area_folder = os.path.join(EMOTION_PATH, "FaceAreas", area)
         trn_path = os.path.join(area_folder, "Training")
         tst_path = os.path.join(area_folder, "Testing")
         for val_act in valid_actions[area]:

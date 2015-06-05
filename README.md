@@ -29,7 +29,7 @@
 	<tr>
 		<td>MoCap</td>
 		<td><a href="http://datascience.sehir.edu.tr/visapp2013">Kinect</a></td>
-		<td>Emotion</td>
+		<td><a href="https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data">Emotion</a></td>
 	</tr>
 	<tr>
     	<td>contents</td>
@@ -124,7 +124,7 @@ After that, open the respective folder and run
 * ```[PREFIX]setting.py``` for WDTW training,
 * ```[PREFIX]test.py``` for WDTW testing;
 
-Whether it's a reader, setting or a testing script file, you can run it through Python IDE (PyCharm is used here) or via cmd by typing ```$ python -m PROJECTNAME.filename``` (without a ```.py```) inside a global project directory, which is  ```GesturesSpeech```. For example, type ```$ python -m Kinect.kreader``` to run Kinect demo.
+Whether it's a reader, setting or a testing script file, you can run it through Python IDE ([PyCharm](https://www.jetbrains.com/pycharm/) is used here) or via cmd by typing ```$ python -m PROJECTNAME.filename``` (without a ```.py```) inside a global project directory, which is  ```GesturesSpeech```. For example, type ```$ python -m Kinect.kreader``` to run Kinect demo.
 
 
 <h2 id="diagram">Class diagram</h2>

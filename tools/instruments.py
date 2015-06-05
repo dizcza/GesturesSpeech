@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from tools.comparison import compare, show_comparison
 from Kinect.kreader import KINECT_PATH
 from MOCAP.mreader import MOCAP_PATH
-from Emotion.em_reader import EMOTION_PATH_PICKLES
+from Emotion.em_reader import EMOTION_PATH
 
 
 class InstrumentCollector(object):
@@ -22,7 +22,7 @@ class InstrumentCollector(object):
         self.script_dir_path = os.path.dirname(sys.argv[0])
         _paths = dict(HumanoidUkr=MOCAP_PATH,
                       HumanoidKinect=KINECT_PATH,
-                      Emotion=EMOTION_PATH_PICKLES,
+                      Emotion=EMOTION_PATH,
                       EmotionArea=None)
         self.proj_path = _paths[MotionClass.__name__]
         names_collection = dict(HumanoidUkr="MOCAP_INFO.json",

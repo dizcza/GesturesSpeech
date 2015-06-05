@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import RadioButtons, CheckButtons, Button
 import matplotlib.animation as animation
 
-from Emotion.em_reader import Emotion, EMOTION_PATH_PICKLES
+from Emotion.em_reader import Emotion, EMOTION_PATH
 from Emotion.FaceLocations.preparation import define_valid_face_actions, get_face_markers, get_face_areas
 from Emotion.prepare_data import parse_xls
 
@@ -20,9 +20,9 @@ def load_emotions(specify):
     database = []
     if specify is None:
         print("Loading all emotion database")
-        for pkl_log in os.listdir(EMOTION_PATH_PICKLES):
+        for pkl_log in os.listdir(EMOTION_PATH):
             if pkl_log.endswith(".pkl"):
-                pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+                pkl_path = os.path.join(EMOTION_PATH, pkl_log)
                 em = Emotion(pkl_path)
                 database.append(em)
     else:
@@ -30,7 +30,7 @@ def load_emotions(specify):
         assert specify in emotions_basket, "invalid emotion is specified"
         print("Loading %s" % specify)
         for pkl_log in emotions_basket[specify]:
-            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log + ".pkl")
+            pkl_path = os.path.join(EMOTION_PATH, pkl_log + ".pkl")
             em = Emotion(pkl_path)
             database.append(em)
     return tuple(database)

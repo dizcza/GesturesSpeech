@@ -5,7 +5,7 @@ import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
-from Emotion.em_reader import Emotion, EMOTION_PATH_PICKLES
+from Emotion.em_reader import Emotion, EMOTION_PATH
 from tools.kalman import kalman_1d, kalman_filter
 
 
@@ -14,7 +14,7 @@ def estimate_sensory_noise():
     eyes_markers = {"eup_r", "edn_r", "eup_l", "edn_l"}
     stds = np.empty((0, 2), dtype=float)
     for fname in chillout_files:
-        fpath = os.path.join(EMOTION_PATH_PICKLES, fname + ".pkl")
+        fpath = os.path.join(EMOTION_PATH, fname + ".pkl")
         em = Emotion(fpath)
         labels = set(em.labels)
         no_eyes = labels.difference(eyes_markers)

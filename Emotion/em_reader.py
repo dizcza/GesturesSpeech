@@ -1,18 +1,26 @@
 # coding=utf-8
 
-import pickle
+import sys
 import os
+import pickle
 
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 from tools.basic import BasicMotion
 from tools.kalman import kalman_filter
 
 
-EMOTION_PATH_PICKLES = r"D:\GesturesDataset\Emotion\pickles"
+def get_em_path():
+    """
+    :return: path to Emotion data project
+    """
+    script_dir = os.path.dirname(sys.argv[0])
+    em_path = os.path.join(script_dir, "_data")
+    return em_path
+
+EMOTION_PATH = get_em_path()
 
 
 class Emotion(BasicMotion):
@@ -42,7 +50,7 @@ class Emotion(BasicMotion):
 
     def __str__(self):
         s = BasicMotion.__str__(self)
-        s += "\n\t slope:\t\t\t %.3g°" % self.slope
+        s += "\n\t slope:\t\t\t %.3g degrees" % self.slope
         s += "\n\t file name:\t\t %s" % self.fname
         s += "\n\t author:\t\t %s" % self.author
         return s
@@ -192,13 +200,6 @@ class Emotion(BasicMotion):
                 _dx *= blur_factor
                 self.norm_data[markerID,frame,:] = self.norm_data[markerID,frame-1,:] + _dx
 
-    def next_frame(self, frame):
-        """
-        :param frame: frame id
-        """
-        self.scat.set_offsets(self.data[:, frame, :])
-        return []
-
     def define_plot_style(self):
         """
          Setting bar char plot style.
@@ -207,34 +208,29 @@ class Emotion(BasicMotion):
         self.fontsize = 11
         self.add_error = False
 
-    def animate(self):
+    def next_frame(self, frame):
+        """
+        :param frame: frame id
+        """
+        self.scat.set_offsets(self.data[:, frame, :])
+        return []
+
+    def init_animation(self):
         """
          Animates 2d data.
         """
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111)
         self.scat = plt.scatter(self.data[:, 0, 0], self.data[:, 0, 1])
-        self.ax.grid()
-        self.ax.set_title("%s: %s" % (self.emotion, self.fname))
-
-        anim = animation.FuncAnimation(self.fig,
-                                       func=self.next_frame,
-                                       frames=self.frames,
-                                       interval=1e3/self.fps,     # in ms
-                                       blit=True)
-        try:
-            plt.show(self.fig)
-        except AttributeError:
-            pass
 
 
 def test_nan_weights():
     """
      Tests each sample for having no nan weights.
     """
-    for log_pkl in os.listdir(EMOTION_PATH_PICKLES):
+    for log_pkl in os.listdir(EMOTION_PATH):
         if log_pkl.endswith(".pkl"):
-            log_path = os.path.join(EMOTION_PATH_PICKLES, log_pkl)
+            log_path = os.path.join(EMOTION_PATH, log_pkl)
             gest = Emotion(log_path)
             w = gest.get_weights()
             assert not np.isnan(w).any(), "nan weights in %s" % log_pkl
@@ -244,9 +240,9 @@ def show_all_emotions():
     """
      Animates Emotion instances.
     """
-    for i, pkl_log in enumerate(os.listdir(EMOTION_PATH_PICKLES)):
+    for i, pkl_log in enumerate(os.listdir(EMOTION_PATH)):
         if pkl_log.endswith(".pkl"):
-            pkl_path = os.path.join(EMOTION_PATH_PICKLES, pkl_log)
+            pkl_path = os.path.join(EMOTION_PATH, pkl_log)
             em = Emotion(pkl_path)
             if em.emotion != "undefined":
                 em.data = em.norm_data
@@ -257,7 +253,7 @@ def demo_run():
     """
      Emotion project demo.
     """
-    em_path = os.path.join(EMOTION_PATH_PICKLES, "Training", u"улыбка", "47-3-1.pkl")
+    em_path = os.path.join(EMOTION_PATH, "Training", u"улыбка", "47-3-1.pkl")
     assert os.path.exists(em_path), "Unable to find the %s" % em_path
     em = Emotion(em_path)
     print(em)

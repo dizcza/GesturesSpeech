@@ -5,7 +5,7 @@ import json
 import os
 import numpy as np
 import warnings
-from Emotion.em_reader import Emotion, EMOTION_PATH_PICKLES
+from Emotion.em_reader import Emotion, EMOTION_PATH
 from Emotion.FaceLocations.preparation import get_face_areas
 
 
@@ -110,7 +110,7 @@ class EmotionArea(Emotion):
 
 
 def test_face_area():
-    smiles_dir = os.path.join(EMOTION_PATH_PICKLES, r"FaceAreas\mouth\Training\smile")
+    smiles_dir = os.path.join(EMOTION_PATH, r"FaceAreas\mouth\Training\smile")
     first_smile_path = os.listdir(smiles_dir)[0]
     first_smile_path = os.path.join(smiles_dir, first_smile_path)
     emArea = EmotionArea(first_smile_path)

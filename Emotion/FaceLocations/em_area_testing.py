@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 
-from Emotion.em_reader import EMOTION_PATH_PICKLES
+from Emotion.em_reader import EMOTION_PATH
 from Emotion.FaceLocations.emotion_area import EmotionArea
 from Emotion.FaceLocations.preparation import get_face_areas
 from tools.instruments import Testing
@@ -20,7 +20,7 @@ def face_areas_test(fps):
     the_best_the_worst_the_total = []
     for area in face_areas:
         print("*** TOOK FACE AREA: %s" % area)
-        area_folder = os.path.join(EMOTION_PATH_PICKLES, "FaceAreas", area)
+        area_folder = os.path.join(EMOTION_PATH, "FaceAreas", area)
         instruments = Testing(EmotionArea, prefix=area_folder)
         instruments.compute_weights(None, None, fps)
         one_area_case = instruments.the_worst_comparison(fps)

@@ -3,10 +3,12 @@
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from matplotlib import rc
 import json
 import os
 import sys
+import warnings
 
 
 font = {'family': 'Verdana',
@@ -19,6 +21,7 @@ class BasicMotion(object):
         self.fps = fps
         self.project = ""
         self.name = ""
+        self.fname = ""
         self.labels = []
         self.weights = {}
         self.data = np.array([], dtype=np.float64)
@@ -30,6 +33,7 @@ class BasicMotion(object):
         self.moving_markers = []
         self.fig = None
         self.ax = None
+        self.faster = 1
 
     def __str__(self):
         """
@@ -235,3 +239,38 @@ class BasicMotion(object):
         self.data = self.data[:, keep_frames, :]
         self.norm_data = self.norm_data[:, keep_frames, :]
         self.frames = length
+
+    def init_animation(self):
+        """
+         Preparation before matplotlib animation. Should be overridden.
+        """
+        pass
+
+    def next_frame(self, frame):
+        """
+         Moves animation by 1 step.
+        :param frame: frame ID
+        """
+        return []
+
+    def animate(self, faster=1):
+        """
+         Animates the data.
+        :param faster: how fast
+        """
+        self.init_animation()
+        self.ax.grid()
+        self.ax.set_title("%s: %s" % (self.fname, self.name))
+        self.faster = faster
+
+        anim = animation.FuncAnimation(self.fig,
+                                       func=self.next_frame,
+                                       frames=self.frames//self.faster,
+                                       interval=1e3/self.fps,     # in ms
+                                       blit=True)
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=FutureWarning)
+                plt.show(self.fig)
+        except AttributeError:
+            pass

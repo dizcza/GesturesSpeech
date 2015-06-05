@@ -8,7 +8,7 @@ import win32com.client as win32
 import shutil
 
 from Emotion.prepare_data.excel_parser import parse_xls, upd_column, parse_whole_xls
-from Emotion.em_reader import EMOTION_PATH_PICKLES
+from Emotion.em_reader import EMOTION_PATH
 
 
 EMOTION_PATH_CSV = r"D:\GesturesDataset\Emotion\csv"
@@ -139,7 +139,7 @@ def convert_dir(directory, *args):
     file_info["author"] = find_key_by_val(writers, directory)
     file_info["emotion"] = find_key_by_val(emotions, directory)
     file_info["labels"] = list(data_dic.keys())
-    fpath = os.path.join(EMOTION_PATH_PICKLES, directory + ".pkl")
+    fpath = os.path.join(EMOTION_PATH, directory + ".pkl")
     pickle.dump(file_info, open(fpath, 'wb'), protocol=2)
 
 
@@ -274,8 +274,8 @@ def split_data(trn_rate=0.5):
     :param trn_rate: how many files go for training
     """
     emotion_basket, _, _ = parse_xls()
-    trn_path = os.path.join(EMOTION_PATH_PICKLES, "Training")
-    tst_path = os.path.join(EMOTION_PATH_PICKLES, "Testing")
+    trn_path = os.path.join(EMOTION_PATH, "Training")
+    tst_path = os.path.join(EMOTION_PATH, "Testing")
     for _path in (trn_path, tst_path):
         shutil.rmtree(_path, ignore_errors=True)
         os.mkdir(_path)
@@ -289,7 +289,7 @@ def split_data(trn_rate=0.5):
             class_dirpath = os.path.join(_path, class_name)
             os.mkdir(class_dirpath)
             for fname in _files:
-                src = os.path.join(EMOTION_PATH_PICKLES, fname + ".pkl")
+                src = os.path.join(EMOTION_PATH, fname + ".pkl")
                 shutil.copy(src, class_dirpath)
 
 
