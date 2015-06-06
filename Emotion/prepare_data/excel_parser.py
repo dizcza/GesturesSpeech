@@ -1,21 +1,18 @@
 # coding=utf-8
 
-import win32com.client as win32
+import sys
 import os
+import win32com.client as win32
 from pprint import pprint
 import time
+from unidecode import unidecode
 
 
 def get_description_path():
     """
     :return: path to description.xls
     """
-    xls_fname = "description.xls"
-    if os.path.exists(xls_fname):
-        return os.path.join(os.getcwd(), xls_fname)
-    else:
-        pardir = os.path.dirname(os.getcwd())
-        return os.path.join(pardir, xls_fname)
+    return os.path.join(os.path.dirname(sys.argv[0]), 'description.xls')
 
 
 def init_unique_emotion_classes():
@@ -34,6 +31,34 @@ def init_unique_emotion_classes():
         u"плакса",
     }
     return classes
+
+
+def translate_unicode(unicode_basket):
+    """
+    :param unicode_basket: a dict with unicode keys
+    :return: the same dict with ascii keys instead
+    """
+    ru_en = {
+        u"улыбка": "smile",
+        u"закрыл глаза": "closed_eyes",
+        u"пренебрежение": "disregard",
+        u"ярость": "rage",
+        u"боль": "pain",
+        u"ужас": "horror",
+        u"озадаченность": "perplexity",
+        u"удивление": "amazement",
+        u"плакса": "crybaby",
+    }
+    ascii_basket = {}
+    for key, value in unicode_basket.items():
+        if key is None:
+            ascii_name = None
+        elif key in ru_en:
+            ascii_name = ru_en[key]
+        else:
+            ascii_name = unidecode(key)
+        ascii_basket[ascii_name] = value
+    return ascii_basket
 
 
 def get_authors():
@@ -77,12 +102,12 @@ def upd_column(col_name, values):
     """
     time.sleep(1)   # waiting to close prev events
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    path = os.path.join(os.getcwd(), r"missed_data.xlsx")
+    path = os.path.join(os.path.dirname(sys.argv[0]), r"missed_data.xlsx")
     wb = excel.Workbooks.Open(path)
     ws = wb.Worksheets("missed")
     ws.Range(col_name + ":" + col_name).ClearContents()
     for i, info in enumerate(values):
-        pointer = col_name + str(i+2)
+        pointer = col_name + str(i + 2)
         ws.Range(pointer).Value = str(info)
     wb.Save()
     wb.Close()
@@ -155,6 +180,8 @@ def parse_whole_xls():
         cell_pointer = my_labels_col + str(row)
     wb.Close()
 
+    emotions_basket = translate_unicode(emotions_basket)
+
     return emotions_basket, authors_basket, boundaries_basket
 
 
@@ -203,6 +230,8 @@ def parse_xls():
 
     wb.Close()
 
+    emotions_basket = translate_unicode(emotions_basket)
+
     return emotions_basket, authors_basket, boundaries_basket
 
 
@@ -216,5 +245,5 @@ def how_many_examples_we_have():
 
 
 if __name__ == "__main__":
-    em_basket, auth_basket, bound = parse_xls()
+    em_basket, auth_basket, bound = parse_whole_xls()
     pprint(em_basket)

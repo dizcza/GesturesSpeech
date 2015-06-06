@@ -322,4 +322,4 @@ The current project is portable. Although it's built and maintained upon Python 
 *   [matplotlib](http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download) (with _pyparsing_, _dateutil_, _setuptools_ and _six_)
 *   [numpy](http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download)
 *   [dtw](https://pypi.python.org/pypi/dtw/1.0) (dynamic time warping)
-*   (optional) [win32com](http://sourceforge.net/projects/pywin32) module to work with Microsoft Excel files
+*   (optional) [win32com](http://sourceforge.net/projects/pywin32) and [unidecode](https://pypi.python.org/pypi/Unidecode) moduli to parse unicode data from Microsoft Excel files

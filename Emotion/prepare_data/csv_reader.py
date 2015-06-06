@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import sys
 import os
 import pickle
 import itertools
@@ -107,8 +108,12 @@ def dump_pickles():
           "#                 Dumping the data: csv --> pkl                 #\n" \
           "#################################################################"
     print(msg)
+
+    pickles_dir = os.path.join(EMOTION_PATH, "pickles")
+    os.mkdir(pickles_dir)
     for directory in os.listdir(EMOTION_PATH_CSV):
         convert_dir(directory, emotions, writers, boundaries)
+
     upd_excel()
     split_data()
 
@@ -139,7 +144,7 @@ def convert_dir(directory, *args):
     file_info["author"] = find_key_by_val(writers, directory)
     file_info["emotion"] = find_key_by_val(emotions, directory)
     file_info["labels"] = list(data_dic.keys())
-    fpath = os.path.join(EMOTION_PATH, directory + ".pkl")
+    fpath = os.path.join(EMOTION_PATH, "pickles", directory + ".pkl")
     pickle.dump(file_info, open(fpath, 'wb'), protocol=2)
 
 
@@ -258,7 +263,7 @@ def upd_excel():
     check_missed(writers, "writers", given_csv_files)
 
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    path = os.path.join(os.getcwd(), r"missed_data.xlsx")
+    path = os.path.join(os.path.dirname(sys.argv[0]), r"missed_data.xlsx")
     wb = excel.Workbooks.Open(path)
     ws = wb.Worksheets("missed")
     ws.Range("A1").Value = "NaNs in:"
@@ -274,6 +279,7 @@ def split_data(trn_rate=0.5):
     :param trn_rate: how many files go for training
     """
     emotion_basket, _, _ = parse_xls()
+    pickles_dir = os.path.join(EMOTION_PATH, "pickles")
     trn_path = os.path.join(EMOTION_PATH, "Training")
     tst_path = os.path.join(EMOTION_PATH, "Testing")
     for _path in (trn_path, tst_path):
@@ -289,10 +295,12 @@ def split_data(trn_rate=0.5):
             class_dirpath = os.path.join(_path, class_name)
             os.mkdir(class_dirpath)
             for fname in _files:
-                src = os.path.join(EMOTION_PATH, fname + ".pkl")
+                src = os.path.join(pickles_dir, fname + ".pkl")
                 shutil.copy(src, class_dirpath)
+
+    # cleaning up temporary pickles folder
+    shutil.rmtree(pickles_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
     dump_pickles()
-    # split_data()

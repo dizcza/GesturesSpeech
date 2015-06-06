@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import sys
 import os
 import pickle
 
@@ -12,16 +11,7 @@ from tools.basic import BasicMotion
 from tools.kalman import kalman_filter
 
 
-def get_em_path():
-    """
-    :return: path to Emotion data project
-    """
-    script_dir = os.path.dirname(sys.argv[0])
-    em_path = os.path.join(script_dir, "_data")
-    return em_path
-
-EMOTION_PATH = get_em_path()
-
+EMOTION_PATH = os.path.join(os.path.dirname(__file__), "_data")
 
 class Emotion(BasicMotion):
     def __init__(self, pkl_path, fps=None):
@@ -253,7 +243,9 @@ def demo_run():
     """
      Emotion project demo.
     """
-    em_path = os.path.join(EMOTION_PATH, "Training", u"улыбка", "47-3-1.pkl")
+    smile_folder = os.path.join(EMOTION_PATH, "Training", "smile")
+    smile_file_name = os.listdir(smile_folder)[0]
+    em_path = os.path.join(smile_folder, smile_file_name)
     assert os.path.exists(em_path), "Unable to find the %s" % em_path
     em = Emotion(em_path)
     print(em)
