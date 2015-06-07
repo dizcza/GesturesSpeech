@@ -186,7 +186,7 @@ class Testing(InstrumentCollector):
         
         for directory in os.listdir(self.tst_path):
             tst_subfolder = os.path.join(self.tst_path, directory)
-            if verbose: print(" testing %s" % directory)
+            if verbose: print(" testing '%s'" % directory)
             for _sampleID, test_name in enumerate(os.listdir(tst_subfolder)):
                 fpath_test = os.path.join(tst_subfolder, test_name)
                 unknownGest = self.MotionClass(fpath_test, fps)

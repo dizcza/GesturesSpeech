@@ -16,8 +16,10 @@ import numpy as np
 import os
 from tools.humanoid import HumanoidBasic
 
-
+# path to Kinect project data
 KINECT_PATH = r"D:\GesturesDataset\KINECT"
+
+# total number of present markers
 MARKERS = 20
 
 
@@ -51,29 +53,28 @@ def read_body(rlines):
     :returns: - (20, frames, 3) data
               - fps
     """
-    BLOCK_SIZE = 82
+    block_size = 82
     frames = int(rlines[4])
     data = np.zeros(shape=(MARKERS, frames, 3))
-    chunks = int((len(rlines) / BLOCK_SIZE))
+    chunks = int((len(rlines) / block_size))
 
     if frames != chunks:
         warnings.warn("frames != chunks; took min")
         frames = min(frames, chunks)
 
-    block_begins = [5 + i * BLOCK_SIZE for i in range(frames)]
+    block_begins = [5 + i * block_size for i in range(frames)]
     time_events = []
     for begin in block_begins:
-        frameID = int(rlines[begin][1:])
-        time_events.append(convert_time(rlines[begin+1]))
-        for labelID in range(MARKERS):
-            _start = begin + 2 + 4 * labelID
+        frame = int(rlines[begin][1:])
+        time_events.append(convert_time(rlines[begin + 1]))
+        for label_id in range(MARKERS):
+            _start = begin + 2 + 4 * label_id
             _end = _start + 4
-            # label = block[_start]
-            x, z, y = np.array(rlines[_start+1:_end], dtype=float)
-            data[labelID, frameID, :] = x, -y, z
+            x, z, y = np.array(rlines[_start + 1: _end], dtype=float)
+            data[label_id, frame, :] = x, -y, z
     time_events = np.array(time_events)
     dt = time_events[1:] - time_events[:-1]
-    fps = np.average(1./dt)
+    fps = np.average(1. / dt)
 
     return data, fps
 
@@ -96,16 +97,19 @@ class HumanoidKinect(HumanoidBasic):
         self.project = "Kinect"
         self.fname = os.path.basename(txt_path)
 
-        # dealing with hand markers
-        self.hand_markers = ["HandLeft",  "WristLeft",  "ElbowLeft",
+        # dealing with hand marker names
+        self.hand_markers = ["HandLeft", "WristLeft", "ElbowLeft",
                              "HandRight", "WristRight", "ElbowRight"]
+        self.shoulder_markers = ["ShoulderLeft", "ShoulderCenter", "ShoulderRight"]
+
+        # Note: 'prime' and 'free' hand params attribute the oneHand
+        # training scenario, where only the prime hand (active one)
+        # is relevant. Although they are set each time the gesture
+        # is created, they aren't used (and not relevant at all)
+        # during the testing.
         swap = {"left": "right", "right": "left"}
-        # Note: 'prime' and 'free' hands are the attributes only for training.
-        # Although they are determined each time the gesture is created,
-        # they aren't used (and not relevant at all) during the testing.
         self.prime_hand = txt_path.split('\\')[-1].split("Hand")[0].lower()
         self.free_hand = swap[self.prime_hand]
-        self.shoulder_markers = ["ShoulderLeft", "ShoulderCenter", "ShoulderRight"]
 
         with open(txt_path, 'r') as rfile:
             rlines = rfile.readlines()
@@ -120,8 +124,8 @@ class HumanoidKinect(HumanoidBasic):
 
     def define_moving_markers(self, mode):
         """
-         Sets moving markers, w.r.t. mode.
-        :param mode: use both hand (by default) or only prime one
+         Defines moving markers, w.r.t. hand mode.
+        :param mode: use both hands (by default) or only the prime one
         """
         self.moving_markers = np.array([])
         if mode == "oneHand":

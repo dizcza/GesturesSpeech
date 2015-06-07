@@ -20,14 +20,14 @@ class HumanoidBasic(BasicMotion):
         BasicMotion.__init__(self, fps)
         self.hand_markers = []
         self.shoulder_markers = "", "", ""
-        self.shoulder_length = 0.
+        self.shoulder_width = 0.
 
     def __str__(self):
         """
         :return: string representation of gesture
         """
         s = BasicMotion.__str__(self)
-        s += "\n\t shoulder length: \t %.3f m" % self.shoulder_length
+        s += "\n\t shoulder width: \t %.3f m" % self.shoulder_width
         return s
 
     def preprocessing(self):
@@ -41,18 +41,18 @@ class HumanoidBasic(BasicMotion):
         center_std = norm(np.std(self.data[center_id, ::], axis=0))
         self.data -= shoulder_center
 
-        # step 2: normalize by shoulder dist
+        # step 2: normalize by shoulder width
         sh_ids = self.get_ids(sh_left, sh_right)
         sh_diff = self.data[sh_ids[0], ::] - self.data[sh_ids[1], ::]
-        self.shoulder_length = np.average(norm(sh_diff, axis=1))
+        self.shoulder_width = np.average(norm(sh_diff, axis=1))
         sh_std = norm(np.std(sh_diff, axis=0))
         self.std = norm([center_std, sh_std])
-        self.norm_data = self.data / self.shoulder_length
+        self.norm_data = self.data / self.shoulder_width
 
     def define_moving_markers(self, mode):
         """
-         Sets moving markers, w.r.t. mode.
-        :param mode: use both hand (by default) or only prime one
+         Defines moving markers, w.r.t. mode.
+        :param mode: use both hands (by default) or only prime one
         """
         self.moving_markers = []
         if mode == "bothHands":

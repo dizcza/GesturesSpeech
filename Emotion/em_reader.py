@@ -10,8 +10,9 @@ import matplotlib.pyplot as plt
 from tools.basic import BasicMotion
 from tools.kalman import kalman_filter
 
-
+# path to Emotion project data
 EMOTION_PATH = os.path.join(os.path.dirname(__file__), "_data")
+
 
 class Emotion(BasicMotion):
     def __init__(self, pkl_path, fps=None):
@@ -65,8 +66,8 @@ class Emotion(BasicMotion):
         self.norm_data -= self.data[nose, first_frame, :]
 
         # step 2: divide data by base line length
-        top_point = (self.data[ebr_ir,0,:] + self.data[ebr_il,0,:]) / 2.
-        base_line = norm(top_point - self.data[jaw,0,:])
+        top_point = np.average(self.data[[ebr_ir, ebr_il], 0, :], axis=0)
+        base_line = norm(top_point - self.data[jaw, 0, :])
         self.norm_data /= base_line
 
         # step 3: slope aligning
@@ -126,17 +127,17 @@ class Emotion(BasicMotion):
         both_eyes = (eup_r, edn_r), (eup_l, edn_l)
         up_down_dist = []
         for eye in both_eyes:
-            dX = self.norm_data[eye[0],::] - self.norm_data[eye[1],::]
-            up_down_dist.append(norm(dX, axis=1))
+            eye_vector = self.norm_data[eye[0], ::] - self.norm_data[eye[1], ::]
+            up_down_dist.append(norm(eye_vector, axis=1))
         eyes_wink = np.sum(up_down_dist, axis=0)
 
         # plt.plot(eyes_wink, 'b')
-        for frame in range(1, len(eyes_wink)-1):
-            start = max(0, frame-wink_window//2)
-            end = min(len(eyes_wink), frame+wink_window//2)
+        for frame in range(1, len(eyes_wink) - 1):
+            start = max(0, frame - wink_window // 2)
+            end = min(len(eyes_wink), frame + wink_window // 2)
             left_bound = max(eyes_wink[start:frame])
             right_bound = max(eyes_wink[frame:end])
-            if eyes_wink[frame] < eyes_wink[frame-1] and eyes_wink[frame] < eyes_wink[frame+1]:
+            if eyes_wink[frame] < eyes_wink[frame - 1] and eyes_wink[frame] < eyes_wink[frame + 1]:
                 deep_left = (left_bound - eyes_wink[frame]) / max(eyes_wink)
                 deep_right = (right_bound - eyes_wink[frame]) / max(eyes_wink)
                 if deep_left > to_be_wink_threshold and deep_right > to_be_wink_threshold:
@@ -151,11 +152,11 @@ class Emotion(BasicMotion):
                                 x_end = self.norm_data[eye_marker, end, dim]
                                 line = np.linspace(x_begin, x_end, end - start)
                                 self.norm_data[eye_marker, start:end, dim] = line
-        # plt.legend(["real eyes movements", "approximation"], numpoints=1, loc=3)
-        # plt.xlabel("frame")
-        # plt.ylabel("eyeUp to eyeDown dist, norm units")
-        # plt.title("Dealing with eyes winking")
-        # plt.show()
+                                # plt.legend(["real eyes movements", "approximation"], numpoints=1, loc=3)
+                                # plt.xlabel("frame")
+                                # plt.ylabel("eyeUp to eyeDown dist, norm units")
+                                # plt.title("Dealing with eyes winking")
+                                # plt.show()
 
     def gaussian_filter(self):
         """
@@ -181,14 +182,14 @@ class Emotion(BasicMotion):
             for frame in range(1, frames_total):
                 end = min(frame + track_next, frames_total)
                 dX_next = np.subtract(self.norm_data[markerID, frame:end, :],
-                                      self.norm_data[markerID, frame-1, :])
+                                      self.norm_data[markerID, frame - 1, :])
                 weights = np.linspace(0, 1, end - frame)
                 accumulated_offset = np.sum(norm(dX_next, axis=1) * weights)
                 _dx = np.subtract(self.norm_data[markerID, frame, :],
-                                  self.norm_data[markerID, frame-1, :])
+                                  self.norm_data[markerID, frame - 1, :])
                 blur_factor = 1. - np.exp(- accumulated_offset / (2 * sigmas))
                 _dx *= blur_factor
-                self.norm_data[markerID,frame,:] = self.norm_data[markerID,frame-1,:] + _dx
+                self.norm_data[markerID, frame, :] = self.norm_data[markerID, frame - 1, :] + _dx
 
     def define_plot_style(self):
         """

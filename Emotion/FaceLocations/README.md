@@ -1,6 +1,7 @@
 <html>
 <head>
 <h4 align="center">Emotion Area subproject</h4>
+<h5 align="center">(This project isn't supported anymore)</h5>
 </head>
 
 <body>

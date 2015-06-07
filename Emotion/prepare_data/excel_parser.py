@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import sys
 import os
 import win32com.client as win32
 from pprint import pprint
@@ -12,7 +11,7 @@ def get_description_path():
     """
     :return: path to description.xls
     """
-    return os.path.join(os.path.dirname(sys.argv[0]), 'description.xls')
+    return os.path.join(os.path.dirname(__file__), 'description.xls')
 
 
 def init_unique_emotion_classes():
@@ -100,9 +99,10 @@ def upd_column(col_name, values):
     :param col_name: excel column name
     :param values: info list
     """
+    path = os.path.join(os.path.dirname(__file__), r"missed_data.xlsx")
+    assert os.path.exists(path), "set up path to missed_data.xlsx"
     time.sleep(1)   # waiting to close prev events
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    path = os.path.join(os.path.dirname(sys.argv[0]), r"missed_data.xlsx")
     wb = excel.Workbooks.Open(path)
     ws = wb.Worksheets("missed")
     ws.Range(col_name + ":" + col_name).ClearContents()
@@ -117,6 +117,7 @@ def verify_excel_file():
     """
      Checks for not overlapping cell values in xlsx file.
     """
+    assert os.path.exists(get_description_path()), "set up path to description.xls"
     excel = win32.gencache.EnsureDispatch('Excel.Application')
     wb = excel.Workbooks.Open(get_description_path())
     ws = wb.Worksheets(u"границы сегментов")
@@ -140,6 +141,7 @@ def verify_excel_file():
 
 def parse_whole_xls():
     """
+    Supplementary function to check out missed data.
     :returns:
         (1) a collection of file names for each emotion class
         (2) a collection of authors for each emotion class
@@ -187,6 +189,7 @@ def parse_whole_xls():
 
 def parse_xls():
     """
+    Main function to parse unique emotions (classes) in description.xls
     :returns:
         (1) a collection of file names for each emotion class
         (2) a collection of authors for each emotion class
@@ -230,6 +233,7 @@ def parse_xls():
 
     wb.Close()
 
+    # you can turn off transliteration in case you use Python 3.x
     emotions_basket = translate_unicode(emotions_basket)
 
     return emotions_basket, authors_basket, boundaries_basket
@@ -245,5 +249,5 @@ def how_many_examples_we_have():
 
 
 if __name__ == "__main__":
-    em_basket, auth_basket, bound = parse_whole_xls()
+    em_basket, auth_basket, bound = parse_xls()
     pprint(em_basket)

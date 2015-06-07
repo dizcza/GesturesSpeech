@@ -14,6 +14,7 @@ try:
 except ImportError:
     import MOCAP.local_tools.btk_fake as btk
 
+# path to MoCap project data
 MOCAP_PATH = r"D:\GesturesDataset\MoCap\splitAll"
 
 

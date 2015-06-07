@@ -11,16 +11,30 @@ import shutil
 from Emotion.prepare_data.excel_parser import parse_xls, upd_column, parse_whole_xls
 from Emotion.em_reader import EMOTION_PATH
 
-
+# path to directory with csv folders, obtained
+# after converting data from Blender files
 EMOTION_PATH_CSV = r"D:\GesturesDataset\Emotion\csv"
+
+# total number of present markers
 MARKERS = 18
+
+
+def assert_paths():
+    """
+    Asserts all necessary paths to begin converting csv --> pkl
+    """
+    vl_path = os.path.join(os.path.dirname(__file__), r"../valid_labels.txt")
+    assert os.path.exists(vl_path), "set up path to valid_labels.txt"
+    assert os.path.exists(EMOTION_PATH_CSV), "set up path to csv folders"
+    assert os.path.exists(EMOTION_PATH), "set up path to Emotion project data"
 
 
 def clean_labels():
     """
      Removes tracked marker log files, if they aren't in valid_labels.txt
     """
-    valid_labels = np.genfromtxt(r"../valid_labels.txt", dtype='str')
+    vl_path = os.path.join(os.path.dirname(__file__), r"../valid_labels.txt")
+    valid_labels = np.genfromtxt(vl_path, dtype='str')
     for directory in os.listdir(EMOTION_PATH_CSV):
         dir_path = os.path.join(EMOTION_PATH_CSV, directory)
         for marker_log in os.listdir(dir_path):
@@ -36,8 +50,9 @@ def verify_labels():
     """
      Verifies all samples to have the same labels.
     """
+    vl_path = os.path.join(os.path.dirname(__file__), r"../valid_labels.txt")
+    valid_labels = np.genfromtxt(vl_path, dtype='str')
     labels_casket = {}
-    valid_labels = np.genfromtxt(r"../valid_labels.txt", dtype='str')
     for directory in os.listdir(EMOTION_PATH_CSV):
         labels_casket[directory] = []
         dir_path = os.path.join(EMOTION_PATH_CSV, directory)
@@ -51,11 +66,11 @@ def verify_labels():
         for their_label in valid_labels:
             okay *= their_label in labels_casket[directory]
         if not okay:
-            print("shit in %s" % directory)
+            print("got shit in %s" % directory)
 
     gathered_labels = np.array(list(labels_casket.values()))
-    the_same = gathered_labels == gathered_labels[0, :]
-    assert the_same.all(), "Emotion labels arrange varies"
+    are_labels_the_same = np.array_equiv(gathered_labels, gathered_labels[0, :])
+    assert are_labels_the_same, "Emotion labels arrange varies"
     print("verify_labels: \tOKAY. Ready to dump data.")
 
 
@@ -87,8 +102,11 @@ def cut_frames_if_needed(gathered_data, boundaries_basket, file_name):
 
 def dump_pickles():
     """
-     Dumps data.pkl
+     Main function to convert folders with csv files into pythonic pickles.
+     Before doing so, make sure you have set correct path to directory
+     with csv folders, provided in EMOTION_PATH_CSV constant above.
     """
+    assert_paths()
     msg = "#################################################################\n" \
           "#                   Prepare to dump pickles                     #\n" \
           "#################################################################"
