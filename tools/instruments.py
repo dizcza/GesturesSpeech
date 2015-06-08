@@ -224,9 +224,11 @@ class Testing(InstrumentCollector):
                     infimum[directory] += 1
                     print_err(got_pattern, unknownGest)
 
-                interval = max_the_same_cost - min_the_same_cost
-                how_good = (min_other_cost - min_the_same_cost) / interval
-                margin += min(1, max(0, how_good))
+                if len(the_same_costs) > 1:
+                    # estimate margin
+                    interval = max_the_same_cost - min_the_same_cost
+                    how_good = (min_other_cost - min_the_same_cost) / interval
+                    margin += min(1, max(0, how_good))
 
         total_samples = 0
         print("The result is shown in number of misclassified samples: ")

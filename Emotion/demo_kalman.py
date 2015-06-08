@@ -10,6 +10,9 @@ from tools.kalman import kalman_1d, kalman_filter
 
 
 def estimate_sensory_noise():
+    """
+    :return: deviation of sensory noise in silent samples
+    """
     chillout_files = "26-1-1", "26-1-2", "37-2-1", "50-3-2", "54-5-2", "57-1-2"
     eyes_markers = {"eup_r", "edn_r", "eup_l", "edn_l"}
     stds = np.empty((0, 2), dtype=float)
@@ -27,33 +30,27 @@ def estimate_sensory_noise():
 
 
 def demo_kalman():
-    # em = Emotion(r"D:\GesturesDataset\Emotion\pickles\31-2-2.pkl")
-    em = Emotion(r"D:\GesturesDataset\Emotion\pickles\49-2-1.pkl")
-    filtered_data = kalman_filter(em.data)
+    """
+     Kalman filter visualizer.
+    """
+    smile_folder = os.path.join(EMOTION_PATH, "Training", "smile")
+    smile_file_name = os.listdir(smile_folder)[0]
+    em_path = os.path.join(smile_folder, smile_file_name)
+    em = Emotion(em_path)
     for markerID, marker in enumerate(em.labels):
-        if marker not in ("edn_r", "edn_l", "eup_l"): continue
-        plt.subplot(211)
-        x_real = em.data[markerID, :, 0]
-        x_real_opt = filtered_data[markerID, :, 0]
-        plt.plot(x_real, linewidth=2)
-        plt.plot(x_real_opt, linewidth=2)
         plt.ylabel("Xs")
-
-        plt.subplot(212)
-        x_real = em.data[markerID, :, 1]
-        x_real_opt = filtered_data[markerID, :, 1]
-        plt.plot(x_real, linewidth=2)
-        plt.plot(x_real_opt, linewidth=2)
+        for dim in range(2):
+            plt.subplot(2, 1, dim + 1)
+            x_real = em.data[markerID, :, dim]
+            x_opt = kalman_1d(x_real)
+            plt.plot(x_real, linewidth=2)
+            plt.plot(x_opt, linewidth=2)
+            plt.legend(["noisy (real)", "kalman"], loc=2)
         plt.ylabel("Ys")
         plt.xlabel("frame")
-        plt.legend(["noisy (real)", "kalman", "mov aver"], loc=2)
-
         plt.suptitle("marker: %s" % marker)
         plt.show()
 
 
-
 if __name__ == "__main__":
     demo_kalman()
-    # sigma_sensor = estimate_sensory_noise()
-    # print(sigma_sensor)

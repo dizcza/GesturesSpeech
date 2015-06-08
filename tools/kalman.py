@@ -12,21 +12,22 @@ def kalman_1d(x_noisy, k_stab=0.2):
     """
     first_visible_id = ~np.isnan(x_noisy)[0]
     start_val = x_noisy[first_visible_id]
-    x_opt = np.ones(first_visible_id + 1) * start_val
+    x_opt = [start_val] * (first_visible_id + 1)
     for frame in range(first_visible_id + 1, len(x_noisy)):
         if np.isnan(x_noisy[frame]):
-            x_opt = np.append(x_opt, x_opt[-1])
+            xi = x_opt[-1]
         else:
-            xi = k_stab * x_noisy[frame] + (1. - k_stab) * x_opt[frame-1]
-            x_opt = np.append(x_opt, xi)
+            xi = k_stab * x_noisy[frame] + (1. - k_stab) * x_opt[frame - 1]
+        x_opt.append(xi)
     return x_opt
 
 
-def kalman_filter(data):
+def kalman_filter(__data):
     """
-    :param data: (#markers, #frames, #dim) gesture data
+    :param __data: (#markers, #frames, #dim) gesture data
     :return: filtered (smooth) gesture data
     """
+    data = np.copy(__data)
     if data.shape[1] > 1:
         for markerID in range(data.shape[0]):
             for dim in range(data.shape[2]):

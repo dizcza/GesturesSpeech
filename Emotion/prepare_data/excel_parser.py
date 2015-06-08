@@ -1,5 +1,6 @@
 # coding=utf-8
 
+from __future__ import unicode_literals
 import os
 import win32com.client as win32
 from pprint import pprint
@@ -164,7 +165,7 @@ def parse_whole_xls():
     boundaries_basket = {}
 
     while ws.Range(cell_pointer).Value is not None:
-        cell_val = str(ws.Range(cell_pointer).Value)
+        cell_val = ws.Range(cell_pointer).Value
         valid_label = find_valid_label(cell_val)
         firsname_val = str(int(ws.Range(firsname_col + str(row)).Value))
         secondname_val = str(ws.Range(secondname_col + str(row)).Value)
@@ -212,7 +213,7 @@ def parse_xls():
     boundaries_basket = {}
 
     while ws.Range(cell_pointer).Value is not None:
-        cell_val = str(ws.Range(cell_pointer).Value)
+        cell_val = ws.Range(cell_pointer).Value
         valid_label = find_valid_label(cell_val)
 
         firsname_val = str(int(ws.Range(firsname_col + str(row)).Value))
