@@ -2,19 +2,23 @@
 
 ###### This repo provides the instruments for signle signs and facial emotions recognition.
 
+See the many questions tagged [tag:elephants] to learn more.
+
 <nav class="contents">
 ## Contents
 1.  [Projects info](#info)
 2.  [How to run a project](#run)
-2.  [Class diagram](#diagram)
-3.  [State of art](#art)
-4.  [Data pre-processing](#preprocess)
-5.  [Body joint displacements](#displacements)
-6.  [Body joint weights. Discriminant ratio](#weights)
-7.  [The worst and the best testing scenarios](#scenario)
-8.  [Weighted DTW comparison](#wdtw)
-9.  [Tools](#tools)
+3.  [Class diagram](#diagram)
+4.  [State of art](#art)
+5.  [Data pre-processing](#preprocess)
+6.  [Body joint displacements](#displacements)
+7.  [Body joint weights. Discriminant ratio](#weights)
+8.  [The worst and the best testing scenarios](#scenario)
+9.  [Weighted DTW comparison](#wdtw)
+10. [Results](#results)
+11. [Tools](#tools)
 </nav>
+
 ![Добрий ранок](png/anim.gif)
 
 
@@ -114,17 +118,21 @@
 
 
 <h2 id="run">How to run a project</h2>
-To run a particular project (_MoCap_, _Kinect_ or _Emotion_), first of all, make sure you've completely installed all [obligatory Python packages](#tools). Secondly, each ```[PREFIX]reader.py``` initializes a constant ```PROJECTNAME_PATH``` -- a path to data directory for current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you should change that constant as well. Keep in mind, that the chosen data directory should preserve the original structure, used in a project (see [Kinect database](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar) or [Emotion database](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data) structures  for example):
+To run a particular project (_MoCap_, _Kinect_ or _Emotion_), 
 
-<div align="center"><img src="png/data_structure.PNG" width="300"></div>
+1. Make sure you've completely installed all [obligatory Python packages](#tools).
+2. Download database for the chosen project.
+	 - MoCap database isn't available due to policy - contact me if you want to run MoCap project.
+	 - [Kinect database](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar).
+	 - [Emotion database](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data) is included in this repo so you don't need to download it manully. Hence do not change path to Emotion database (see next step).
+3. Set up a path to the downloaded database. 
+	>Each `[PREFIX]reader.py` initializes a constant `PROJECTNAME_PATH` -- a path to data directory for the current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you have to change that constant as well. Keep in mind, that the chosen data directory should preserve the original structure, used in a project: <div align="center"><img src="png/data_structure.PNG" width="300"></div>
+4. Decide which project part do you want to run: 
+	- `[PREFIX]reader.py` -- data demonstration (visualization);
+	- `[PREFIX]setting.py` -- WDTW training;
+	- `[PREFIX]test.py` -- WDTW testing.
 
-After that, open the respective folder and run 
-
-* ```[PREFIX]reader.py``` for data demonstration (visualization);
-* ```[PREFIX]setting.py``` for WDTW training,
-* ```[PREFIX]test.py``` for WDTW testing;
-
-Whether it's a reader, setting or a testing script file, you can run it through Python IDE ([PyCharm](https://www.jetbrains.com/pycharm/) is used here) or via cmd by typing ```$ python -m PROJECTNAME.filename``` (without a ```.py```) inside a global project directory, which is  ```GesturesSpeech```. For example, type ```$ python -m Kinect.kreader``` to run Kinect demo.
+	Whether it's a reader, setting or a testing script file, you can run it through Python IDE ([PyCharm](https://www.jetbrains.com/pycharm/) is used here) or via cmd by typing `$ python -m PROJECTNAME.filename` (without a `.py`) inside a global project directory, which is  `GesturesSpeech`. For example, type `$ python -m Kinect.kreader` to run Kinect demo.
 
 
 <h2 id="diagram">Class diagram</h2>
@@ -233,20 +241,13 @@ When all hidden parameters are calculated and all weights are set for each gestu
 
 Classical DTW algorithm takes ![](png/math/On.PNG) complexity both in time and space. Thus we speed up it to linear time and space complexity, using [FastDTW](http://cs.fit.edu/~pkc/papers/tdm04.pdf) [implementation](https://github.com/slaypni/fastdtw). Although FastDTW carries disadvantage in worse accuracy, comparing to DTW, via changing controlling parameter, called radius _r_, it turns out, that in our case FastDTW yields the same performance as DTW does.
 
-<table style="width:100%">
-	<tr>
-		<th>Kinect</th>
-		<th>MoCap</th>
-	<tr>
-    <tr>
-        <td>
-            <img src="Kinect/png/dtw_path.png"/>
-        </td>
-        <td>
-            <img src="MOCAP/png/dtw_path.png"/>
-        </td>
-    </tr>
-</table>
+| Kinect                       | MoCap                       |
+| ---------------------------- | ----------------------------|
+| ![](Kinect/png/dtw_path.png) | ![](MOCAP/png/dtw_path.png) |
+
+
+
+<h2 id="results">Results</h2>
 
 Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the [database](http://datascience.sehir.edu.tr/visapp2013/) were classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario.
 

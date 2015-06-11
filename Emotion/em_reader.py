@@ -1,6 +1,5 @@
 # coding=utf-8
 
-from __future__ import unicode_literals
 import os
 import pickle
 
@@ -132,7 +131,6 @@ class Emotion(BasicMotion):
             up_down_dist.append(norm(eye_vector, axis=1))
         eyes_wink = np.sum(up_down_dist, axis=0)
 
-        # plt.plot(eyes_wink, 'b')
         for frame in range(1, len(eyes_wink) - 1):
             start = max(0, frame - wink_window // 2)
             end = min(len(eyes_wink), frame + wink_window // 2)
@@ -144,8 +142,6 @@ class Emotion(BasicMotion):
                 if deep_left > to_be_wink_threshold and deep_right > to_be_wink_threshold:
                     start = start + np.argmax(eyes_wink[start:frame])
                     end = frame + np.argmax(eyes_wink[frame:end])
-                    # y = np.linspace(left_bound, right_bound, end - start)
-                    # plt.plot(np.arange(start, end, 1), y, 'go')
                     for eye in both_eyes:
                         for eye_marker in eye:
                             for dim in range(self.norm_data.shape[2]):
@@ -153,11 +149,6 @@ class Emotion(BasicMotion):
                                 x_end = self.norm_data[eye_marker, end, dim]
                                 line = np.linspace(x_begin, x_end, end - start)
                                 self.norm_data[eye_marker, start:end, dim] = line
-                                # plt.legend(["real eyes movements", "approximation"], numpoints=1, loc=3)
-                                # plt.xlabel("frame")
-                                # plt.ylabel("eyeUp to eyeDown dist, norm units")
-                                # plt.title("Dealing with eyes winking")
-                                # plt.show()
 
     def gaussian_filter(self):
         """

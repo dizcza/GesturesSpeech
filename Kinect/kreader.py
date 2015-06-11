@@ -11,7 +11,6 @@ Kinect project (HumanoidKinect class) is based upon database from the reference:
 }
 """
 
-from __future__ import unicode_literals
 import warnings
 import numpy as np
 import os
