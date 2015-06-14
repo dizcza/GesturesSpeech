@@ -2,28 +2,26 @@
 
 ###### This repo provides the instruments for signle signs and facial emotions recognition.
 
-See the many questions tagged [tag:elephants] to learn more.
 
-<nav class="contents">
 ## Contents
-1.  [Projects info](#info)
-2.  [How to run a project](#run)
-3.  [Class diagram](#diagram)
-4.  [State of art](#art)
-5.  [Data pre-processing](#preprocess)
-6.  [Body joint displacements](#displacements)
-7.  [Body joint weights. Discriminant ratio](#weights)
-8.  [The worst and the best testing scenarios](#scenario)
-9.  [Weighted DTW comparison](#wdtw)
+1.  [Projects info](#projects-info)
+2.  [How to run a project](#how-to-run-a-project)
+3.  [Class diagram](#class-diagram)
+4.  [State of art](#state-of-art)
+5.  [Data pre-processing](#data-pre-processing)
+6.  [Body joint displacements](#body-joint-displacements)
+7.  [Body joint weights. Discriminant ratio](#body-joint-weights-discriminant-ratio)
+8.  [The worst and the best testing scenarios](#the-worst-and-the-best-testing-scenarios)
+9.  [Weighted DTW comparison](#weighted-dtw-comparison)
 10. [Results](#results)
+11. [FPS dependency](#fps-dependency)
 11. [Tools](#tools)
-</nav>
 
 ![Добрий ранок](png/anim.gif)
 
 
 
-<h2 id="info">Projects info</h2>
+## Projects info
 
 <table style="width:100%; margin:0 auto">
 	<tr>
@@ -109,7 +107,8 @@ See the many questions tagged [tag:elephants] to learn more.
 	</tr>
 </table>
 
-##### Notes:
+**Notes**:
+
 1.  The Kinect project is based on [this](http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf) paper and their [data](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar) to compare its results with our MoCap project.
 2.  _Active markers_ are the ones that carry information about the motion body parts. Hence we don't need to track them all. This parameter is set manually for each project.
 3.  Number of _actors_ is the number of humans, who were involved directly into data acquisition.
@@ -117,7 +116,8 @@ See the many questions tagged [tag:elephants] to learn more.
 
 
 
-<h2 id="run">How to run a project</h2>
+## How to run a project
+
 To run a particular project (_MoCap_, _Kinect_ or _Emotion_), 
 
 1. Make sure you've completely installed all [obligatory Python packages](#tools).
@@ -126,7 +126,8 @@ To run a particular project (_MoCap_, _Kinect_ or _Emotion_),
 	 - [Kinect database](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar).
 	 - [Emotion database](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data) is included in this repo so you don't need to download it manully. Hence do not change path to Emotion database (see next step).
 3. Set up a path to the downloaded database. 
-	>Each `[PREFIX]reader.py` initializes a constant `PROJECTNAME_PATH` -- a path to data directory for the current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you have to change that constant as well. Keep in mind, that the chosen data directory should preserve the original structure, used in a project: <div align="center"><img src="png/data_structure.PNG" width="300"></div>
+	
+	> Each `[PREFIX]reader.py` initializes a constant `PROJECTNAME_PATH` -- a path to data directory for the current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you have to change that constant. Keep in mind, that the chosen data directory should preserve the original structure, used in a project: <div align="center"><img src="png/data_structure.PNG" width="300"></div>
 4. Decide which project part do you want to run: 
 	- `[PREFIX]reader.py` -- data demonstration (visualization);
 	- `[PREFIX]setting.py` -- WDTW training;
@@ -135,19 +136,22 @@ To run a particular project (_MoCap_, _Kinect_ or _Emotion_),
 	Whether it's a reader, setting or a testing script file, you can run it through Python IDE ([PyCharm](https://www.jetbrains.com/pycharm/) is used here) or via cmd by typing `$ python -m PROJECTNAME.filename` (without a `.py`) inside a global project directory, which is  `GesturesSpeech`. For example, type `$ python -m Kinect.kreader` to run Kinect demo.
 
 
-<h2 id="diagram">Class diagram</h2>
+
+## Class diagram
 
 <div align="center"><img src="http://yuml.me/diagram/scruffy/class/[BasicMotion]^-[HumanoidBasic], [BasicMotion]^-[Emotion], [HumanoidBasic]^-[MoCap], [HumanoidBasic]^-[Kinect]" width=250></div>
 
 
 
-<h2 id="art">State of the art</h2>
+## State of the art
 
 The main idea in gesture recognition is to maximize between-class variance _Db_ and minimize within-class variance _Dw_ by choosing appropriate hidden parameters (training step). For this purpose Weighted DTW algorithm has been [proposed](http://datascience.sehir.edu.tr/pub/VISAPP2013.pdf).
 
 It's obvious, that a joint which is active in one gesture class may not be active in another gesture class. Hence weights have to be adjusted accordingly. As Reyes et al. (2011) have observed, only six out of the 20 joints contribute in identifying a hand gesture: left hand, right hand, left wrist, right wrist, left elbow, right elbow. For example, for the right-hand-push-up gesture, one would expect the right hand, right elbow and right wrist joints to have large weights, but to have smaller weights for the left-hand-push-up gesture. We propose to use only 3 of them, w.r.t. to the left or right hand.
 
-<h2 id="preprocess">Data pre-processing</h2>
+
+
+## Data pre-processing
 
 Data pre-processing for MoCap and Kinect projects includes 2 steps:
 
@@ -158,7 +162,7 @@ Additionally, besides these two steps, Emotion data pre-processing includes also
 
 
 
-<h2 id="displacements">Body joint displacements</h2>
+## Body joint displacements
 
 Except datasets sizes, the main difference between MoCap and Kinect projects is the number of body joints (marker) that are active during the motion. Thus, Kinect project provides only 3 markers per hand while MoCap project operates with 50 (25 x 2) hand markers. Their contribution in the motion (or their activity) is shown below as a joint's displacement sum over gesture frames (measured in normalized units) with right hand highlighted in light blue colour for Kinect sample and left hand - for MoCap sample, shown above as an animation of Ukrainian gesture "Добрий ранок". For Emotion project, a _smile_ sample was taken with mouth markers highlighted in light blue.
 
@@ -183,7 +187,7 @@ Except datasets sizes, the main difference between MoCap and Kinect projects is 
 
 
 
-<h2 id="weights">Body joint weights. Discriminant ratio</h2>
+## Body joint weights. Discriminant ratio
 
 Using the total displacement values of joints, the joint **_j_**'s weight value of class **_g_** is calculated via
 <div align="center"><img src ="png/math/weights_formula.PNG"></div>
@@ -219,7 +223,7 @@ Note, that MoCap has only 1 training example and 1 testing example per unique ge
 
 
 
-<h2 id="scenario">The worst and the best testing scenarios</h2>
+## The worst and the best testing scenarios
 
 The WORST test scenario is passed (with OK status) when the **max** DTW cost (or its modification) among the test sample "c" and all THE SAME class train samples ![](png/math/qi.PNG) is lower than the min DTW cost among the test sample "c" and all OTHER classes samples ![](png/math/hj.PNG) :
 
@@ -235,7 +239,7 @@ It should be clear that the best scenario is also a _classic_ scenario at findin
 
 
 
-<h2 id="wdtw">Weighted DTW comparison</h2>
+## Weighted DTW comparison
 
 When all hidden parameters are calculated and all weights are set for each gesture class, it's time to use WDTW to compare some unknown sequence (from a testing set) with a known one (from a training set).
 
@@ -247,7 +251,7 @@ Classical DTW algorithm takes ![](png/math/On.PNG) complexity both in time and s
 
 
 
-<h2 id="results">Results</h2>
+## Results
 
 Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the [database](http://datascience.sehir.edu.tr/visapp2013/) were classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario.
 
@@ -296,14 +300,14 @@ WDTW algorithm correctly identified 29 / 36 emotions, while simple DTW identifie
 
 
 
-<h2 id="rrate">FPS dependency</h2>
+## FPS dependency
 
 Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 8 is enough for both projects data.
 ![](png/error_vs_fps.png)
 
 
 
-<h2 id="tools">Tools</h2>
+## Tools
 
 Free 3D Graphics Lab Motion Capture visualizers:
 

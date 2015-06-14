@@ -17,6 +17,7 @@ except ImportError:
 # path to MoCap project data
 MOCAP_PATH = r"D:\GesturesDataset\MoCap\splitAll"
 
+# todo sys.argv[0] --> __file__
 
 def gather_points_data(acq):
     """
@@ -32,7 +33,7 @@ def gather_points_data(acq):
         for i in range(0, acq.GetPoints().GetItemNumber()):
             label_id = acq.GetPoint(i).GetLabel()
             data = np.dstack((data, acq.GetPoint(label_id).GetValues().T))
-        data = np.delete(data.T, 0, axis=0)  # first marker is noisy for this file (truly)
+        data = np.delete(data.T, 0, axis=0)  # first marker is noisy
 
         # dealing with mm --> m
         return data / 1e3
