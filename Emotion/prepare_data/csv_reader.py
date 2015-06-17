@@ -281,7 +281,7 @@ def upd_excel():
     check_missed(writers, "writers", given_csv_files)
 
     excel = win32.gencache.EnsureDispatch('Excel.Application')
-    path = os.path.join(os.path.dirname(sys.argv[0]), r"missed_data.xlsx")
+    path = os.path.join(os.path.dirname(__file__), r"missed_data.xlsx")
     wb = excel.Workbooks.Open(path)
     ws = wb.Worksheets("missed")
     ws.Range("A1").Value = "NaNs in:"

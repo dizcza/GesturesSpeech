@@ -119,19 +119,6 @@ def show_comparison(known_gest, unknown_gest):
     :param known_gest: a BasicMotion example
     :param unknown_gest: a BasicMotion example
     """
-
-    def swap_first_two_cols(data):
-        """
-         Swaps markers with frames columns.
-        :param data: (#markers, frames, 3) ndarray
-        :return: (#frames, #markers, 3) data
-        """
-        new_shape = data.shape[1], data.shape[0], data.shape[2]
-        swapped_data = np.empty(shape=new_shape)
-        for frame in range(data.shape[1]):
-            swapped_data[frame, ::] = data[:, frame, :]
-        return swapped_data
-
     data1 = known_gest.get_norm_data()
     data2 = unknown_gest.get_norm_data()
     weights = known_gest.get_weights()
@@ -144,9 +131,9 @@ def show_comparison(known_gest, unknown_gest):
         print("Incompatible data dimensions.")
         return np.inf
 
-    # was: data.shape == (#markers, frames, 3)
-    data1 = swap_first_two_cols(data1)
-    data2 = swap_first_two_cols(data2)
+    # was: data.shape == (#markers, #frames, 3)
+    data1 = np.swapaxes(data1, 0, 1)
+    data2 = np.swapaxes(data2, 0, 1)
     # now: data.shape == (#frames, #markers, 3)
 
     dist_measure_weighted = partial(dist_measure, weights=weights)

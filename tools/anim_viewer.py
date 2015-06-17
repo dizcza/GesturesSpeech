@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """
-A simple OpenGL viewer for C3D files.
+A simple OpenGL viewer for C3D files. Also provides a visualizer for any 3D data.
 Original: https://github.com/EmbodiedCognition/py-c3d/blob/master/scripts/c3d-viewer
 Required packages:
     - c3d: https://github.com/EmbodiedCognition/py-c3d
@@ -78,7 +78,10 @@ def sphere_vertices(n=2):
 
 
 class Viewer(pyglet.window.Window):
-    def __init__(self, c3d_reader, trace=None, paused=False):
+    """
+     An abstract Viewer. Should be overridden with provided data source.
+    """
+    def __init__(self, trace=None, paused=False):
         platform = pyglet.window.get_platform()
         display = platform.get_default_display()
         screen = display.get_default_screen()
@@ -95,13 +98,20 @@ class Viewer(pyglet.window.Window):
         super(Viewer, self).__init__(
             width=800, height=650, resizable=True, vsync=False, config=config)
 
-        self._frames = c3d_reader.read_frames(copy=False)
-        self._frame_rate = c3d_reader.header.frame_rate
-        self._frame_id = 0
+        # ------------------ BEGIN -------------------- #
+        # -- THESE THREE PARAMS SHOULD BE OVERRIDDEN -- #
+        """
+        1) generator of (frame_no, points, analog) pairs
+        2) frame rate -- frames per second
+        3) marker trails
+        """
+        self._frames = iter([])
+        self._frame_rate = 0
+        self._trails = []
+        # ------------------- END --------------------- #
 
         self._maxlen = 16
-        self._trails = [[] for _ in range(c3d_reader.point_used)]
-        self._reset_trails()
+        self._frame_id = 0
 
         self.trace = trace
         self.paused = paused
@@ -111,8 +121,6 @@ class Viewer(pyglet.window.Window):
         self.tz = -1
         self.ry = 30
         self.rz = -50
-
-        # self.fps = pyglet.clock.ClockDisplay()
 
         self.on_resize(self.width, self.height)
 
@@ -238,14 +246,49 @@ class Viewer(pyglet.window.Window):
             else:
                 trail.append(trail[-1])
 
-    def mainloop(self):
-        pyglet.clock.schedule_interval(self.update, 0.1 / self._frame_rate)
+    def mainloop(self, slow_down=1):
+        pyglet.clock.schedule_interval(self.update, 0.1 * slow_down / self._frame_rate)
         pyglet.app.run()
 
 
+class MocapViewer(Viewer):
+    def __init__(self, c3d_reader):
+        """
+        :param c3d_reader: Reader from a c3d module with a given path to c3d file.
+        """
+        Viewer.__init__(self)
+        # ------------------ BEGIN -------------------- #
+        self._frames = c3d_reader.read_frames(copy=False)
+        self._frame_rate = c3d_reader.header.frame_rate
+        self._trails = [[] for _ in range(c3d_reader.point_used)]
+        # ------------------- END --------------------- #
+        self._reset_trails()
+
+
+class DataViewer(Viewer):
+    def __init__(self, data, rate):
+        """
+        :param data: (#frames, #markers, #dim) ndarray
+                     of XYZ of body joint markers;
+                     should be measured in mm
+                     with feet on the floor (around zero height)
+        :param rate: frames per sec
+        """
+        Viewer.__init__(self)
+        frame_no = np.arange(data.shape[0])
+        analog = [[] for _ in frame_no]
+        # ------------------ BEGIN -------------------- #
+        self._frames = zip(frame_no, data, analog)
+        self._frame_rate = rate
+        self._trails = [[] for _ in range(data.shape[1])]
+        # ------------------- END --------------------- #
+        self._reset_trails()
+
+
 def demo():
+    c3d_file_path = r"D:\GesturesDataset\MoCap\Hospital\H3_mcraw.c3d"
     try:
-        Viewer(c3d.Reader(open(r"D:\GesturesDataset\MoCap\Hospital\H3_mcraw.c3d", 'rb'))).mainloop()
+        MocapViewer(c3d.Reader(open(c3d_file_path, 'rb'))).mainloop()
     except StopIteration:
         pass
 

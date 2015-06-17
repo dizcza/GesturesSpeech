@@ -1,13 +1,14 @@
 # coding=utf-8
 
 import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 import c3d
 
 from tools.humanoid import HumanoidBasic
 import MOCAP.local_tools.labelling as labelling
-from MOCAP.local_tools.c3d_viewer import Viewer
+from tools.anim_viewer import MocapViewer
 
 try:
     import btk
@@ -17,7 +18,6 @@ except ImportError:
 # path to MoCap project data
 MOCAP_PATH = r"D:\GesturesDataset\MoCap\splitAll"
 
-# todo sys.argv[0] --> __file__
 
 def gather_points_data(acq):
     """
@@ -142,7 +142,7 @@ class HumanoidUkr(HumanoidBasic):
          Pretty 3d animation like in OpenGL.
         """
         try:
-            Viewer(c3d.Reader(open(self.fpath, 'rb'))).mainloop()
+            MocapViewer(c3d.Reader(open(self.fpath, 'rb'))).mainloop()
         except StopIteration:
             pass
 

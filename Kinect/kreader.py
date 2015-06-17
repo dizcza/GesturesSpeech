@@ -12,9 +12,11 @@ Kinect project (HumanoidKinect class) is based upon database from the reference:
 """
 
 import warnings
-import numpy as np
 import os
+import numpy as np
+
 from tools.humanoid import HumanoidBasic
+from tools.anim_viewer import DataViewer
 
 # path to Kinect project data
 KINECT_PATH = r"D:\GesturesDataset\KINECT"
@@ -135,6 +137,23 @@ class HumanoidKinect(HumanoidBasic):
         else:
             HumanoidBasic.define_moving_markers(self, mode)
 
+    def animate_pretty(self):
+        """
+         Pretty 3d animation like in OpenGL.
+        """
+        feet_labels = "FootRight", "FootLeft"
+        feet_ids = self.get_ids(*feet_labels)
+        hip_to_floor_dist = -np.average(self.data[feet_ids, :, 2])
+        _data = np.swapaxes(self.data, 0, 1)
+        _data *= 1e3
+        _data[:, :, 2] += 1e3 * hip_to_floor_dist
+        shape = _data.shape[0], _data.shape[1], 1
+        _data = np.append(_data, np.zeros(shape), axis=2)
+        try:
+            DataViewer(_data, self.fps).mainloop(slow_down=25)
+        except StopIteration:
+            pass
+
 
 def demo_run():
     """
@@ -145,7 +164,7 @@ def demo_run():
     gest = HumanoidKinect(gest_path)
     print(gest)
     gest.show_displacements("bothHands", ("ElbowRight", "WristRight", "HandRight"))
-    gest.animate()
+    gest.animate_pretty()
 
 
 if __name__ == "__main__":
