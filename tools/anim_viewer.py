@@ -1,7 +1,8 @@
 # coding=utf-8
 
 """
-A simple OpenGL viewer for C3D files. Also provides a visualizer for any 3D data.
+A simple OpenGL MoCap Coordinate 3D viewer.                 # MocapViewer
+Also provides a visualizer for arrays of 3D motion data.    # DataViewer
 Original: https://github.com/EmbodiedCognition/py-c3d/blob/master/scripts/c3d-viewer
 Required packages:
     - c3d: https://github.com/EmbodiedCognition/py-c3d
@@ -110,7 +111,9 @@ class Viewer(pyglet.window.Window):
         self._trails = []
         # ------------------- END --------------------- #
 
-        self._maxlen = 16
+        self.clock = pyglet.clock.get_default()
+        self._maxlen = 16   # max trace length (in frames)
+        self.interval = 0   # time interval between two frames
         self._frame_id = 0
 
         self.trace = trace
@@ -186,6 +189,16 @@ class Viewer(pyglet.window.Window):
         glLoadIdentity()
         glu.gluPerspective(45, float(width) / height, 1, 100)
 
+    def change_interval(self, multiplier):
+        """
+         Changes FPS via changing clock interval between two frames.
+         :param multiplier: (float) how long/short new interval will be
+        """
+        self.interval *= float(multiplier)
+        self.clock.unschedule(self.update)
+        self.clock.schedule_interval(self.update, self.interval)
+        print("FPS SET: %g; \t FPS DISPLAYED: %g" % (1. / self.interval, self.clock.get_fps()))
+
     def on_key_press(self, key, modifiers):
         k = pyglet.window.key
         if key == k.ESCAPE:
@@ -194,11 +207,9 @@ class Viewer(pyglet.window.Window):
             self.paused = False if self.paused else True
             print("PAUSED" if self.paused else "CONTINUE")
         elif key in (k.PLUS, k.EQUAL, k.NUM_ADD):
-            self._maxlen = max(1, self._maxlen // 2)
-            self._reset_trails()
+            self.change_interval(0.5)
         elif key in (k.MINUS, k.UNDERSCORE, k.NUM_SUBTRACT):
-            self._maxlen *= 2
-            self._reset_trails()
+            self.change_interval(2)
         elif key == k.RIGHT:
             # skips 1 sec
             skip = int(self._frame_rate)
@@ -233,6 +244,7 @@ class Viewer(pyglet.window.Window):
         self._trails = [collections.deque(t, self._maxlen) for t in self._trails]
 
     def _next_frame(self):
+        # saves current frame
         # pyglet.image.get_buffer_manager().get_color_buffer().save("%d.png" % self._frame_id)
         self._frame_id += 1
         return next(self._frames)
@@ -247,7 +259,8 @@ class Viewer(pyglet.window.Window):
                 trail.append(trail[-1])
 
     def mainloop(self, slow_down=1):
-        pyglet.clock.schedule_interval(self.update, 0.1 * slow_down / self._frame_rate)
+        self.interval = float(slow_down) / self._frame_rate
+        self.clock.schedule_interval(self.update, self.interval)
         pyglet.app.run()
 
 
@@ -275,6 +288,7 @@ class DataViewer(Viewer):
         :param rate: frames per sec
         """
         Viewer.__init__(self)
+        self._maxlen = 5
         frame_no = np.arange(data.shape[0])
         analog = [[] for _ in frame_no]
         # ------------------ BEGIN -------------------- #
@@ -286,7 +300,7 @@ class DataViewer(Viewer):
 
 
 def demo():
-    c3d_file_path = r"D:\GesturesDataset\MoCap\Hospital\H3_mcraw.c3d"
+    c3d_file_path = r"D:\GesturesDataset\MoCap\Hospital\H2_mcraw.c3d"
     try:
         MocapViewer(c3d.Reader(open(c3d_file_path, 'rb'))).mainloop()
     except StopIteration:

@@ -4,8 +4,8 @@ import os
 
 try:
     import bpy
-    print("Blender Python is found and successfully loaded.")
+    print("\n *** Blender Python is found and successfully loaded. ***\n")
 except:
-    print("Cannot load Blender Python module.")
+    print("\n *** ERROR: cannot load Blender Python module. ***\n")
 
 os.system("pause")

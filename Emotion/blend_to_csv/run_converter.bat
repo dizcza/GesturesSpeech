@@ -1,1 +1,0 @@
-blender --background --python convert_to_csv.py

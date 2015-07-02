@@ -1,4 +1,4 @@
-# Sign language
+# Sign language recognition
 
 ###### This repo provides the instruments for signle signs and facial emotions recognition.
 
@@ -124,7 +124,7 @@ To run a particular project (_MoCap_, _Kinect_ or _Emotion_),
 2. Download database for the chosen project.
 	 - MoCap database isn't available due to policy - contact me if you want to run MoCap project.
 	 - [Kinect database](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar).
-	 - [Emotion database](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data) is included in this repo so you don't need to download it manully. Hence do not change path to Emotion database (see next step).
+	 - [Emotion database](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data) is included in this repo so you don't need to download it manully. Hence do not change path to Emotion database (see the next step).
 3. Set up a path to the downloaded database. 
 	
 	> Each `[PREFIX]reader.py` initializes a constant `PROJECTNAME_PATH` -- a path to data directory for the current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you have to change that constant. Keep in mind, that the chosen data directory should preserve the original structure, used in a project: <div align="center"><img src="png/data_structure.PNG" width="300"></div>
@@ -133,7 +133,11 @@ To run a particular project (_MoCap_, _Kinect_ or _Emotion_),
 	- `[PREFIX]setting.py` -- WDTW training;
 	- `[PREFIX]test.py` -- WDTW testing.
 
-	Whether it's a reader, setting or a testing script file, you can run it through Python IDE ([PyCharm](https://www.jetbrains.com/pycharm/) is used here) or via cmd by typing `$ python -m PROJECTNAME.filename` (without a `.py`) inside a global project directory, which is  `GesturesSpeech`. For example, type `$ python -m Kinect.kreader` to run Kinect demo.
+	Whether it's a reader, setting or a testing script file, you can run it through Python IDE ([PyCharm](https://www.jetbrains.com/pycharm/) is used here) or via cmd by typing `$ python -m PROJECTNAME.filename` (without a `.py`) inside a global project directory, which is  `GesturesSpeech` -- repository name. For example, type
+  
+		$ python -m Kinect.kreader
+  
+	to run Kinect demo.
 
 
 
@@ -253,7 +257,7 @@ Classical DTW algorithm takes ![](png/math/On.PNG) complexity both in time and s
 
 ## Results
 
-Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all testing gesture characters from the [database](http://datascience.sehir.edu.tr/visapp2013/) were classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario.
+Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all test gestures were classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario for Kinect project.
 
 <table style="width:100%">
 	<caption><font size="2"><i>Single gesture recognition accuracy, % </i></font></caption>
@@ -284,7 +288,7 @@ Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints fo
 		<td>80.6</td>
 	</tr>
 	<tr>
-    	<td>DTW or FastDTW</td>
+    	<td>DTW / FastDTW</td>
 		<td>100</td>
 		<td>100</td>
 		<td>69.4</td>
@@ -311,9 +315,9 @@ Another interesting observation shows that there is no need to use the whole den
 
 Free 3D Graphics Lab Motion Capture visualizers:
 
-*   [Mokka](http://b-tk.googlecode.com/svn/web/mokka/index.html)
-*   [Blender](http://www.blender.org/) (look at [here](http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender) to be able to import C3D files)
-*   [Free CMO Reader](http://www.c-motion.com/free-downloads/)
+*   [Mokka](http://b-tk.googlecode.com/svn/web/mokka/index.html) (my favourite);
+*   [Blender](http://www.blender.org/) (look at [here](http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender) to be able to import C3D files);
+*   [CMO Reader](http://www.c-motion.com/free-downloads/#did4).
 
 The current project is portable. Although it's built and maintained upon Python 3.4 x32 version, you can use 2.7.8 or higher 32 bit version of Python.
 

@@ -15,6 +15,7 @@ def choose_beta(hand_mode="bothHands", fps=None, reset=False):
     """
      Chooses the best beta (which yields the biggest discriminant ratio R),
      w.r.t. hand mode and fps params.
+     Set 'fps' to None not to change the default fps.
     """
     Training(HumanoidUkr).choose_beta_pretty(hand_mode, fps, reset)
 

@@ -15,8 +15,8 @@ def choose_beta(mode=None, fps=None, reset=False):
     """
      Chooses the best beta (which yields the biggest discriminant ratio R),
      w.r.t. mode and fps params.
-     Set mode to None to use all markers.
-     Set fps to None not to change default fps
+     Set 'mode' to None to use all markers.
+     Set 'fps' to None not to change the default fps.
     """
     Training(Emotion).choose_beta_pretty(mode, fps, reset)
 

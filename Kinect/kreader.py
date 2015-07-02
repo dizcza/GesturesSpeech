@@ -150,7 +150,7 @@ class HumanoidKinect(HumanoidBasic):
         shape = _data.shape[0], _data.shape[1], 1
         _data = np.append(_data, np.zeros(shape), axis=2)
         try:
-            DataViewer(_data, self.fps).mainloop(slow_down=25)
+            DataViewer(_data, self.fps).mainloop(slow_down=2.5)
         except StopIteration:
             pass
 
