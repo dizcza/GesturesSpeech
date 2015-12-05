@@ -2,11 +2,12 @@
 
 import cv2
 import numpy as np
+from numpy.linalg import norm
 import json
 import os
 
-mp4_path = r"D:\GesturesDataset\videos_mocap_18_11\alexandr\cut\HPIM0029s3e1.MOV"
-# mp4_path = r"D:\GesturesDataset\videos_mocap_18_11\alexandr\cut\HPIM0026s1e1.MOV"
+# mp4_path = r"D:\GesturesDataset\videos_mocap_18_11\alexandr\cut\HPIM0029s3e1.MOV"
+mp4_path = r"D:\GesturesDataset\videos_mocap_18_11\alexandr\cut\HPIM0026s1e1.MOV"
 
 BOUNDARIES = (
     (150, 180),
@@ -27,11 +28,12 @@ PI = 180
 both_eyes_cascade = cv2.CascadeClassifier('haar_both_eyes.xml')
 eye_cascade = cv2.CascadeClassifier('haar_eye.xml')
 
-MIN_MARKER_RADIUS = 5
-MAX_MARKER_RADIUS = 10
+MIN_MARKER_RADIUS_SOFT = 4
+MIN_MARKER_RADIUS_HARD = 4
+MAX_MARKER_RADIUS = 7
 
-MIN_MARKER_AREA_SOFT = 3.14 * MIN_MARKER_RADIUS ** 2
-MIN_MARKER_AREA_HARD = 3.14 * 4 ** 2
+MIN_MARKER_AREA_SOFT = 3.14 * MIN_MARKER_RADIUS_SOFT ** 2
+MIN_MARKER_AREA_HARD = 3.14 * MIN_MARKER_RADIUS_HARD ** 2
 MAX_MARKER_AREA = 3.14 * MAX_MARKER_RADIUS ** 2
 
 MARKERS_NUM = 18
@@ -223,29 +225,82 @@ def haar_eye(gray, skinny, show=True):
         cv2.imshow("haar eyes", gray)
 
 
-def deal_with_eye_overlap(gray_soft, overlap_contours):
+def contour_center(contour):
+    """
+    :param contour: a list of XY, pertains to a contour
+    :return: (tuple) contour's center
+    """
+    rect_x, rect_y, rect_w, rect_h = cv2.boundingRect(contour)
+    empty_img = np.zeros((rect_w, rect_h))
+    rect_pos = [rect_x, rect_y]
+    contour_local = contour - rect_pos
+    cv2.drawContours(empty_img, [contour_local], -1, color=MAX_COLOR_VAL, thickness=cv2.FILLED)
+    center_local = get_img_active_center(empty_img)
+    xc, yc = np.add(center_local, rect_pos)
+    return xc, yc
+
+
+def get_img_active_center(img):
+    """
+    :param img: an image (gray or colored)
+    :return: (tuple) image center
+    """
+    xc, yc = np.average(np.where(img > 0)[:2], axis=1).astype(np.uint32)
+    return xc, yc
+
+
+def refine_eye_contour(roi_soft, eye_hard_contour, min_intersect=0.9, max_delta=0.2):
+    hard_center = contour_center(eye_hard_contour)
+    intersect_rate = 0
+    eye_center_prev = eye_center_refined = hard_center
+    delta_relative = MIN_MARKER_RADIUS_SOFT / MIN_MARKER_RADIUS_SOFT
+
+    while intersect_rate < min_intersect and delta_relative > max_delta:
+        colorful_img = np.zeros(roi_soft.shape + tuple([3]), dtype=np.uint8)
+        cv2.circle(colorful_img, eye_center_refined, MIN_MARKER_RADIUS_SOFT, color=BLUE, thickness=cv2.FILLED)
+        # colorful_img = cv2.bitwise_and(colorful_img, colorful_img, mask=roi_soft)
+        eye_center_refined = get_img_active_center(colorful_img)
+        gray = cv2.cvtColor(colorful_img, cv2.COLOR_BGR2GRAY)
+        intersect_rate = cv2.countNonZero(gray) / MIN_MARKER_AREA_SOFT
+        delta_relative = norm(np.subtract(eye_center_refined, eye_center_prev)) / MIN_MARKER_RADIUS_SOFT
+        eye_center_prev = eye_center_refined
+        print(eye_center_refined, delta_relative, intersect_rate)
+
+        cv2.imshow("colorful_img", colorful_img)
+    print("done")
+
+    return eye_hard_contour
+
+
+
+def deal_with_eye_overlap(gray_soft, big_contours):
     gray_hard = gray_soft.copy()
-    gray_hard[np.where(gray_soft < V_MAX_LOWER)] = 0
+    gray_hard[np.where(gray_hard < V_MAX_LOWER)] = 0
     gray_hard = cv2.blur(gray_hard, ksize=(3,3))
 
     eye_contours = []
 
-    for stuck_contour in overlap_contours:
+    for stuck_contour in big_contours:
         rect_x, rect_y, rect_w, rect_h = cv2.boundingRect(stuck_contour)
-
-        cv2.rectangle(gray_soft, (rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), MAX_COLOR_VAL / 2, thickness=2)
-        cv2.imshow("d", gray_soft)
-
         roi_hard = gray_hard[rect_x: rect_x + rect_w, rect_y: rect_y + rect_h]
+        roi_soft = gray_soft[rect_x: rect_x + rect_w, rect_y: rect_y + rect_h]
+
         roi_hard_contours = get_contours(roi_hard)
         areas = [cv2.contourArea(c) for c in roi_hard_contours]
         roi_hard_contours = [roi_hard_contours[i] for i in range(len(roi_hard_contours)) if areas[i] > MIN_MARKER_AREA_HARD]
         if roi_hard_contours:
             eye_contour_index = np.argmin([cv2.contourArea(c) for c in roi_hard_contours])
             eye_hard_contour = roi_hard_contours[eye_contour_index]
+            # eye_hard_contour = refine_eye_contour(roi_soft, eye_hard_contour)
+
             eye_hard_contour[:, :, 0] += rect_x
             eye_hard_contour[:, :, 1] += rect_y
+
+
             eye_contours.append(eye_hard_contour)
+
+        cv2.rectangle(gray_hard, (rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), MAX_COLOR_VAL / 2, thickness=2)
+        cv2.imshow("gray_hard", gray_hard)
 
     return eye_contours
 
@@ -273,10 +328,13 @@ def filter_by_contour_area(gray):
         elif c_area > MIN_MARKER_AREA_SOFT:
             filtered_contours.append(c)
 
-    # filtered_contours = deal_with_eye_contours(filtered_contours, big_contours, gray)
-    if len(filtered_contours) < 18:
-        eye_contours_additional = deal_with_eye_overlap(gray, big_contours)
-        filtered_contours += eye_contours_additional
+    # if len(filtered_contours) < 18:
+    #     # print(len(filtered_contours))
+    #     eye_contours_additional = deal_with_eye_overlap(gray, big_contours)
+    #     filtered_contours += eye_contours_additional
+    # filtered_contours += big_contours
+    if len(filtered_contours) != 18:
+        print(len(filtered_contours))
 
     filtered_img = np.zeros(shape=gray.shape, dtype=np.uint8)
     cv2.drawContours(filtered_img, filtered_contours, -1, color=MAX_COLOR_VAL, thickness=cv2.FILLED)
@@ -298,7 +356,7 @@ def take_smaller_part_hough(stuck_contour, gray):
                                param1=MAX_COLOR_VAL,
                                param2=4,
                                minRadius=MAX_MARKER_RADIUS,
-                               maxRadius=MAX_MARKER_RADIUS + MIN_MARKER_RADIUS)
+                               maxRadius=MAX_MARKER_RADIUS + MIN_MARKER_RADIUS_SOFT)
 
     bgr = cv2.cvtColor(roi, cv2.COLOR_GRAY2BGR)
     if circles is not None:
@@ -352,40 +410,6 @@ def to_tuple(ndarray):
     return tuple(ndarray.tolist())
 
 
-def deal_with_eye_contours(filtered_contours, big_contours, gray):
-    if len(filtered_contours) > MARKERS_NUM:
-        return filtered_contours
-        # raise ValueError
-    elif len(filtered_contours) == MARKERS_NUM:
-        return filtered_contours
-    else:
-        eye_contours = []
-        scarcity = MARKERS_NUM - len(filtered_contours)
-        descending_area_indices = np.argsort([cv2.contourArea(c) for c in big_contours])[::-1]
-        for index_taken in descending_area_indices[:scarcity]:
-            stuck_contour = big_contours[index_taken]
-
-            stuck_contour_bgr = np.zeros(gray.shape + tuple([3]))
-            cv2.drawContours(stuck_contour_bgr, stuck_contour, -1, GREEN, thickness=cv2.FILLED)
-            # cv2.imshow("stuck contour", stuck_contour_bgr)
-
-            take_smaller_part_hough(stuck_contour, gray)
-
-            eye_c, split_contours, centers = take_smaller_part(stuck_contour)
-
-            bgr = np.zeros(gray.shape + tuple([3]))
-            # bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-            for cid in range(len(split_contours)):
-                cv2.drawContours(bgr, split_contours, cid, COLORS[cid], thickness=cv2.FILLED)
-                cv2.circle(bgr, to_tuple(centers[cid]), radius=1, color=RED, thickness=2)
-
-            # cv2.imshow("kmeans", bgr)
-
-            eye_contours.append(eye_c)
-        return filtered_contours + eye_contours
-
-
-
 def process_frame(frame, index):
     if index == 0:
         frame = resize_in_half(frame)
@@ -398,7 +422,10 @@ def process_frame(frame, index):
     dots_img = cv2.bitwise_and(dots_img, skinny)
 
     # haar_eye(hsv[:, :, 2].astype(np.uint8), skinny)
-    dots_img = cv2.blur(dots_img, ksize=(3,3))
+    dots_img = cv2.blur(dots_img, ksize=(2,1))
+    # dots_img = cv2.blur(dots_img, ksize=(1,1))
+    # dots_img = cv2.blur(dots_img, ksize=(1,1))
+    # dots_img = cv2.blur(dots_img, ksize=(1,1))
 
     # dots_img[ np.where(dots_img > 0) ] = MAX_COLOR_VAL
 
