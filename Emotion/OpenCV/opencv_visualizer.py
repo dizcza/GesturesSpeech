@@ -2,90 +2,25 @@
 
 import cv2
 import numpy as np
-from numpy.linalg import norm
-import json
-import os
+from Emotion.OpenCV.constants import *
 
 # mp4_path = r"D:\GesturesDataset\videos_mocap_18_11\alexandr\cut\HPIM0029s3e1.MOV"
 mp4_path = r"D:\GesturesDataset\videos_mocap_18_11\alexandr\cut\HPIM0026s1e1.MOV"
 
-BOUNDARIES = (
-    (150, 180),
-    (0, 255),
-    (0, 255)
-)
-
-MAX_COLOR_VAL = 255
-
-BLUE = (MAX_COLOR_VAL, 0, 0)
-GREEN = (0, MAX_COLOR_VAL, 0)
-RED = (0, 0, MAX_COLOR_VAL)
-
-COLORS = BLUE, GREEN, RED
-
-PI = 180
-
-both_eyes_cascade = cv2.CascadeClassifier('haar_both_eyes.xml')
-eye_cascade = cv2.CascadeClassifier('haar_eye.xml')
-
-MIN_MARKER_RADIUS_SOFT = 4
-MIN_MARKER_RADIUS_HARD = 4
-MAX_MARKER_RADIUS = 7
-
-MIN_MARKER_AREA_SOFT = 3.14 * MIN_MARKER_RADIUS_SOFT ** 2
-MIN_MARKER_AREA_HARD = 3.14 * MIN_MARKER_RADIUS_HARD ** 2
-MAX_MARKER_AREA = 3.14 * MAX_MARKER_RADIUS ** 2
-
-MARKERS_NUM = 18
-
-V_MAX_LOWER = 200
-
-
-class HSV(object):
-    WIN_NAME = "hsv mask"
-
-    HUE_MIN_NAME = "hue min"
-    SAT_MIN_NAME = "sat min"
-    VAL_MIN_NAME = "val min"
-
-    HUE_MAX_NAME = "hue max"
-    SAT_MAX_NAME = "sat max"
-    VAL_MAX_NAME = "val max"
-
-    HUE_DEFAULT = 150
-    SAT_DEFAULT = 0
-    VAL_DEFAULT = 0
-
-
-class HoughCircles(object):
-    WIN_NAME = "hough circles"
-
-    DP_NAME = "dp"
-    MIN_DIST_NAME = "minDist"
-    PARAM_1_NAME = "param1"
-    PARAM_2_NAME = "param2"
-    MIN_RADIUS_NAME = "minRadius"
-    MAX_RADIUS_NAME = "maxRadius"
-
-    DP_DEFAULT = 1
-    MIN_DIST_DEFAULT = 20
-    PARAM_1_DEFAULT = 100
-    PARAM_2_DEFAULT = 3
-    MIN_RADIUS_DEFAULT = 4
-    MAX_RADIUS_DEFAULT = 8
-
-
-
-
 
 def resize_in_half(frame):
+    """
+    :param frame: image
+    :return: image, reduced by half
+    """
     return cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
 
 
-
-
-
 def separate_channels(hsv):
+    """
+    :param hsv: hsv image
+    :return: a sequence of h, s, v images
+    """
     lower_black, upper_black = get_lower_upper()
 
     channel_streams = []
@@ -102,6 +37,10 @@ def separate_channels(hsv):
 
 
 def get_black_pixels(hsv):
+    """
+    :param hsv: hsv image
+    :return: its black mask
+    """
     lower_black, upper_black = get_lower_upper()
     mask_black = cv2.inRange(hsv, lower_black, upper_black)
     return mask_black
@@ -115,29 +54,10 @@ def get_black_pixel_indices(hsv, inverse=False):
         return np.where(mask_black > 0)
 
 
-def hough_circles(frame, gray):
-    dp, minDist, param1, param2, minRadius, maxRadius = get_hough_params()
-    circles = cv2.HoughCircles(gray,
-                               cv2.HOUGH_GRADIENT,
-                               dp=dp,
-                               minDist=minDist,
-                               param1=param1,
-                               param2=param2,
-                               minRadius=minRadius,
-                               maxRadius=maxRadius)
-
-    if circles is not None:
-        circles = np.uint16(np.around(circles))
-        for i in circles[0,:]:
-            # draw the outer circle
-            cv2.circle(frame,(i[0],i[1]),i[2],GREEN,2)
-            # draw the center of the circle
-            cv2.circle(frame,(i[0],i[1]),2,RED,3)
-
-        cv2.imshow('detected circles', frame)
-
-
 def get_lower_upper():
+    """
+    :return: lower & upper black ranges from a trackbar
+    """
     hue_lower = cv2.getTrackbarPos(HSV.HUE_MIN_NAME, HSV.WIN_NAME)
     sat_lower = cv2.getTrackbarPos(HSV.SAT_MIN_NAME, HSV.WIN_NAME)
     val_lower = cv2.getTrackbarPos(HSV.VAL_MIN_NAME, HSV.WIN_NAME)
@@ -152,29 +72,10 @@ def get_lower_upper():
     return lower_black, upper_black
 
 
-def get_hough_params():
-    dp = cv2.getTrackbarPos(HoughCircles.DP_NAME, HoughCircles.WIN_NAME)
-    minDist = cv2.getTrackbarPos(HoughCircles.MIN_DIST_NAME, HoughCircles.WIN_NAME)
-    param1 = cv2.getTrackbarPos(HoughCircles.PARAM_1_NAME, HoughCircles.WIN_NAME)
-    param2 = cv2.getTrackbarPos(HoughCircles.PARAM_2_NAME, HoughCircles.WIN_NAME)
-    minRadius = cv2.getTrackbarPos(HoughCircles.MIN_RADIUS_NAME, HoughCircles.WIN_NAME)
-    maxRadius = cv2.getTrackbarPos(HoughCircles.MAX_RADIUS_NAME, HoughCircles.WIN_NAME)
-
-    return dp, minDist, param1, param2, minRadius, maxRadius
-
-
-def create_hough_circles_window():
-    cv2.namedWindow(HoughCircles.WIN_NAME, 1)
-
-    cv2.createTrackbar(HoughCircles.DP_NAME, HoughCircles.WIN_NAME, HoughCircles.DP_DEFAULT, 10, nothing)
-    cv2.createTrackbar(HoughCircles.MIN_DIST_NAME, HoughCircles.WIN_NAME, HoughCircles.MIN_DIST_DEFAULT, 50, nothing)
-    cv2.createTrackbar(HoughCircles.PARAM_1_NAME, HoughCircles.WIN_NAME, HoughCircles.PARAM_1_DEFAULT, MAX_COLOR_VAL, nothing)
-    cv2.createTrackbar(HoughCircles.PARAM_2_NAME, HoughCircles.WIN_NAME, HoughCircles.PARAM_2_DEFAULT, 50, nothing)
-    cv2.createTrackbar(HoughCircles.MIN_RADIUS_NAME, HoughCircles.WIN_NAME, HoughCircles.MIN_RADIUS_DEFAULT, 20, nothing)
-    cv2.createTrackbar(HoughCircles.MAX_RADIUS_NAME, HoughCircles.WIN_NAME, HoughCircles.MAX_RADIUS_DEFAULT, 50, nothing)
-
-
 def create_window():
+    """
+     Creates a window with HSV thresholds.
+    """
     cv2.namedWindow(HSV.WIN_NAME, 1)
 
     cv2.createTrackbar(HSV.HUE_MIN_NAME, HSV.WIN_NAME, 0, PI, nothing)
@@ -188,6 +89,10 @@ def create_window():
 
 
 def get_skin_img_gray(hsv):
+    """
+    :param hsv: hsv colored image
+    :return: skinny image of an hsv image
+    """
     sv_lower = 30, 100
     sv_upper = 150, MAX_COLOR_VAL
     hue_ranges = (0, 30), (145, PI)
@@ -209,23 +114,7 @@ def get_skin_img_gray(hsv):
     return skin_img
 
 
-def haar_eye(gray, skinny, show=True):
-    x, y, w, h = cv2.boundingRect(skinny)
-    roi_face = gray[y:y+h, x:x+w]
-    try:
-        ex, ey, ew, eh = both_eyes_cascade.detectMultiScale(roi_face)[0]
-        cv2.rectangle(roi_face, (ex, ey), (ex + ew, ey + eh), MAX_COLOR_VAL / 2, thickness=2)
-        # roi_eyes = roi_face[ey:ey+eh, ex:ex+ew]
-        # eyes = eye_cascade.detectMultiScale(roi_eyes)
-        # for (ex, ey, ew, eh) in eyes:
-        #     cv2.rectangle(roi_eyes, (ex, ey), (ex + ew, ey + eh), MAX_COLOR_VAL, thickness=2)
-    except:
-        pass
-    if show:
-        cv2.imshow("haar eyes", gray)
-
-
-def contour_center(contour):
+def get_contour_center(contour):
     """
     :param contour: a list of XY, pertains to a contour
     :return: (tuple) contour's center
@@ -249,165 +138,157 @@ def get_img_active_center(img):
     return xc, yc
 
 
-def refine_eye_contour(roi_soft, eye_hard_contour, min_intersect=0.9, max_delta=0.2):
-    hard_center = contour_center(eye_hard_contour)
-    intersect_rate = 0
-    eye_center_prev = eye_center_refined = hard_center
-    delta_relative = MIN_MARKER_RADIUS_SOFT / MIN_MARKER_RADIUS_SOFT
-
-    while intersect_rate < min_intersect and delta_relative > max_delta:
-        colorful_img = np.zeros(roi_soft.shape + tuple([3]), dtype=np.uint8)
-        cv2.circle(colorful_img, eye_center_refined, MIN_MARKER_RADIUS_SOFT, color=BLUE, thickness=cv2.FILLED)
-        # colorful_img = cv2.bitwise_and(colorful_img, colorful_img, mask=roi_soft)
-        eye_center_refined = get_img_active_center(colorful_img)
-        gray = cv2.cvtColor(colorful_img, cv2.COLOR_BGR2GRAY)
-        intersect_rate = cv2.countNonZero(gray) / MIN_MARKER_AREA_SOFT
-        delta_relative = norm(np.subtract(eye_center_refined, eye_center_prev)) / MIN_MARKER_RADIUS_SOFT
-        eye_center_prev = eye_center_refined
-        print(eye_center_refined, delta_relative, intersect_rate)
-
-        cv2.imshow("colorful_img", colorful_img)
-    print("done")
-
-    return eye_hard_contour
-
-
-
-def deal_with_eye_overlap(gray_soft, big_contours):
-    gray_hard = gray_soft.copy()
-    gray_hard[np.where(gray_hard < V_MAX_LOWER)] = 0
-    gray_hard = cv2.blur(gray_hard, ksize=(3,3))
-
-    eye_contours = []
-
-    for stuck_contour in big_contours:
-        rect_x, rect_y, rect_w, rect_h = cv2.boundingRect(stuck_contour)
-        roi_hard = gray_hard[rect_x: rect_x + rect_w, rect_y: rect_y + rect_h]
-        roi_soft = gray_soft[rect_x: rect_x + rect_w, rect_y: rect_y + rect_h]
-
-        roi_hard_contours = get_contours(roi_hard)
-        areas = [cv2.contourArea(c) for c in roi_hard_contours]
-        roi_hard_contours = [roi_hard_contours[i] for i in range(len(roi_hard_contours)) if areas[i] > MIN_MARKER_AREA_HARD]
-        if roi_hard_contours:
-            eye_contour_index = np.argmin([cv2.contourArea(c) for c in roi_hard_contours])
-            eye_hard_contour = roi_hard_contours[eye_contour_index]
-            # eye_hard_contour = refine_eye_contour(roi_soft, eye_hard_contour)
-
-            eye_hard_contour[:, :, 0] += rect_x
-            eye_hard_contour[:, :, 1] += rect_y
-
-
-            eye_contours.append(eye_hard_contour)
-
-        cv2.rectangle(gray_hard, (rect_x, rect_y), (rect_x + rect_w, rect_y + rect_h), MAX_COLOR_VAL / 2, thickness=2)
-        cv2.imshow("gray_hard", gray_hard)
-
-    return eye_contours
-
-
-def get_contours(gray, maxval=MAX_COLOR_VAL):
+def get_contours(gray):
+    """
+    :param gray: gray image
+    :return: its contours (all of them)
+    """
     _, thresh = cv2.threshold(gray, 0, MAX_COLOR_VAL, cv2.THRESH_BINARY)
     _, contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return contours
 
 
+def match_contour_size(contour, mode, sigma=0.3):
+    """
+    :param contour: returned by get_contours(dots_gray)
+    :param mode: hard of soft mode
+    :param sigma: deviation from a circle to an ellipse
+    :return: if the contour fits in a possible box size
+    """
+    lowest_box_size = (1 - sigma) * 2 * RADIUS_RANGE[mode]["min"]
+    biggest_box_size = (1 + sigma) * 2 * RADIUS_RANGE[mode]["max"]
+    width, height = cv2.boundingRect(contour)[2:]
+    ratio = float(width) / height
+    fit_in = ratio < MAX_CIRCLE_RATIO
+    for c_size in (width, height):
+        fit_in *= lowest_box_size < c_size < biggest_box_size
+    return fit_in
 
-def filter_by_contour_area(gray):
-    gray_hard = gray.copy()
-    gray_hard[np.where(gray < V_MAX_LOWER)] = 0
 
-    contours = get_contours(gray)
+def match_contour_area(contour, mode):
+    """
+    :param contour: returned by get_contours(dots_gray)
+    :param mode: hard of soft mode
+    :return: if the contour fits in a possible area range
+    """
+    min_marker_area = np.pi * RADIUS_RANGE[mode]["min"] ** 2
+    max_marker_area = np.pi * RADIUS_RANGE[mode]["max"] ** 2
+    return min_marker_area < cv2.contourArea(contour) < max_marker_area
 
-    big_contours = []
+
+def filter_by_contour_area(dots_gray, mode):
+    """
+    :param dots_gray: gray image with dots (markers) left
+    :param mode: hard or soft mode
+    :return: dots image, filtered by area and size w.r.t. mode
+    """
+    contours = get_contours(dots_gray)
+
     filtered_contours = []
 
     for c in contours:
-        c_area = cv2.contourArea(c)
-        if c_area > MAX_MARKER_AREA:
-            big_contours.append(c)
-        elif c_area > MIN_MARKER_AREA_SOFT:
+        if match_contour_area(c, mode) and match_contour_size(c, mode):
             filtered_contours.append(c)
 
-    # if len(filtered_contours) < 18:
-    #     # print(len(filtered_contours))
-    #     eye_contours_additional = deal_with_eye_overlap(gray, big_contours)
-    #     filtered_contours += eye_contours_additional
-    # filtered_contours += big_contours
-    if len(filtered_contours) != 18:
-        print(len(filtered_contours))
+    if mode == MODE.HARD and len(filtered_contours) != MARKERS_NUM:
+        print(mode, len(filtered_contours))
 
-    filtered_img = np.zeros(shape=gray.shape, dtype=np.uint8)
+    filtered_img = np.zeros(shape=dots_gray.shape, dtype=np.uint8)
     cv2.drawContours(filtered_img, filtered_contours, -1, color=MAX_COLOR_VAL, thickness=cv2.FILLED)
 
     return filtered_img
+
+
+def arrange_markers(contours):
+    """
+    :param contours: unarranged contours
+    :return: contours arranged w.r.t. MARKER_NAMES
+    """
+    contours = np.array(contours)
+    cheeks_nose = contours[6:10]
+    cheeks_nose_center_xs = [get_contour_center(c)[0] for c in cheeks_nose]
+    aligned_indices = np.argsort(cheeks_nose_center_xs)[::-1]
+    contours[6:10] = cheeks_nose[aligned_indices]
+    return contours
+
+
+def get_marker_centers(dots_gray):
+    """
+    :param dots_gray: gray img of markers
+    :return: marker centers
+    """
+    contours = get_contours(dots_gray)
+    contours = arrange_markers(contours)
+    markers_centers = []
+    for c_index, c in enumerate(contours):
+        c_center = get_contour_center(c)
+        markers_centers.append(c_center)
+    return np.array(markers_centers)
+
+
+def copy_hard_to_soft(dots_hard, dots_soft, pos):
+    """
+    :param dots_hard: img obtained with hard threshold
+    :param dots_soft: img obtained with soft threshold
+    :param pos: eye hard pos
+    :return: dots_soft with inserted eye from dots_hard
+    """
+    y, x = pos
+    x_left = x - MAX_MARKER_RADIUS_SOFT
+    x_right = x + MAX_MARKER_RADIUS_SOFT
+    y_top = y - MAX_MARKER_RADIUS_SOFT
+    y_bottom = y + MAX_MARKER_RADIUS_SOFT
+    dots_soft[x_left:x_right, y_top:y_bottom] = dots_hard[x_left:x_right, y_top:y_bottom]
+    return dots_soft
+
+
+def lay_on(dots_hard, dots_soft):
+    """
+    :param dots_hard: img obtained with hard threshold
+    :param dots_soft: img obtained with soft threshold
+    :return: dots_soft with both eyes from dots_hard if necessary
+    """
+    marker_centers_hard = get_marker_centers(dots_hard)
+    marker_centers_soft = get_marker_centers(dots_soft)
+    if len(marker_centers_soft) > MARKERS_NUM:
+        cv2.imshow("too much markers", dots_soft)
+    if len(marker_centers_soft) < MARKERS_NUM:
+        eyes_hard = marker_centers_hard[EYE_UP_INDICES]
+        possible_eyes_soft = marker_centers_soft[EYE_UP_INDICES]
+        for eye_index, eye_hard in zip(EYE_UP_INDICES, eyes_hard):
+            if not does_intersect(eye_hard, possible_eyes_soft):
+                marker_centers_soft = np.insert(marker_centers_soft, eye_index, eye_hard, axis=0)
+                dots_soft = copy_hard_to_soft(dots_hard, dots_soft, eye_hard)
+    return dots_soft
+
+
+def draw_centers(dots_gray):
+    """
+    :param dots_gray: dots gray img
+    :return: dots BGR img with marker centers and text
+    """
+    marker_centers = get_marker_centers(dots_gray)
+    dots_bgr = cv2.cvtColor(dots_gray, cv2.COLOR_GRAY2BGR)
+    for m_index, m_center in enumerate(marker_centers):
+        cv2.circle(dots_bgr, tuple(m_center), radius=2, color=GREEN, thickness=2)
+        x_right = m_center[0] + MIN_MARKER_RADIUS_HARD
+        y_top = m_center[1] - MIN_MARKER_RADIUS_HARD // 2
+        cv2.putText(dots_bgr, MARKER_NAMES[m_index], (x_right, y_top), cv2.FONT_ITALIC, 0.5, BLUE, thickness=1)
+    return dots_bgr
 
 
 def dist(p1, p2):
     return np.linalg.norm(p1 - p2)
 
 
-def take_smaller_part_hough(stuck_contour, gray):
-    rect_x, rect_y, rect_w, rect_h = cv2.boundingRect(stuck_contour)
-    roi = gray[rect_x : rect_x + rect_w, rect_y : rect_y + rect_h]
-    circles = cv2.HoughCircles(roi,
-                               cv2.HOUGH_GRADIENT,
-                               dp=2,
-                               minDist=MAX_MARKER_RADIUS,
-                               param1=MAX_COLOR_VAL,
-                               param2=4,
-                               minRadius=MAX_MARKER_RADIUS,
-                               maxRadius=MAX_MARKER_RADIUS + MIN_MARKER_RADIUS_SOFT)
-
-    bgr = cv2.cvtColor(roi, cv2.COLOR_GRAY2BGR)
-    if circles is not None:
-        circles = np.uint16(np.around(circles))
-        for i in circles[0,:]:
-            # draw the outer circle
-            cv2.circle(bgr,(i[0],i[1]),i[2],GREEN,2)
-            # draw the center of the circle
-            cv2.circle(bgr,(i[0],i[1]),2,RED,3)
-
-        cv2.imshow('hough eyes dealer', bgr)
-    else:
-        print("shit")
-
-
-def take_smaller_part(stuck_contour):
-    cluster_n = 2
-    pixel_resolution = 0.1
-    steps = 30
-    attempts = 10
-
-    rect_x, rect_y, rect_w, rect_h = cv2.boundingRect(stuck_contour)
-    shape = (rect_x + rect_w, rect_y + rect_h)
-    filled_c = np.zeros(shape, dtype=np.uint8)
-    cv2.drawContours(filled_c, [stuck_contour], -1, MAX_COLOR_VAL, thickness=cv2.FILLED)
-    xy_filled = cv2.findNonZero(filled_c)
-
-    points_converted = xy_filled.squeeze().astype(np.float32)
-    term_crit = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, steps, pixel_resolution)
-    ret, _, centers = cv2.kmeans(points_converted, cluster_n, None, term_crit, attempts, cv2.KMEANS_RANDOM_CENTERS)
-
-    split_contours = [[] for _ in range(cluster_n)]
-
-    for point_c in stuck_contour:
-        distances = [dist(point_c, cnt) for cnt in centers]
-        label = np.argmin(distances)
-        split_contours[label].append(point_c)
-
-
-    for label in range(cluster_n):
-        shape = tuple( [len(split_contours[label])] ) + stuck_contour.shape[1:]
-        split_contours[label] = np.resize(split_contours[label], shape)
-
-    split_areas = [cv2.contourArea(c) for c in split_contours]
-    smaller_contour = split_contours[np.argmin(split_areas)]
-
-    return smaller_contour, split_contours, centers.astype(np.uint32)
-
-
-def to_tuple(ndarray):
-    return tuple(ndarray.tolist())
+def does_intersect(eye_center_hard, possible_eyes_center_soft):
+    """
+    :param eye_center_hard: eye center with hard threshold
+    :param possible_eyes_center_soft: points where can be eyes with soft threshold
+    :return: if hard and soft eyes intersects
+    """
+    intersect = [dist(eye_center_hard, eye_soft) < MAX_MARKER_RADIUS_SOFT for eye_soft in possible_eyes_center_soft]
+    return np.any(intersect)
 
 
 def process_frame(frame, index):
@@ -415,26 +296,23 @@ def process_frame(frame, index):
         frame = resize_in_half(frame)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     skinny = get_skin_img_gray(hsv)
-
     channel_streams = separate_channels(hsv)
 
     dots_img = get_black_pixels(hsv)
     dots_img = cv2.bitwise_and(dots_img, skinny)
 
-    # haar_eye(hsv[:, :, 2].astype(np.uint8), skinny)
-    dots_img = cv2.blur(dots_img, ksize=(2,1))
-    # dots_img = cv2.blur(dots_img, ksize=(1,1))
-    # dots_img = cv2.blur(dots_img, ksize=(1,1))
-    # dots_img = cv2.blur(dots_img, ksize=(1,1))
+    dots_hard = cv2.blur(dots_img, ksize=(2,1))
+    dots_soft = cv2.blur(dots_img, ksize=(3,3))
 
-    # dots_img[ np.where(dots_img > 0) ] = MAX_COLOR_VAL
+    dots_hard = filter_by_contour_area(dots_hard, MODE.HARD)
+    dots_soft = filter_by_contour_area(dots_soft, MODE.SOFT)
 
-    dots_img = filter_by_contour_area(dots_img)
-    cv2.imshow("markers", dots_img)
+    dots_soft = lay_on(dots_hard, dots_soft)
 
-    # hough_circles(frame, dots_img)
+    for mode, _dots_gray in zip((MODE.HARD, MODE.SOFT), (dots_hard, dots_soft)):
+        dots_bgr = draw_centers(_dots_gray)
+        cv2.imshow("mode " + mode, dots_bgr)
 
-    # cv2.imshow("skinny", skinny)
     cv2.imshow(HSV.WIN_NAME, channel_streams)
 
 
@@ -460,7 +338,6 @@ def run(index):
 
 def main(index):
     create_window()
-    # create_hough_circles_window()
     repeat = True
 
     while repeat:
