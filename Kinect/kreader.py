@@ -110,10 +110,10 @@ class HumanoidKinect(HumanoidBasic):
         # is created, they aren't used (and not relevant at all)
         # during the testing.
         swap = {"left": "right", "right": "left"}
-        self.prime_hand = txt_path.split('\\')[-1].split("Hand")[0].lower()
+        self.prime_hand = txt_path.split(os.sep)[-1].split("Hand")[0].lower()
         self.free_hand = swap[self.prime_hand]
 
-        with open(txt_path, 'r') as rfile:
+        with open(txt_path, 'rU') as rfile:
             rlines = rfile.readlines()
             self.name = rlines[3][1:-1]
             self.labels = gather_labels(rlines)

@@ -50,11 +50,16 @@ def take_common_markers(known_gest, unknown_gest):
     return data1, data2, weights
 
 
-def align_markers_pos(known_data, unknown_data):
+def align_by_first_frame(known_data, unknown_data):
     """
-     Aligns all markers data from an unknown gest as it was in first frame of a known gest.
-    :param known_data: (#markers, frames, 3) data of a known gest
-    :param unknown_data: (#markers, frames, 3) data of an unknown gest
+    Translates all markers in unknown_data so that their position in space
+    matches with markers from known data in first frame.
+    Offset is measured by the first marker of the first frame in both sequences.
+    Consider the usage only when general pre-processing (sample-independent)
+    shows a poor result.
+
+    :param known_data: (#markers, #frames, #dim) data of a known gest
+    :param unknown_data: (#markers, #frames, #dim) data of an unknown gest
     :return: aligned by first markers pos unknown data
     """
     if_error = "Invalid markers dim. Align data shapes first."
@@ -89,7 +94,7 @@ def compare(known_gest, unknown_gest, dtw_chosen=fastdtw, weighted=True):
     # NOTE. Using this reduces level of generality,
     #       but in some cases yields better result.
     #       In our case, do not use it.
-    # unknown_data = align_markers_pos(known_data, unknown_data)
+    # unknown_data = align_by_first_frame(known_data, unknown_data)
 
     if not weighted: weights = np.ones(known_data.shape[0])
 
@@ -131,15 +136,15 @@ def show_comparison(known_gest, unknown_gest):
         print("Incompatible data dimensions.")
         return np.inf
 
-    # was: data.shape == (#markers, #frames, 3)
+    # was: data.shape == (#markers, #frames, #dim)
     data1 = np.swapaxes(data1, 0, 1)
     data2 = np.swapaxes(data2, 0, 1)
-    # now: data.shape == (#frames, #markers, 3)
+    # now: data.shape == (#frames, #markers, #dim)
 
     dist_measure_weighted = partial(dist_measure, weights=weights)
     dist, cost, path = dtw(data1, data2, dist=dist_measure_weighted)
 
-    print('Minimum distance found: %f' % (dist * (known_gest.frames + unknown_gest.frames)))
+    print('Minimum distance found (unnormalized): %f' % (dist * (known_gest.frames + unknown_gest.frames)))
     plt.imshow(cost.T, origin='lower', cmap=cm.gray, interpolation='nearest')
     plt.plot(path[0], path[1], 'w')
     plt.xlim((-0.5, cost.shape[0]-0.5))

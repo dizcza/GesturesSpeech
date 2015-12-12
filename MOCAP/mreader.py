@@ -44,7 +44,7 @@ def parse_fname(fname):
     :param fname: path to .c3d-file
     :return: class name of the instance
     """
-    short_name = fname.split('\\')[-1]
+    short_name = fname.split(os.sep)[-1]
     if "_sample" in short_name:
         return short_name[:-12]
     else:
