@@ -5,7 +5,7 @@
 
 ## Contents
 1.  [Projects info](#projects-info)
-2.  [How to run a project](#how-to-run-a-project)
+2.  [**How to run a project**](#how-to-run-a-project)
 3.  [Class diagram](#class-diagram)
 4.  [State of art](#state-of-art)
 5.  [Data pre-processing](#data-pre-processing)
@@ -247,7 +247,7 @@ It should be clear that the best scenario is also a _classic_ scenario at findin
 
 When all hidden parameters are calculated and all weights are set for each gesture class, it's time to use WDTW to compare some unknown sequence (from a testing set) with a known one (from a training set).
 
-Classical DTW algorithm takes ![](png/math/On.PNG) complexity both in time and space. Thus we speed up it to linear time and space complexity, using [FastDTW](http://cs.fit.edu/~pkc/papers/tdm04.pdf) [implementation](https://github.com/slaypni/fastdtw). Although FastDTW carries disadvantage in worse accuracy, comparing to DTW, via changing controlling parameter, called radius _r_, it turns out, that in our case FastDTW yields the same performance as DTW does.
+Classical DTW algorithm takes ![](png/math/On.PNG) complexity both in time and space. Using [FastDTW](http://cs.fit.edu/~pkc/papers/tdm04.pdf) [implementation](https://github.com/slaypni/fastdtw) speeds it up to linear complexity both in time and space. Although FastDTW introduces an error via changing controlling parameter, called radius **_r_**, it turns out that in our case FastDTW yields the same accuracy as DTW does.
 
 | Kinect                       | MoCap                       |
 | ---------------------------- | ----------------------------|
@@ -257,7 +257,7 @@ Classical DTW algorithm takes ![](png/math/On.PNG) complexity both in time and s
 
 ## Results
 
-Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all test gestures were classified correctly, while simple (unweighted) FastDTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario for Kinect project.
+Using Weighted DTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all test gestures were classified correctly, while simple (unweighted) DTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario for Kinect project.
 
 <table style="width:100%">
 	<caption><font size="2"><i>Single gesture recognition accuracy, % </i></font></caption>
@@ -288,7 +288,7 @@ Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints fo
 		<td>80.6</td>
 	</tr>
 	<tr>
-    	<td>DTW / FastDTW</td>
+    	<td>DTW</td>
 		<td>100</td>
 		<td>100</td>
 		<td>69.4</td>
@@ -300,7 +300,7 @@ Using Weighted FastDTW algorithm with only 6 crucial (both hands) body joints fo
 
 At the same time, MoCap's simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly, there is too much information per MoCap sample (too high FPS and too many markers) and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.
 
-WDTW algorithm correctly identified 29 / 36 emotions, while simple DTW identified 30 / 36\. The difference in 1 correctly recognized sample doesn't make a weather. Nevertheless, the explanation lies in the variation of markers fasteting on the face, sensory noise and variation of facial expressions per unique emotion class.
+WDTW algorithm correctly identified 29 / 36 emotions, while simple DTW identified 30 / 36\. The difference in 1 correctly recognized sample doesn't make a weather. Nevertheless, the explanation lies in the variation of pre-defined markers on the face, sensory noise and variations of facial expressions for the same emotion.
 
 
 
@@ -315,11 +315,11 @@ Another interesting observation shows that there is no need to use the whole den
 
 Free 3D Graphics Lab Motion Capture visualizers:
 
-*   [Mokka](http://b-tk.googlecode.com/svn/web/mokka/index.html) (my favourite);
+*   [Mokka](http://b-tk.googlecode.com/svn/web/mokka/index.html) - my favourite; just make sure your data path uses only standard ASCII characters (they do not support extended ASCII character set);
 *   [Blender](http://www.blender.org/) (look at [here](http://stackoverflow.com/questions/20499320/how-to-import-c3d-files-into-blender) to be able to import C3D files);
 *   [CMO Reader](http://www.c-motion.com/free-downloads/#did4).
 
-The current project is portable. Although it's built and maintained upon Python 3.4 x32 version, you can use 2.7.8 or higher 32 bit version of Python.
+The current project is portable. Although it's built and maintained upon Python 3.4 x32 version, you can use 2.7.8 or higher 32 bit version of Python. The project is created and supported on Windows 7 (**it's NOT tested on Linux yet!**).
 
 **Obligatory Python packages** (can be found at [http://www.lfd.uci.edu/~gohlke/pythonlibs)](http://www.lfd.uci.edu/~gohlke/pythonlibs):
 
@@ -328,7 +328,7 @@ The current project is portable. Although it's built and maintained upon Python 
     *   [climate](http://github.com/lmjohns3/py-cli)
     *   [curses](http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses)
     *   [pyglet](http://pyglet.readthedocs.org/en/pyglet-1.2-maintenance)
-*   [matplotlib](http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download) (with _pyparsing_, _dateutil_, _setuptools_ and _six_)
+*   [matplotlib](http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-1.4.2/windows/matplotlib-1.4.2.win32-py2.7.exe/download)
 *   [numpy](http://sourceforge.net/projects/numpy/files/NumPy/1.9.1/numpy-1.9.1-win32-superpack-python2.7.exe/download)
-*   [dtw](https://pypi.python.org/pypi/dtw/1.0) (dynamic time warping)
-*   (optional) [win32com](http://sourceforge.net/projects/pywin32) and [unidecode](https://pypi.python.org/pypi/Unidecode) moduli to parse unicode data from Microsoft Excel files
+*   [dtw](https://pypi.python.org/pypi/dtw/1.0) -- dynamic time warping -- only for the illustration purpose (I used [FastDTW](https://github.com/slaypni/fastdtw) modification)
+*   (optional in [Emotion project](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion)) [win32com](http://sourceforge.net/projects/pywin32) and [unidecode](https://pypi.python.org/pypi/Unidecode) moduli to parse unicode data from Microsoft Excel files.

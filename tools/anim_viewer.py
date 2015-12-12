@@ -284,7 +284,7 @@ class DataViewer(Viewer):
         :param data: (#frames, #markers, #dim) ndarray
                      of XYZ of body joint markers;
                      should be measured in mm
-                     with feet on the floor (around zero height)
+                     with feet on the floor
         :param rate: frames per sec
         """
         Viewer.__init__(self)
@@ -292,7 +292,7 @@ class DataViewer(Viewer):
         frame_no = np.arange(data.shape[0])
         analog = [[] for _ in frame_no]
         # ------------------ BEGIN -------------------- #
-        self._frames = zip(frame_no, data, analog)
+        self._frames = iter(zip(frame_no, data, analog))
         self._frame_rate = rate
         self._trails = [[] for _ in range(data.shape[1])]
         # ------------------- END --------------------- #
