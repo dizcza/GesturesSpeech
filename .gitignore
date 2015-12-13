@@ -1,7 +1,18 @@
-*.pyc
-temp.py
-*.npy
+# PyCharm settings
 .idea
-MOCAP/animation/
+
+# python executables
+*.pyc
 __pycache__/
+
+# no need to track junk files
+temp.py
+
+# old version to read c3d files
+MOCAP/animation/
+
+# scripts to visualize README.md
 tools/plotting_stuff/
+
+# Kinect database
+Kinect/_data/

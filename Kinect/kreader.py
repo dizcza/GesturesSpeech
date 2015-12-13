@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """
-Kinect project (HumanoidKinect class) is based upon database from the reference:
+Kinect project is based upon database from the reference:
   @inproceedings{celebi2013gesture,
       author    = {Sait Celebi and Ali Selman Aydin and Talha Tarik Temiz and Tarik Arici},
       title     = {{Gesture Recognition Using Skeleton Data with Weighted Dynamic Time Warping}},
@@ -17,9 +17,11 @@ import numpy as np
 
 from tools.humanoid import HumanoidBasic
 from tools.anim_viewer import DataViewer
+from Kinect.data_manager import load_database
 
-# path to Kinect project data
-KINECT_PATH = r"D:\GesturesDataset\KINECT"
+# loads Kinect database if not loaded yet
+# and returns a path to Kinect project data
+KINECT_PATH = load_database()
 
 # total number of present markers
 MARKERS = 20

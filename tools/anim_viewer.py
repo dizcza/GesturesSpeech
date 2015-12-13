@@ -11,6 +11,7 @@ Required packages:
     - pyglet: http://pyglet.readthedocs.org/en/pyglet-1.2-maintenance
     - numpy: http://sourceforge.net/projects/numpy/?source=directory
 """
+import os
 
 import c3d
 import climate
@@ -300,7 +301,7 @@ class DataViewer(Viewer):
 
 
 def demo():
-    c3d_file_path = r"D:\GesturesDataset\MoCap\Hospital\H2_mcraw.c3d"
+    c3d_file_path = os.path.join("..", "MOCAP", "_data", "M1_02_v2_gest1_sample0.c3d")
     try:
         MocapViewer(c3d.Reader(open(c3d_file_path, 'rb'))).mainloop()
     except StopIteration:

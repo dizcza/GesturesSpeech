@@ -121,14 +121,12 @@
 To run a particular project (_MoCap_, _Kinect_ or _Emotion_), 
 
 1. Make sure you've completely installed all [obligatory Python packages](#tools).
-2. Download database for the chosen project.
-	 - MoCap database isn't available due to policy - contact me if you want to run MoCap project.
-	 - [Kinect database](http://datascience.sehir.edu.tr/visapp2013/WeightedDTW-Visapp2013-DB.rar).
-	 - [Emotion database](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion/_data) is included in this repo so you don't need to download it manully. Hence do not change path to Emotion database (see the next step).
-3. Set up a path to the downloaded database. 
+2. If you're about to run MoCap project, you need to
+    - get [permission](https://github.com/dizcza/GesturesSpeech/tree/dev/MOCAP/_data). Otherwise, only one c3d sample is available.
+    - set up a path to the downloaded MoCap database.
 	
 	> Each `[PREFIX]reader.py` initializes a constant `PROJECTNAME_PATH` -- a path to data directory for the current PROJECTNAME, -- where [PREFIX] is the first character of the PROJECTNAME. So you have to change that constant. Keep in mind, that the chosen data directory should preserve the original structure, used in a project: <div align="center"><img src="png/data_structure.PNG" width="300"></div>
-4. Decide which project part do you want to run: 
+3. Decide which project part do you want to run: 
 	- `[PREFIX]reader.py` -- data demonstration (visualization);
 	- `[PREFIX]setting.py` -- WDTW training;
 	- `[PREFIX]test.py` -- WDTW testing.
@@ -321,6 +319,7 @@ Free 3D Graphics Lab Motion Capture visualizers (you probably don't have access 
 
 The project is portable: both **Windows 7** and **Linux** are supported. Also you can easily switch from Python 2.7 to Python 3.4 and vice versa.
 
+If you use Python 2.7, make sure you don't have non-ascii characters in your path to clone the project. Some python-2.7 modules (such as [pyglet](http://pyglet.readthedocs.org)) may not work with module param `-m`.
 
 #### Tested on:
 * Windows 7 SP1 x64 + Python 3.4.3 x32 (also with Python 2.7.10 x32)
@@ -337,4 +336,6 @@ The project is portable: both **Windows 7** and **Linux** are supported. Also yo
 *   [matplotlib](http://sourceforge.net/projects/matplotlib)
 *   [numpy](http://sourceforge.net/projects/numpy)
 *   [dtw](https://pypi.python.org/pypi/dtw) [dynamic time warping] is only for illustration purpose (I used [FastDTW](https://github.com/slaypni/fastdtw) modification)
+*   [tqdm](https://github.com/tqdm/tqdm) progress bar
+*   [rarfile](https://github.com/markokr/rarfile) to unrar downloaded Kinect database.rar
 *   (optional in [Emotion project](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion) for Windows 7 users) [win32com](http://sourceforge.net/projects/pywin32) and [unidecode](https://pypi.python.org/pypi/Unidecode) moduli to parse unicode data from Microsoft Excel files.
