@@ -1,9 +1,7 @@
 # coding=utf-8
 
 import os
-
 import numpy as np
-import matplotlib.pyplot as plt
 import c3d
 
 from tools.humanoid import HumanoidBasic
@@ -14,6 +12,7 @@ try:
     import btk
 except ImportError:
     import MOCAP.local_tools.btk_fake as btk
+
 
 # path to MoCap project data
 # you probably don't have permission to use our c3d data,
