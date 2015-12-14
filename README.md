@@ -10,13 +10,13 @@ For gained recognition accuracy go to [results](results) session.
 
 ## Quick start
 
-Firstly, install [dependencies](#dependencies).
+Inside `GesturesSpeech` type:
 
-Secondly, inside `GesturesSpeech` folder type one of the following:
-
-	$ python -m MOCAP.mreader
-	$ python -m Kinect.kreader
-	$ python -m Emotion.em_reader
+1. `pip install -r requirements.txt`
+2. check one project at a time:
+	* `python -m MOCAP.mreader`
+	* `python -m Kinect.kreader`
+	* `python -m Emotion.em_reader`
 
 
 ## In-depth start
@@ -29,7 +29,7 @@ There is three independent projects:
 
  To run one of them,
 
-1. Make sure you've completely installed all [obligatory Python packages](#dependencies).
+1. As in [Quick start](#quick-start), run `pip install -r requirements.txt`. If something goes wrong, install manually [obligatory Python packages](#dependencies). 
 2. If you're about to run MoCap project, you need to
     - get [permission](https://github.com/dizcza/GesturesSpeech/tree/dev/MOCAP/_data). Otherwise, only one c3d sample is available.
     - set up a path to the downloaded MoCap database.
@@ -49,7 +49,7 @@ There is three independent projects:
 
 The project is portable: both **Windows 7** and **Linux** are supported. Also you can easily switch from Python 2.7 to Python 3.4 and vice versa.
 
-If you use Python 2.7, make sure you don't have non-ascii characters in your path to clone the project in. Some python-2.7 modules (such as [pyglet](http://pyglet.readthedocs.org)) may not work with module param `-m` and cyrillic characters in path at the same time.
+If you use Python 2.7, make sure you don't have non-ascii characters in your path to clone the project in. Some python-2.7 modules (such as [pyglet](https://bitbucket.org/pyglet/pyglet/issues/74/pyglet-crashes-with-a-unicodeerror-on)) may not work with module param `-m` and cyrillic characters in path at the same time.
 
 #### Tested on:
 * Windows 7 SP1 x64 + Python 3.4.3 x32 (also with Python 2.7.10 x32)
@@ -58,14 +58,12 @@ If you use Python 2.7, make sure you don't have non-ascii characters in your pat
 
 ## Dependencies
 
+*   [numpy](http://sourceforge.net/projects/numpy)
 *   [c3d](https://github.com/EmbodiedCognition/py-c3d) to read and display c3d contents (Note: if you use Python 2.7.x, install also native [Biomechanical ToolKit](https://code.google.com/p/b-tk/downloads/list))
 *   for pretty animation like in OpenGL:
     *   [climate](http://github.com/lmjohns3/py-cli)
-    *   [curses](http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses) (necessary only for Windows 7 users)
     *   [pyglet](http://pyglet.readthedocs.org)
 *   [matplotlib](http://sourceforge.net/projects/matplotlib)
-*   [numpy](http://sourceforge.net/projects/numpy)
 *   [dtw](https://pypi.python.org/pypi/dtw) [dynamic time warping] is only for illustration purpose (I used [FastDTW](https://github.com/slaypni/fastdtw) modification)
 *   [tqdm](https://github.com/tqdm/tqdm) progress bar
 *   [rarfile](https://github.com/markokr/rarfile) to unrar downloaded Kinect database.rar
-*   (optional in [Emotion project](https://github.com/dizcza/GesturesSpeech/tree/dev/Emotion) for Windows 7 users) [win32com](http://sourceforge.net/projects/pywin32) and [unidecode](https://pypi.python.org/pypi/Unidecode) moduli to parse unicode data from Microsoft Excel files.

@@ -5,11 +5,10 @@ A simple OpenGL MoCap Coordinate 3D viewer.                 # MocapViewer
 Also provides a visualizer for arrays of 3D motion data.    # DataViewer
 Original: https://github.com/EmbodiedCognition/py-c3d/blob/master/scripts/c3d-viewer
 Required packages:
+    - numpy: http://sourceforge.net/projects/numpy/?source=directory
     - c3d: https://github.com/EmbodiedCognition/py-c3d
     - climate: http://github.com/lmjohns3/py-cli
-    - curses: http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses
     - pyglet: http://pyglet.readthedocs.org/en/pyglet-1.2-maintenance
-    - numpy: http://sourceforge.net/projects/numpy/?source=directory
 """
 import os
 

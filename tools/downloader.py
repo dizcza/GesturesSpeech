@@ -44,3 +44,8 @@ def download_url(url, desc=None):
         progress_bar.close()
 
     return fname
+
+
+if __name__ == "__main__":
+    fname = download_url("https://flashcart-helper.googlecode.com/files/UnRAR.exe")
+    os.remove(fname)
