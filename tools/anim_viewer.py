@@ -7,21 +7,17 @@ Original: https://github.com/EmbodiedCognition/py-c3d/blob/master/scripts/c3d-vi
 Required packages:
     - numpy: http://sourceforge.net/projects/numpy/?source=directory
     - c3d: https://github.com/EmbodiedCognition/py-c3d
-    - climate: http://github.com/lmjohns3/py-cli
     - pyglet: http://pyglet.readthedocs.org/en/pyglet-1.2-maintenance
 """
 import os
 
 import c3d
-import climate
 import collections
 import contextlib
 import numpy as np
 import pyglet
 
 from pyglet.gl import *
-
-climate.add_arg('inputs', nargs='+', metavar='FILE', help='show these c3d files')
 
 BLACK = (0, 0, 0)
 WHITE = (1, 1, 1)
