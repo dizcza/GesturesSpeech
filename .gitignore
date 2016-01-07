@@ -5,8 +5,9 @@
 *.pyc
 __pycache__/
 
-# no need to track junk files
+# quick tests
 temp.py
+speed-tests.py
 
 # old version to read c3d files
 MOCAP/animation/

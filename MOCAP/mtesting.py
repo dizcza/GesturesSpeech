@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from MOCAP.mreader import HumanoidUkr
-from tools.instruments import Testing, Training
+from tools.instruments import InstrumentCollector, Testing, Training
 
 
 def plot_error_vs_fps(mode="bothHands", beta=None):
@@ -30,6 +30,14 @@ def run_the_worst_comparison(mode="bothHands", beta=None, fps=None, weighted=Tru
     """
     Training(HumanoidUkr).compute_weights(mode, beta, fps)
     Testing(HumanoidUkr).the_worst_comparison(fps, weighted=weighted)
+
+
+def print_average_duration():
+    """
+     Prints average gestures duration in seconds.
+    """
+    duration = InstrumentCollector(HumanoidUkr).compute_average_duration()
+    print("Average gesture duration (sec): %g " % duration)
 
 
 if __name__ == "__main__":

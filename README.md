@@ -21,13 +21,13 @@ For gained recognition accuracy go to [results](results) section.
 * Windows 7 SP1 x64 + Python 3.4.3 x32 (also with Python 2.7.10 x32)
 * Ubuntu 14.04.3 x64 + Python 2.7.6 x64 (built-in)
 
-
 ## Dependencies
 
-*   [numpy](http://sourceforge.net/projects/numpy)
+*   [numpy+mkl](http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy) or a standard [numpy](http://www.numpy.org/)
 *   [c3d](https://github.com/EmbodiedCognition/py-c3d) to read and display c3d contents (Note: if you use Python 2.7, install also native [Biomechanical ToolKit](https://code.google.com/p/b-tk/downloads/list))
 *   [pyglet](http://pyglet.readthedocs.org) for OpenGL graphics
 *   [matplotlib](http://sourceforge.net/projects/matplotlib) for scientific results
 *   [dtw](https://pypi.python.org/pypi/dtw) [dynamic time warping] is only for illustration purpose (I used [FastDTW](https://github.com/slaypni/fastdtw) modification)
 *   [tqdm](https://github.com/tqdm/tqdm) progress bar
 *   [rarfile](https://github.com/markokr/rarfile) to unrar automatically downloaded Kinect database
+*   [futures](https://pypi.python.org/pypi/futures) only for Python 2.7 users to support [concurrent.future](https://docs.python.org/3.4/library/concurrent.futures.html) multiprocessing

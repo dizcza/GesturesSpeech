@@ -8,8 +8,10 @@
 6.  [Body joint weights. Discriminant ratio](#body-joint-weights-discriminant-ratio)
 7.  [The worst and the best testing scenarios](#the-worst-and-the-best-testing-scenarios)
 8.  [Weighted DTW comparison](#weighted-dtw-comparison)
-9. [Results](#results)
-10. [FPS dependency](#fps-dependency)
+9.  [Results](#results)
+10. [Computation time per test sample](#computation-time-per-test-sample)
+11. [FPS dependency](#fps-dependency)
+12. [Real-time classification possibility](#real-time-classification-possibility)
 
 ![Добрий ранок](png/anim.gif)
 
@@ -69,6 +71,12 @@
 		<td>30</td>
 		<td>24</td>
 	</tr>
+    <tr>
+    	<td>average gesture duration (sec)</td>
+		<td>2.86</td>
+		<td>1.46</td>
+		<td>3.92</td>
+	</tr>
 	<tr>
     	<td>unique gestures</td>
 		<td>139</td>
@@ -100,6 +108,8 @@
 		<td>3</td>
 	</tr>
 </table>
+
+_Table 1. Projects info._
 
 **Notes**:
 
@@ -264,13 +274,45 @@ Using Weighted DTW algorithm with only 6 crucial (both hands) body joints for Ki
 	</tr>
 </table>
 
+_Table 2. Recognition accuracy._
+
 At the same time, MoCap's simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly, there is too much information per MoCap sample (too high FPS and too many markers) and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.
 
 WDTW algorithm correctly identified 29 / 36 emotions, while simple DTW identified 30 / 36\. The difference in 1 correctly recognized sample doesn't make a weather. Nevertheless, the explanation lies in the variation of pre-defined markers on the face, sensory noise and variations of facial expressions for the same emotion.
 
+## Computation time per test sample
 
+Below is shown average elapsed time for processing one testing sample versus all known samples from a training folder. 
+Computations have been made asynchronously on Intel i5 3.4 GHz (with each core used).
+
+| MoCap      | Kinect    | Emotion    |
+| ---------- | --------- | ---------- |
+| 10.312 sec | 0.655 sec | 0.777 sec  |
+
+_Table 3. Computation time._
 
 ## FPS dependency
 
 Another interesting observation shows that there is no need to use the whole dense data to be able to correctly classify it. For instance, using weighted DTW, setting FPS = 8 is enough for both projects data.
 ![](png/error_vs_fps.png)
+
+## Real-time classification possibility
+
+Is it possible to use weighted fast DTW algorithm with our databases to recognize unknown gestures in real time? - Yes, it is possible. In first estimation, real-time classification requires that
+
+<p align="center">COMPUTATION_TIME &lt GESTURE_DURATION  (1)</p>
+
+Comparing _Table 1_ with _Table 3_ gives
+
+| Database | Computation time (sec) | Gesture duration (sec) | COMPUTATION_TIME < GESTURE_DURATION |
+| -------- | ---------------------- | ---------------------- | ----------------------------------- |
+| MoCap    | 10.312                 | 2.86                   | false                               |
+| Kinect   | 0.655                  | 1.46                   | true                                |
+| Emotion  | 0.777                  | 3.92                   | true                                |
+
+_Table 4. Possibility of real-time classification._
+
+As seen from _Table 4_, there is only MoCap database does not satisfy condition (1). But according to [FPS dependency](#fps-dependency), we can downgrade FPS from 120 to 12 (or even less) without loosing the performance. Theoretically, it'd give us computation time of 1.031 sec, which is smaller than its average gesture duration (2.86 sec). Nevertheless, we should note, that: 
+
+1. computation complexity of a gesture classification by DTW algorithm grows linearly with adding new reference gestures. That means for each (very small) comparison time of two given gestures (known and unknown), there is a breaking point of a database size that does not satisfy (1) anymore, and it becomes impossible to classify gestures in real time;
+2. condition (1) does not include time needed to separate continuous data flow into chunks of possible gestures AND post-processing time to combine classified chunks into the best fit.

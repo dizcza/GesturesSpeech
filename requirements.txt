@@ -5,3 +5,4 @@ pyglet>=1.2.4
 dtw>=1.2
 tqdm>=3.1.4
 rarfile>=2.7
+futures>=3.0.3
