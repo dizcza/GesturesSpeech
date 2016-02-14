@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from Emotion.em_reader import Emotion
-from tools.instruments import Testing, Training
+from tools.instruments import InstrumentCollector, Testing, Training
 
 
 def run_the_worst_comparison(mode=None, beta=None, fps=None, weighted=True):
@@ -22,6 +22,14 @@ def run_the_worst_comparison(mode=None, beta=None, fps=None, weighted=True):
     """
     Training(Emotion).compute_weights(mode, beta, fps)
     Testing(Emotion).the_worst_comparison(fps, weighted=weighted)
+
+
+def print_average_duration():
+    """
+     Prints average gestures duration in seconds.
+    """
+    duration = InstrumentCollector(Emotion).compute_average_duration()
+    print("Average gesture duration (sec): %g " % duration)
 
 
 if __name__ == "__main__":

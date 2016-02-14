@@ -166,12 +166,16 @@ class BasicMotion(object):
             lighted_id = self.moving_markers.index(lighted_marker)
             barlist[lighted_id].set_color("#99CCFF")
 
-    def show_displacements(self, mode, highlight=()):
+    def show_displacements(self, mode, highlight=(), title=None):
         """
         :param mode: use both hand (by default) or only prime one
         """
         self.plot_displacement(mode, highlight)
-        plt.show()
+        if title:
+            plt.title(title)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            plt.show()
 
     def set_constant_weights(self, mode):
         """

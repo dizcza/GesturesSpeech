@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """
-Kinect project (HumanoidKinect class) is based upon database from the reference:
+Kinect project is based upon database from the reference:
   @inproceedings{celebi2013gesture,
       author    = {Sait Celebi and Ali Selman Aydin and Talha Tarik Temiz and Tarik Arici},
       title     = {{Gesture Recognition Using Skeleton Data with Weighted Dynamic Time Warping}},
@@ -17,9 +17,11 @@ import numpy as np
 
 from tools.humanoid import HumanoidBasic
 from tools.anim_viewer import DataViewer
+from Kinect.data_manager import load_database
 
-# path to Kinect project data
-KINECT_PATH = r"D:\GesturesDataset\KINECT"
+# loads Kinect database if not loaded yet
+# and returns a path to Kinect project data
+KINECT_PATH = load_database()
 
 # total number of present markers
 MARKERS = 20
@@ -110,10 +112,10 @@ class HumanoidKinect(HumanoidBasic):
         # is created, they aren't used (and not relevant at all)
         # during the testing.
         swap = {"left": "right", "right": "left"}
-        self.prime_hand = txt_path.split('\\')[-1].split("Hand")[0].lower()
+        self.prime_hand = txt_path.split(os.sep)[-1].split("Hand")[0].lower()
         self.free_hand = swap[self.prime_hand]
 
-        with open(txt_path, 'r') as rfile:
+        with open(txt_path, 'rU') as rfile:
             rlines = rfile.readlines()
             self.name = rlines[3][1:-1]
             self.labels = gather_labels(rlines)

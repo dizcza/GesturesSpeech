@@ -5,23 +5,19 @@ A simple OpenGL MoCap Coordinate 3D viewer.                 # MocapViewer
 Also provides a visualizer for arrays of 3D motion data.    # DataViewer
 Original: https://github.com/EmbodiedCognition/py-c3d/blob/master/scripts/c3d-viewer
 Required packages:
-    - c3d: https://github.com/EmbodiedCognition/py-c3d
-    - climate: http://github.com/lmjohns3/py-cli
-    - curses: http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses
-    - pyglet: http://pyglet.readthedocs.org/en/pyglet-1.2-maintenance
     - numpy: http://sourceforge.net/projects/numpy/?source=directory
+    - c3d: https://github.com/EmbodiedCognition/py-c3d
+    - pyglet: http://pyglet.readthedocs.org/en/pyglet-1.2-maintenance
 """
+import os
 
 import c3d
-import climate
 import collections
 import contextlib
 import numpy as np
 import pyglet
 
 from pyglet.gl import *
-
-climate.add_arg('inputs', nargs='+', metavar='FILE', help='show these c3d files')
 
 BLACK = (0, 0, 0)
 WHITE = (1, 1, 1)
@@ -300,7 +296,7 @@ class DataViewer(Viewer):
 
 
 def demo():
-    c3d_file_path = r"D:\GesturesDataset\MoCap\Hospital\H2_mcraw.c3d"
+    c3d_file_path = os.path.join("..", "MOCAP", "_data", "M1_02_v2_gest1_sample0.c3d")
     try:
         MocapViewer(c3d.Reader(open(c3d_file_path, 'rb'))).mainloop()
     except StopIteration:

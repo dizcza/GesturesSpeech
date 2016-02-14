@@ -65,7 +65,7 @@ def init_frame(filename, verbose=False):
     :param filename: .c3d-file
     :return: init (relaxed) frame pertains to the filename.c3d
     """
-    short_name = filename.split('\\')[-1]
+    short_name = filename.split(os.sep)[-1]
     initFrames = {
         "M1_02_v2.c3d": 280,
         "M2_02.c3d": 405,

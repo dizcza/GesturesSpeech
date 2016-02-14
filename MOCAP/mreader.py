@@ -1,9 +1,7 @@
 # coding=utf-8
 
 import os
-
 import numpy as np
-import matplotlib.pyplot as plt
 import c3d
 
 from tools.humanoid import HumanoidBasic
@@ -15,7 +13,10 @@ try:
 except ImportError:
     import MOCAP.local_tools.btk_fake as btk
 
+
 # path to MoCap project data
+# you probably don't have permission to use our c3d data,
+# so don't bother with that
 MOCAP_PATH = r"D:\GesturesDataset\MoCap\splitAll"
 
 
@@ -44,7 +45,7 @@ def parse_fname(fname):
     :param fname: path to .c3d-file
     :return: class name of the instance
     """
-    short_name = fname.split('\\')[-1]
+    short_name = fname.split(os.sep)[-1]
     if "_sample" in short_name:
         return short_name[:-12]
     else:
@@ -147,30 +148,15 @@ class HumanoidUkr(HumanoidBasic):
             pass
 
 
-def test_nan_weights():
-    """
-     Tests each sample for having nan weights.
-    """
-    for log_c3d in os.listdir(MOCAP_PATH):
-        if log_c3d.endswith(".c3d"):
-            log_path = os.path.join(MOCAP_PATH, log_c3d)
-            gest = HumanoidUkr(log_path)
-            w = gest.get_weights()
-            assert not np.isnan(w).any(), "nan weights in %s" % log_c3d
-
-
 def demo_run():
     """
      MoCap project demo.
     """
-    gest_path = os.path.join(MOCAP_PATH, "Training", "M1_02_v2_gest1", "M1_02_v2_gest1_sample0.c3d")
-    assert os.path.exists(gest_path), "Unable to find the %s" % gest_path
-    gest = HumanoidUkr(gest_path)
+    demo_path = os.path.join(os.path.dirname(__file__), "_data", "M1_02_v2_gest1_sample0.c3d")
+    gest = HumanoidUkr(demo_path)
     print(gest)
     rhand_labels = [label for label in gest.moving_markers if label[0] == 'R']
-    gest.plot_displacement("bothHands", rhand_labels)
-    plt.title(u"'Добрий ранок' joint displacement")
-    plt.show()
+    gest.show_displacements("bothHands", rhand_labels, u"'Good morning' joint displacement")
     gest.animate_pretty()
 
 

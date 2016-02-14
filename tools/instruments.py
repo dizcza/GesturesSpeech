@@ -5,11 +5,15 @@ import time
 import json
 import sys
 
+import concurrent
+from concurrent.futures import ProcessPoolExecutor
+
 import numpy as np
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
 from tools.comparison import compare, show_comparison
+from tools.fastdtw import fastdtw
 from Kinect.kreader import KINECT_PATH
 from MOCAP.mreader import MOCAP_PATH
 from Emotion.em_reader import EMOTION_PATH
@@ -130,6 +134,18 @@ class InstrumentCollector(object):
         self.dump_info()
         print("New weights are saved in %s" % self._info_name)
 
+    def compute_average_duration(self):
+        """
+        Computes average gesture duration in sec across train + test samples.
+
+        :return: average gesture duration
+        """
+        durations_total = 0
+        samples = self.load_test_samples(fps=None) + self.load_train_samples(fps=None)
+        for _sample in samples:
+            durations_total += float(_sample.frames) / _sample.fps
+        return durations_total / len(samples)
+
 
 ########################################################################################################################
 #                                              T E S T I N G                                                           #
@@ -149,6 +165,8 @@ class Testing(InstrumentCollector):
         :param verbose: verbose display (True) or silent (False)
         :param weighted: use weighted FastDTW modification or just FastDTW
         """
+
+        executor = ProcessPoolExecutor()
 
         def print_err(got_pattern, unknownGest):
             if verbose:
@@ -181,8 +199,8 @@ class Testing(InstrumentCollector):
             trn_subdir = os.path.join(self.trn_path, directory)
             for short_name in os.listdir(trn_subdir):
                 fname = os.path.join(trn_subdir, short_name)
-                knownGest = self.MotionClass(fname, fps)
-                patterns[directory].append(knownGest)
+                knownOtherGest = self.MotionClass(fname, fps)
+                patterns[directory].append(knownOtherGest)
         
         for directory in os.listdir(self.tst_path):
             tst_subfolder = os.path.join(self.tst_path, directory)
@@ -192,18 +210,32 @@ class Testing(InstrumentCollector):
                 unknownGest = self.MotionClass(fpath_test, fps)
                 the_same_costs = []
                 other_costs = []
+                other_patterns = []
+                futures_list = []
 
                 for theSamePattern in patterns[directory]:
-                    dist = compare(theSamePattern, unknownGest, weighted=weighted)
-                    the_same_costs.append(dist)
+                    future = executor.submit(compare, *(theSamePattern, unknownGest, fastdtw, weighted))
+                    future.is_the_same_pattern = True
+                    futures_list.append(future)
 
-                other_patterns = []
                 for class_name, gestsLeft in patterns.items():
                     if class_name != directory:
-                        for knownGest in gestsLeft:
-                            dist = compare(knownGest, unknownGest, weighted=weighted)
-                            other_costs.append(dist)
-                            other_patterns.append(knownGest)
+                        for knownOtherGest in gestsLeft:
+                            other_patterns.append(knownOtherGest)
+                            future = executor.submit(compare, *(knownOtherGest, unknownGest, fastdtw, weighted))
+                            future.is_the_same_pattern = False
+                            futures_list.append(future)
+
+                results_collected = concurrent.futures.wait(futures_list)
+                assert len(results_collected.not_done) == 0, "failed to compute async"
+
+                for future_completed in results_collected.done:
+                    dist = future_completed.result()
+                    if future_completed.is_the_same_pattern:
+                        the_same_costs.append(dist)
+                    else:
+                        other_costs.append(dist)
+
                 min_other_cost = min(other_costs)
                 min_the_same_cost = min(the_same_costs)
                 max_the_same_cost = max(the_same_costs)
@@ -251,6 +283,8 @@ class Testing(InstrumentCollector):
         print("*** margin: %.3g%%" % margin)
         duration = time.time() - start
         print("Duration: %d sec" % duration)
+
+        executor.shutdown()
 
         return total_infimum, total_supremum, total_samples
 
@@ -322,7 +356,9 @@ class Training(InstrumentCollector):
         print("%s: COMPUTING WITHIN VARIANCE" % self.MotionClass.__name__)
         start_timer = time.time()
 
+        executor = ProcessPoolExecutor()
         one_vs_the_same_var = []
+        futures_list = []
         for directory in os.listdir(self.trn_path):
             trn_subfolder = os.path.join(self.trn_path, directory)
             log_examples = os.listdir(trn_subfolder)
@@ -337,11 +373,17 @@ class Training(InstrumentCollector):
                     # (stored in PROJECTNAME_INFO.json), there is no need to
                     # alter arguments and compute it explicitly, because
                     # compare(goingGest, firstGest) == compare(firstGest, goingGest)
-                    dist = compare(firstGest, goingGest)
-
-                    one_vs_the_same_var.append(dist)
+                    future = executor.submit(compare, *(firstGest, goingGest, fastdtw, True))
+                    futures_list.append(future)
 
                 log_examples.pop(0)
+
+        results_collected = concurrent.futures.wait(futures_list)
+        assert len(results_collected.not_done) == 0, "failed to compute async"
+
+        for future_completed in results_collected.done:
+            dist = future_completed.result()
+            one_vs_the_same_var.append(dist)
 
         if any(one_vs_the_same_var):
             within_var = np.average(one_vs_the_same_var)
@@ -376,11 +418,20 @@ class Training(InstrumentCollector):
         start_timer = time.time()
         one_vs_others_var = []
         trn_samples = self.load_train_samples(fps)
-        for firstGest in trn_samples:
-            for goingGest in (trn_samples + tuple()):
-                if firstGest.name != goingGest.name:
-                    dist = compare(firstGest, goingGest)
-                    one_vs_others_var.append(dist)
+        futures_list = []
+        with ProcessPoolExecutor() as executor:
+            for firstGest in trn_samples:
+                for goingGest in (trn_samples + tuple()):
+                    if firstGest.name != goingGest.name:
+                        future = executor.submit(compare, *(firstGest, goingGest, fastdtw, True))
+                        futures_list.append(future)
+
+            results_collected = concurrent.futures.wait(futures_list)
+            assert len(results_collected.not_done) == 0, "failed to compute async"
+            for future_completed in results_collected.done:
+                dist = future_completed.result()
+                one_vs_others_var.append(dist)
+
         between_var = np.average(one_vs_others_var)
         between_std = np.std(one_vs_others_var)
         self.proj_info["between_variance"] = between_var

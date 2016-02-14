@@ -1,7 +1,19 @@
-*.pyc
-temp.py
-*.npy
+# PyCharm settings
 .idea
-MOCAP/animation/
+
+# python executables
+*.pyc
 __pycache__/
+
+# quick tests
+temp.py
+speed-tests.py
+
+# old version to read c3d files
+MOCAP/animation/
+
+# scripts to visualize README.md
 tools/plotting_stuff/
+
+# Kinect database
+Kinect/_data/
