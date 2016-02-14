@@ -9,7 +9,7 @@ There is three independent projects:
 
 To run one of them,
 
-1. As in [Quick start](#quick-start), run `pip install -r requirements.txt`. If something goes wrong, install manually [obligatory Python packages](README.md#dependencies). 
+1. As in [Quick start](README.m#quick-start), run `pip install -r requirements.txt`. If something goes wrong, install manually [obligatory Python packages](README.md#dependencies). 
 2. If you're about to run MoCap project, you need to
     - get [permission](https://github.com/dizcza/GesturesSpeech/tree/dev/MOCAP/_data). Otherwise, only one c3d sample is available.
     - set up a path to the downloaded MoCap database.

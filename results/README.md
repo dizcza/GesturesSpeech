@@ -8,7 +8,7 @@
 6.  [Body joint weights. Discriminant ratio](#body-joint-weights-discriminant-ratio)
 7.  [The worst and the best testing scenarios](#the-worst-and-the-best-testing-scenarios)
 8.  [Weighted DTW comparison](#weighted-dtw-comparison)
-9.  [Results](#results)
+9.  [Gained accuracy](#gained-accuracy)
 10. [Computation time per test sample](#computation-time-per-test-sample)
 11. [FPS dependency](#fps-dependency)
 12. [Real-time classification possibility](#real-time-classification-possibility)
@@ -231,7 +231,7 @@ Classical DTW algorithm takes ![](png/math/On.PNG) complexity both in time and s
 
 
 
-## Results
+## Gained accuracy
 
 Using Weighted DTW algorithm with only 6 crucial (both hands) body joints for Kinect project (with other weights set to zero), all test gestures were classified correctly, while simple (unweighted) DTW algorithm with the same 6 body joints yields 21.2% out-of-sample error in the best case scenario for Kinect project.
 
@@ -278,11 +278,11 @@ _Table 2. Recognition accuracy._
 
 At the same time, MoCap's simple DTW yields the same result (100% recognition accuracy) as the weighted one. It's because, firstly, there is too much information per MoCap sample (too high FPS and too many markers) and, secondly, training and testing gestures were performed by the same skilled signer. Thus, training and testing examples are nearly identical.
 
-WDTW algorithm correctly identified 29 / 36 emotions, while simple DTW identified 30 / 36\. The difference in 1 correctly recognized sample doesn't make a weather. Nevertheless, the explanation lies in the variation of pre-defined markers on the face, sensory noise and variations of facial expressions for the same emotion.
+WDTW algorithm correctly identified 29 / 36 emotions, while simple DTW identified 30 / 36\. The difference in 1 correctly recognized sample doesn't make a weather. Nevertheless, the explanation lies in the variations of initial marker positions from one person to another and variations of facial expressions for the same emotion.
 
 ## Computation time per test sample
 
-Below is shown average elapsed time for processing one testing sample versus all known samples from a training folder. 
+Below is shown the elapsed average time of processing one testing sample versus all known samples from a training folder. 
 Computations have been made asynchronously on Intel i5 3.4 GHz (with each core used).
 
 | MoCap      | Kinect    | Emotion    |
